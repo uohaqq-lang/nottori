@@ -385,3 +385,4 @@ button { font-family: inherit; }
 .lock .lcard:first-child { animation: lockIn .5s ease-out; }
 @keyframes lockIn { from { transform: translateY(-14px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
 .lock .lcard .b { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ban { touch-action: none; transition: transform .15s ease-out, opacity .15s; }

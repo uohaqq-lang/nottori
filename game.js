@@ -110,6 +110,7 @@ let choice = null;            /* いまの選択 { app, th, options, resolve } *
 let tray = null;              /* S8 の行動の板 */
 let busy = null;              /* 行動中 { label, start, dur } */
 let raceBanner = null;
+let raceAction = null;   /* 通知を消しても、設定から押せるように */
 
 /* ---------- 小さな絵（写真の代わり） ---------- */
 const SVG = {
@@ -228,7 +229,7 @@ function renderPico() {
     body = list.map(t => { const last = t.msgs[t.msgs.length - 1]; const ghost = last && last.ghost; return `<div class="row${t.unread ? ' unread' : ''}${ghost ? ' ghost' : ''}" data-act="th" data-arg="${t.th}"><span class="av" style="background:${COLORS[t.th] || '#888'}">${esc(t.name.slice(0, 1))}</span><div class="mid"><div class="nm">${esc(t.name)}</div><div class="pv${ghost ? ' red' : ''}">${esc(last ? (last.unsent ? T.unsent : last.link ? UI.voteTitle : (last.me ? 'あなた：' : '') + fill(last.text || '')) : '')}</div></div><span class="tm">${esc(last ? last.tm : '')}</span></div>`; }).join('');
   } else {
     if (v.confirm) body = `<div class="confirm"><p>${esc(T.s4confirm)}</p><button class="btn pico" data-act="pwDo">${esc(T.s4confirmBtn)}</button><button class="btn sub" data-act="pwCancel">${esc(UI.back)}</button></div>`;
-    else body = `<div class="setrow" data-act="pwRow"><span>${esc(UI.pwRow)}</span><span>›</span></div><div class="setrow dim"><span>通知</span><span>オン</span></div><div class="setrow dim"><span>2段階認証</span><span>オフ</span></div>` + (v.pwDone ? `<div class="sysline">${esc(UI.pwDone)}</div>` : '');
+    else body = (raceAction ? `<div class="setrow" data-act="loginAlert" style="flex-direction:column;gap:8px"><span style="color:var(--danger)">${esc(raceAction.text)}</span><button class="btn" style="padding:10px">${esc(T.s4button)}</button></div>` : '') + `<div class="setrow" data-act="pwRow"><span>${esc(UI.pwRow)}</span><span>›</span></div><div class="setrow dim"><span>通知</span><span>オン</span></div><div class="setrow dim"><span>2段階認証</span><span>オフ</span></div>` + (v.pwDone ? `<div class="sysline">${esc(UI.pwDone)}</div>` : '');
   }
   return `<div class="view pico">${head('Instacam', false, 'logo')}<div class="scroll">${body}</div><div class="ptabs">${['feed', 'dm', 'set'].map((k, i) => `<button class="${tab === k ? 'on' : ''}" data-act="ptab" data-arg="${k}">${esc(UI.picoTabs[i])}${k === 'dm' && badge('pico') ? ` (${badge('pico')})` : ''}</button>`).join('')}</div>${homebar()}</div>`;
 }
@@ -312,7 +313,13 @@ function banner(app, title, text, opts = {}) {
   const box = document.createElement('div');
   box.className = 'ban' + (opts.sticky ? ' sticky' : '');
   box.innerHTML = `<span class="ico">${ICON[app] || ''}</span><div class="mid"><div class="t"><span>${esc(UI.apps[app] || app)}</span><span>今</span></div>${title ? `<div class="h">${esc(title)}</div>` : ''}<div class="b">${esc(text)}</div>${opts.button ? `<button class="bt">${esc(opts.button)}</button>` : ''}</div>`;
+  /* 上にはらうと消える（11/17 本人「通知をどかせない・消せないのが嫌」） */
+  let y0 = null, moved = false;
+  box.addEventListener('pointerdown', e => { y0 = e.clientY; moved = false; box.setPointerCapture && box.setPointerCapture(e.pointerId); });
+  box.addEventListener('pointermove', e => { if (y0 == null) return; const dy = e.clientY - y0; if (dy < -6) { moved = true; box.style.transform = `translateY(${dy}px)`; box.style.opacity = String(Math.max(0, 1 + dy / 120)); } });
+  box.addEventListener('pointerup', e => { if (y0 == null) return; const dy = e.clientY - y0; y0 = null; if (dy < -40) { dismiss(box); if (opts.onSwipe) opts.onSwipe(); } else { box.style.transform = ''; box.style.opacity = ''; } });
   box.addEventListener('click', e => {
+    if (moved) { moved = false; return; }
     if (opts.button && e.target.classList.contains('bt')) { opts.onButton && opts.onButton(); return; }
     if (opts.open) { gotoView(opts.open); }
     if (!opts.sticky) dismiss(box);
@@ -602,7 +609,8 @@ async function race() {
     $('#overlay').innerHTML = `<div class="dlg"><p>${esc(T.s4confirm)}</p><button class="btn" id="pwgo">${esc(T.s4confirmBtn)}</button></div>`;
     $('#pwgo').onclick = () => { $('#overlay').className = ''; $('#overlay').innerHTML = ''; if (!done) { saved = true; done = true; } };
   };
-  raceBanner = banner('pico', '', T.s4notify.replace('{遠い都道府県}', far), { sticky: true, button: T.s4button, onButton: onPress });
+  raceAction = { press: onPress, text: T.s4notify.replace('{遠い都道府県}', far) };
+  raceBanner = banner('pico', '', raceAction.text, { sticky: true, button: T.s4button, onButton: onPress });
   view = { name: 'pico', tab: 'dm' }; render();
   if (AUTO) { const p = PICKS.length ? PICKS.shift() : 0; if (p === 0) setTimeout(() => { onPress(); setTimeout(() => $('#pwgo') && $('#pwgo').click(), 200); }, 3500 / SPEED * 4); }
   const t0 = Date.now();
@@ -616,7 +624,7 @@ async function race() {
     }
     if (el >= TIMING.s4.lockout) done = true;
   }
-  dismiss(raceBanner); raceBanner = null;
+  dismiss(raceBanner); raceBanner = null; raceAction = null;
   st.sentCount = sent;
   if (saved && sent < TIMING.s4.friends) {
     st.route = 'in';
@@ -885,6 +893,7 @@ document.addEventListener('click', e => {
     case 'inline': { const t = threads[view.name] && threads[view.name][view.th]; if (t && t.inline && t.inline[arg]) t.inline[arg].f(); break; }
     case 'callYes': if (view.onPick) view.onPick(0); break;
     case 'callNo': if (view.onPick) view.onPick(1); break;
+    case 'loginAlert': if (raceAction) raceAction.press(); break;
     case 'voteX': view = { name: 'home' }; render(); break;
     case 'openVote': if (voteView) { view = voteView; render(); } break;
     case 'erase': eraseProgress(); toast(UI.erased); break;
