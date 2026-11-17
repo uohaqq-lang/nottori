@@ -520,3 +520,25 @@ span.pic svg { width: 100%; height: 100%; display: block; }
 .call.asking .avatar { width: 56px; height: 56px; margin-bottom: 8px; }
 .call.asking .subs { padding-top: 14px; padding-bottom: 290px; }
 .call.withBars.asking .who { margin-top: 64px !important; }
+
+/* ログインの確認・ログインしている場所・保護のページ（11/17 本物に寄せる） */
+.lcbox { padding: 18px 18px 24px; display: flex; flex-direction: column; gap: 12px; }
+.lcmap { width: 100%; height: auto; border-radius: 12px; display: block; }
+.lcrow { display: flex; flex-direction: column; gap: 3px; font-size: 14px; color: #555; }
+.lcrow b { font-size: 17px; color: #111; }
+.lcq { font-size: 16px; font-weight: 700; margin: 6px 0 2px; }
+.lcnote { font-size: 14.5px; line-height: 1.7; color: #333; margin: 0; }
+.lcttl { font-size: 19px; text-align: center; }
+.lclab { font-size: 12px; color: #737373; margin-bottom: -6px; }
+.lcfld { border: 1px solid #dbdbdb; border-radius: 10px; background: #fafafa; padding: 12px 14px; letter-spacing: .12em; color: #333; }
+.btn.igBlue { background: #0095f6; color: #fff; border: 0; }
+.btn.igBlue:disabled { opacity: .4; }
+.lwrow { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-bottom: 1px solid #f3f3f3; cursor: pointer; }
+.lwrow .mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.lwrow .mid b { font-size: 15px; }
+.lwrow .mid span { font-size: 13px; color: #737373; }
+.lwrow .mid span.on { color: #2e9d4f; }
+.lwic { width: 40px; height: 40px; border-radius: 50%; background: #efefef; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.lwic svg { width: 22px; height: 22px; }
+.mailbody .b { white-space: pre-line; }.ig .btn.sub { background: #efefef; color: #111; border: 0; }
+.lcfld { font-size: 18px; letter-spacing: .2em; }

@@ -128,7 +128,7 @@ const SVG = {
   desk: `<img class="ph" src="img/desk.jpg" alt="" draggable="false">`,  /* 写真は生成AIで作った（実在の店・人ではない） */
   shop: `<img class="ph" src="img/shop.jpg" alt="" draggable="false">`,  /* 写真は生成AIで作った（実在の店・人ではない） */
   nabe: `<img class="ph" src="img/nabe.jpg" alt="" draggable="false">`,  /* 写真は生成AIで作った（実在の店・人ではない） */
-  yutoShot: `<svg viewBox="0 0 220 120" width="200"><rect width="220" height="120" rx="10" fill="#f7f6f3" stroke="#ddd"/><clipPath id="ysc"><circle cx="22" cy="28" r="12"/></clipPath><image href="img/av_me.jpg" x="10" y="16" width="24" height="24" clip-path="url(#ysc)" preserveAspectRatio="xMidYMid slice"/><text x="40" y="32" font-size="11" fill="#333">ソウタ</text><rect x="14" y="48" width="192" height="52" rx="12" fill="#fff" stroke="#e5e2dc"/><text x="24" y="70" font-size="10" fill="#333">ごめん急ぎで、コンビニでギフト</text><text x="24" y="86" font-size="10" fill="#333">カード買って番号送ってくれない？</text></svg>`,
+  yutoShot: `<svg viewBox="0 0 220 120" width="200"><rect width="220" height="120" rx="10" fill="#f7f6f3" stroke="#ddd"/><clipPath id="ysc"><circle cx="22" cy="28" r="12"/></clipPath><image href="img/av_me.jpg" x="10" y="16" width="24" height="24" clip-path="url(#ysc)" preserveAspectRatio="xMidYMid slice"/><text x="40" y="32" font-size="11" fill="#333">ソウタ</text><rect x="14" y="48" width="192" height="52" rx="12" fill="#fff" stroke="#e5e2dc"/><text x="24" y="70" font-size="10" fill="#333">カード止まってて、ポチペイで5,000円</text><text x="24" y="86" font-size="10" fill="#333">だけ送ってくれない？明日には絶対返す</text></svg>`,
   idcard: `<svg viewBox="0 0 180 112" class="idcard"><rect width="180" height="112" rx="8" fill="#eef2f6" stroke="#b9c3cf"/><rect x="12" y="22" width="52" height="66" fill="#c9a38f"/><rect x="76" y="26" width="86" height="8" fill="#9aa8bb"/><rect x="76" y="44" width="70" height="8" fill="#9aa8bb"/><rect x="76" y="62" width="80" height="8" fill="#9aa8bb"/><text x="12" y="15" font-size="9" fill="#6b7682">学生証（ゲームの中の絵）</text></svg>`,
   cand: c => `<svg viewBox="0 0 160 160"><rect width="160" height="160" fill="${c}"/><circle cx="80" cy="64" r="30" fill="#fff" opacity=".85"/><rect x="38" y="104" width="84" height="56" rx="30" fill="#fff" opacity=".85"/></svg>`,
   faceDummy: `<svg viewBox="0 0 100 100"><rect width="100" height="100" fill="#f3e4ea"/><circle cx="50" cy="42" r="18" fill="#d9b8c4"/><rect x="24" y="64" width="52" height="36" rx="18" fill="#d9b8c4"/></svg>`
@@ -218,6 +218,11 @@ function render() {
   else if (v.name === 'phone') html = `<div class="view">${head(UI.apps.phone, true)}<div class="scroll">${calls.slice().reverse().map(c => `<div class="row">${avHTML('mom', 'av')}<div class="mid"><div class="nm"${c.missed ? ' style="color:var(--danger)"' : ''}>${esc(c.who)}</div><div class="pv">${c.missed ? '不在着信' : '通話'}</div></div><span class="tm">${esc(c.tm)}</span></div>`).join('')}</div>${homebar()}</div>`;
   else if (v.name === 'call') html = renderCall();
   else if (v.name === 'vote') html = renderVote();
+  else if (v.name === 'protect') {
+    const M = T.s5mail;
+    const inner = st.reverted ? `<p class="lcnote">${esc(M.pDone)}</p><button class="btn igBlue" data-act="open" data-arg="pico">${esc(M.pOpen)}</button>` : `<p class="lcnote">${esc(M.pBody)}</p><label class="lclab">${esc(T.lc.pwLabel)}</label><div class="lcfld">••••••••••••</div><button class="btn igBlue" data-act="revertDo">${esc(M.pBtn)}</button>`;
+    html = `<div class="view vote" style="position:absolute;inset:0;background:#fff"><div class="vbar"><span class="url">${esc(M.url)}</span><button class="x" data-act="voteX">✕</button></div><div class="scroll"><div class="lcbox"><div class="igLogo" style="text-align:center;margin:8px 0 14px">Instagraph</div><b class="lcttl">${esc(M.pTitle)}</b>${inner}</div></div>${homebar()}</div>`;
+  }
   else if (v.name === 's9') html = renderS9();
   else if (v.name === 'doc') html = v.html;
   s.innerHTML = html;
@@ -258,8 +263,22 @@ const IC = {
   more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="19" cy="12" r="1.7" fill="currentColor"/></svg>'
 };
 function igAv(th, size) { return avHTML(th, 'igav', size); }
-/* 「心当たりがない」は、通知を消しても、どの画面からも押せるように上に出す */
-const raceRow = () => raceAction ? `<div class="setrow igAlert" data-act="loginAlert"><span>${esc(raceAction.text)}</span><button class="btn">${esc(T.s4button)}</button></div>` : '';
+/* ログインの確認（本物の通知を押したときの画面）と、ログインしている場所の一覧 */
+function renderLoginCheck(v) {
+  const lc = T.lc;
+  const map = '<svg viewBox="0 0 300 120" class="lcmap"><rect width="300" height="120" fill="#e8eef2"/><path d="M0 80 C60 60 90 95 150 70 S250 40 300 55" stroke="#fff" stroke-width="10" fill="none"/><path d="M40 0 L70 120 M200 0 L180 120" stroke="#fff" stroke-width="6"/><circle cx="160" cy="62" r="22" fill="#0095f6" opacity=".18"/><circle cx="160" cy="62" r="7" fill="#0095f6"/></svg>';
+  const head = `<div class="pad44"></div><div class="igChatHead"><button class="igIcon" data-act="back">${IC.back}</button><div class="igChatName"><b>${esc(v.lc === 'pw' ? lc.pwTitle : lc.title)}</b></div></div>`;
+  let body;
+  if (v.lc === 'pw') body = `<div class="lcbox"><p class="lcnote">${esc(lc.pwNote)}</p><label class="lclab">${esc(lc.pwLabel)}</label><div class="lcfld">••••••••••••</div><button class="btn igBlue" data-act="lcPw">${esc(lc.pwBtn)}</button></div>`;
+  else body = `<div class="lcbox">${map}<div class="lcrow"><b>${esc(fill(lc.where))}</b><span>${esc(lc.device)}</span><span>${esc(lc.when)}</span></div><p class="lcq">${esc(lc.q)}</p><button class="btn igBlue" data-act="lcNo">${esc(lc.no)}</button><button class="btn sub" data-act="lcYes">${esc(lc.yes)}</button></div>`;
+  return `<div class="view pico ig">${head}<div class="scroll">${body}</div>${homebar()}</div>`;
+}
+function renderLoginWhere() {
+  const lc = T.lc;
+  const mine = `<div class="lwrow"><span class="lwic">${IC.phone}</span><div class="mid"><b>${esc(fill('{スマホの種類}'))}</b><span class="on">${esc(lc.thisDevice)}・${esc(lc.active)}</span></div></div>`;
+  const theirs = raceAction ? `<div class="lwrow" data-act="loginAlert"><span class="lwic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 20h8M12 16v4" stroke="currentColor" stroke-width="1.8"/></svg></span><div class="mid"><b>${esc(lc.device)}</b><span>${esc(fill(lc.where))}・${esc(lc.when)}</span></div><span class="igIcon sm">${IC.more}</span></div>` : '';
+  return `<div class="view pico ig"><div class="pad44"></div><div class="igChatHead"><button class="igIcon" data-act="back">${IC.back}</button><div class="igChatName"><b>${esc(lc.whereTitle)}</b></div></div><div class="scroll">${mine}${theirs}</div>${homebar()}</div>`;
+}
 /* 一覧の表示は「入力中…」ではなく、最後に届いた本物のメッセージで */
 const lastReal = t => t.msgs.slice().reverse().find(x => !x.typing) || t.msgs[t.msgs.length - 1];
 /* インスタの一覧は「今」「3分」のように、経った時間で出す */
@@ -275,6 +294,8 @@ function renderPico() {
     const sup = (v.support || []).map(x => x === 'id' ? `<div class="bb">${SVG.idcard}</div>` : x === 'submit' ? `<button class="btn pico" data-act="submitId">${esc(T.submit)}</button>` : `<div class="bb">${esc(x)}</div>`).join('');
     return `<div class="view pico ig"><div class="pad44"></div><div class="igTop"><span class="igLogo">Instagraph</span></div><div class="locked"><div class="big">${esc(T.s5locked)}</div><div class="fake"></div><div class="fake"></div><div class="support">${sup}</div></div>${homebar()}</div>`;
   }
+  if (v.lc) return renderLoginCheck(v);
+  if (v.where) return renderLoginWhere();
   if (v.th) {
     const t = thread('pico', v.th);
     return `<div class="view pico ig"><div class="pad44"></div><div class="igChatHead"><button class="igIcon" data-act="back">${IC.back}</button>${igAv(v.th, 32)}<div class="igChatName"><b>${esc(t.name)}</b><span>Instagraph</span></div><span class="igIcon">${IC.phone}</span><span class="igIcon">${IC.video}</span></div><div class="chat">${t.msgs.map(m => msgHTML('pico', t, m)).join('')}${inlineHTML('pico', v.th)}</div><div class="igInput"><span class="igCam">${IC.camera}</span><span class="igPh">メッセージ...</span><span class="igIcon sm">${IC.mic}</span><span class="igIcon sm">${IC.image}</span></div>${homebar()}</div>`;
@@ -287,19 +308,19 @@ function renderPico() {
       const pv = last ? (last.unsent ? T.unsent : last.link ? 'リンクを送信しました' : last.img ? '写真を送信しました' : (last.me ? 'あなた: ' : '') + fill(last.text || '')) : '';
       return `<div class="igRow${t.unread ? ' unread' : ''}${ghost ? ' ghost' : ''}" data-act="th" data-arg="${t.th}">${igAv(t.th, 54)}<div class="mid"><div class="nm">${esc(t.name)}</div><div class="pv${ghost ? ' red' : ''}"><span class="txt">${esc(pv)}</span><span class="ago"> · ${esc(ago(last))}</span></div></div>${t.unread ? '<span class="igDot"></span>' : `<span class="igIcon sm dim">${IC.camera}</span>`}</div>`;
     }).join('');
-    return `<div class="view pico ig"><div class="pad44"></div><div class="igChatHead"><button class="igIcon" data-act="ptab" data-arg="feed">${IC.back}</button><div class="igChatName"><b>${esc(myName())}</b></div><span class="igIcon">${IC.edit}</span></div><div class="scroll">${raceRow()}<div class="igSearch">${IC.search}<span>検索</span></div><div class="igSub"><b>メッセージ</b><span>リクエスト</span></div>${rows}</div>${homebar()}</div>`;
+    return `<div class="view pico ig"><div class="pad44"></div><div class="igChatHead"><button class="igIcon" data-act="ptab" data-arg="feed">${IC.back}</button><div class="igChatName"><b>${esc(myName())}</b></div><span class="igIcon">${IC.edit}</span></div><div class="scroll"><div class="igSearch">${IC.search}<span>検索</span></div><div class="igSub"><b>メッセージ</b><span>リクエスト</span></div>${rows}</div>${homebar()}</div>`;
   }
   let body = '';
   if (tab === 'set') {
     const prof = `<div class="igProf">${igAv('me', 80)}<div class="igNums"><div><b>${T.picoPosts.length}</b><span>投稿</span></div><div><b>54</b><span>フォロワー</span></div><div><b>61</b><span>フォロー中</span></div></div></div><div class="igBio"><b>${esc(myName())}</b></div>`;
     if (v.confirm) body = prof + `<div class="confirm"><p>${esc(T.s4confirm)}</p><button class="btn pico" data-act="pwDo">${esc(T.s4confirmBtn)}</button><button class="btn sub" data-act="pwCancel">${esc(UI.back)}</button></div>`;
-    else body = prof + raceRow() + `<div class="igSetHead">設定とアクティビティ</div><div class="setrow" data-act="pwRow"><span>${esc(UI.pwRow)}</span><span>›</span></div><div class="setrow dim"><span>通知</span><span>オン</span></div><div class="setrow dim"><span>2段階認証</span><span>オフ</span></div>` + (v.pwDone ? `<div class="sysline">${esc(UI.pwDone)}</div>` : '');
+    else body = prof + `<div class="igSetHead">設定とアクティビティ</div><div class="setrow" data-act="loginWhere"><span>${esc(T.lc.whereTitle)}</span><span>›</span></div><div class="setrow" data-act="pwRow"><span>${esc(UI.pwRow)}</span><span>›</span></div><div class="setrow dim"><span>通知</span><span>オン</span></div><div class="setrow dim"><span>2段階認証</span><span>オフ</span></div>` + (v.pwDone ? `<div class="sysline">${esc(UI.pwDone)}</div>` : '');
   } else {
     const ppl = ['me', 'yuto', 'riko', 'kai', 'f3', 'f4', 'f5'];
     const stories = ppl.map((k, n) => `<div class="igStory${n === 0 ? ' mine' : ''}"><span class="ring">${igAv(k, 60)}</span><span class="nm">${esc(n === 0 ? 'ストーリーズ' : (PEOPLE[k] || ''))}</span></div>`).join('');
     const likes = [12, 31, 8, 17];
     const posts = T.picoPosts.slice().reverse().map((p, n) => `<div class="igPost"><div class="igPostHead">${igAv('me', 32)}<b>${esc(myName())}</b><span class="igIcon sm right">${IC.more}</span></div>${SVG[p.img].replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" ')}<div class="igActs"><span class="igIcon">${IC.heart}</span><span class="igIcon">${IC.bubble}</span><span class="igIcon">${IC.plane}</span><span class="igIcon right">${IC.save}</span></div><div class="igLikes">「いいね！」${likes[n % likes.length]}件</div><div class="igCap"><b>${esc(myName())}</b> ${esc(p.text)}${p.tag ? `<span class="igTag">${esc(p.tag)}</span>` : ''}</div></div>`).join('');
-    body = raceRow() + `<div class="igStories">${stories}</div>${posts}`;
+    body = `<div class="igStories">${stories}</div>${posts}`;
   }
   const n = badge('pico');
   const nav = `<div class="igNav"><button class="igIcon" data-act="ptab" data-arg="feed">${tab === 'feed' ? IC.homeOn : IC.home}</button><span class="igIcon">${IC.search}</span><span class="igIcon">${IC.plus}</span><span class="igIcon">${IC.reel}</span><button class="igIcon me${tab === 'set' ? ' on' : ''}" data-act="ptab" data-arg="set">${igAv('me', 26)}</button></div>`;
@@ -332,8 +353,8 @@ function renderMail() {
     const m = mails.find(x => x.id === v.id);
     let acts = '';
     if (m.leak && !st.leakFixed && !leakAnswered) acts = `<div class="acts"><button class="btn pico" data-act="leakFix">${esc(T.leakMail.change)}</button><button class="btn sub" data-act="leakClose">${esc(T.leakMail.close)}</button></div>`;
-    const extra = m.dead ? `<div><span class="deadlink">https://pico.example/…</span></div><div class="note">${esc(T.s5mail.note)}</div>` : '';
-    return `<div class="view">${head(UI.apps.mail, true)}<div class="mailbody"><div class="s">${esc(m.subject)}</div><div class="f">${esc(m.from)}</div><div class="b">${esc(m.body)}</div>${extra}${acts}</div>${homebar()}</div>`;
+    const extra = m.revert ? `<div class="acts"><button class="btn igBlue" data-act="revertOpen"${st.reverted ? ' disabled' : ''}>${esc(T.s5mail.btn)}</button></div>` : '';
+    return `<div class="view">${head(UI.apps.mail, true)}<div class="mailbody"><div class="s">${esc(m.subject)}</div><div class="f">${esc(m.from)}${m.addr ? ` &lt;${esc(m.addr)}&gt;` : ''}</div><div class="b">${esc(m.body)}</div>${extra}${acts}</div>${homebar()}</div>`;
   }
   return `<div class="view">${head(UI.apps.mail, false)}<div class="scroll">${mails.slice().reverse().map(m => `<div class="mailrow${m.unread ? ' unread' : ''}" data-act="mailOpen" data-arg="${m.id}"><div class="f">${esc(m.from)}<span>${esc(m.t)}</span></div><div class="s">${esc(m.subject)}</div></div>`).join('')}</div>${homebar()}</div>`;
 }
@@ -414,6 +435,7 @@ function banner(app, title, text, opts = {}) {
   box.addEventListener('click', e => {
     if (moved) { moved = false; return; }
     if (opts.button && e.target.classList.contains('bt')) { opts.onButton && opts.onButton(); return; }
+    if (opts.onTap) { opts.onTap(); return; }
     if (opts.open) { gotoView(opts.open); }
     if (!opts.sticky) dismiss(box);
   });
@@ -493,6 +515,8 @@ function gotoView(v) {
 }
 function goBack() {
   const v = view;
+  if (v.name === 'pico' && v.lc) { view = { name: 'pico', tab: 'dm' }; render(); return; }
+  if (v.name === 'pico' && v.where) { view = { name: 'pico', tab: 'set' }; render(); return; }
   if (v.th) { view = Object.assign({}, v, { th: null }); if (v.name === 'pico') view.tab = 'dm'; }
   else if (v.id) view = { name: 'mail' };
   else view = { name: 'home' };
@@ -538,7 +562,7 @@ async function runScene(name) {
     FROZEN = true;
     /* 確かめ用：&peek=アプリ:タブ または アプリ:th:相手 で、止めた時点の画面を開く */
     const pk = (QS.get('peek') || '').split(':');
-    if (pk[0]) { const b = $('#banners'); if (b) b.innerHTML = ''; view = pk[1] === 'th' ? { name: pk[0], th: pk[2] } : { name: pk[0], tab: pk[1] }; render(); }
+    if (pk[0]) { const b = $('#banners'); if (b) b.innerHTML = ''; view = pk[1] === 'th' ? { name: pk[0], th: pk[2] } : pk[1] === 'lc' ? { name: pk[0], lc: pk[2] } : pk[1] === 'where' ? { name: pk[0], where: true } : pk[0] === 'mail' ? { name: 'mail', id: pk[1] } : pk[0] === 'protect' ? { name: 'protect' } : { name: pk[0], tab: pk[1] }; render(); }
   }, (Number(QS.get('holdAfter')) || 1) * 1000 / SPEED);
   const steps = SCENES[name];
   for (const step of steps) {
@@ -556,7 +580,7 @@ async function exec(step) {
     case 'msg': await deliver(step); return;
     case 'pause': await sleep(step.s); return;
     case 'notify': banner(step.app, '', fill(step.text), { open: step.th ? { name: step.app, th: step.th } : { name: step.app, tab: 'dm' } }); return;
-    case 'mail': await sleep(step.wait || 0); mails.push({ id: 'm' + mails.length, from: step.mail.from, subject: step.mail.subject, body: step.mail.body, unread: true, t: hm(new Date()), dead: true }); banner('mail', step.mail.from, step.mail.subject, { open: { name: 'mail', id: 'm' + (mails.length - 1) } }); return;
+    case 'mail': await sleep(step.wait || 0); mails.push({ id: 'm' + mails.length, from: step.mail.from, addr: step.mail.addr, subject: step.mail.subject, body: fill(step.mail.body), unread: true, t: hm(new Date()), revert: true }); banner('mail', step.mail.from, step.mail.subject, { open: { name: 'mail', id: 'm' + (mails.length - 1) } }); return;
     case 'set': Object.assign(st, step.v); return;
     case 'open': view = Object.assign({}, step.view); render(); return;
     case 'goto': return { goto: step.to };
@@ -713,20 +737,17 @@ async function race() {
   const far = fill('{遠い都道府県}');
   const momT = thread('pico', 'mom'); momT.name = '母';
   pushMsg('pico', 'mom', { me: true, ghost: true, text: T.s4toMom });
+  setTimeout(() => { pushMsg('pico', 'mom', { me: true, ghost: true, text: T.s4toMom2 }); render(); }, 2500 / SPEED);
   let saved = false, sent = 0, done = false;
   const onPress = () => {
     if (done || st.route) return;
-    $('#overlay').className = 'on modal';
-    $('#overlay').innerHTML = `<div class="dlg"><p>${esc(T.s4confirm)}</p><button class="btn" id="pwgo">${esc(T.s4confirmBtn)}</button><button class="btn sub" id="pwno" style="margin-top:10px">キャンセル</button></div>`;
-    const close = () => { $('#overlay').className = ''; $('#overlay').innerHTML = ''; $('#overlay').onclick = null; };
-    $('#pwgo').onclick = e => { e.stopPropagation(); close(); if (!done) { saved = true; done = true; } };
-    $('#pwno').onclick = e => { e.stopPropagation(); close(); };
-    $('#overlay').onclick = e => { if (e.target.id === 'overlay') close(); };
+    dismiss(raceBanner);
+    gotoView({ name: 'pico', lc: 'ask' });
   };
-  raceAction = { press: onPress, text: T.s4notify.replace('{遠い都道府県}', far) };
-  raceBanner = banner('pico', '', raceAction.text, { sticky: true, button: T.s4button, onButton: onPress });
+  raceAction = { press: onPress, text: T.s4notify.replace('{遠い都道府県}', far), save: () => { if (!done) { saved = true; done = true; } } };
+  raceBanner = banner('pico', '新しいログイン', raceAction.text, { sticky: true, onTap: onPress });
   view = { name: 'pico', tab: 'dm' }; render();
-  if (AUTO) { const p = PICKS.length ? PICKS.shift() : 0; if (p === 0) setTimeout(() => { onPress(); setTimeout(() => $('#pwgo') && $('#pwgo').click(), 200); }, 3500 / SPEED * 4); }
+  if (AUTO) { const p = PICKS.length ? PICKS.shift() : 0; if (p === 0) setTimeout(() => { onPress(); setTimeout(() => { view.lc = 'pw'; render(); setTimeout(() => raceAction && raceAction.save(), 200); }, 200); }, 3500 / SPEED * 4); }
   const t0 = Date.now();
   while (!done) {
     await sleep(0.25);
@@ -735,10 +756,13 @@ async function race() {
     while (sent < want && !done) {
       const k = 'f' + sent; thread('pico', k).name = FRIENDS[sent];
       pushMsg('pico', k, { me: true, ghost: true, text: T.s4toFriend }); sent++; render();
+      /* 少し間をあけて本題。止められたら届かない */
+      setTimeout(() => { if (!saved) { pushMsg('pico', k, { me: true, ghost: true, text: T.s4toFriend2 }); render(); } }, (2 + Math.random() * 2) * 1000 / SPEED);
     }
     if (el >= TIMING.s4.lockout) done = true;
   }
   dismiss(raceBanner); raceBanner = null; raceAction = null;
+  if (view.name === 'pico' && (view.lc || view.where)) view = { name: 'pico', tab: 'dm' };
   st.sentCount = sent;
   if (saved && sent < TIMING.s4.friends) {
     st.route = 'in';
@@ -781,6 +805,7 @@ async function recover() {
     $('#bars').innerHTML = bar(T.lineMom, momLeft.v, TIMING.lines.mom, st.momSaved ? 'saved' : '') + (out ? bar(T.lineFriends, frLeft.v, TIMING.lines.friends, '') : '');
   };
   document.querySelectorAll('.view').forEach(v => v.classList.add('withBars'));
+  if (AUTO && QS.has('revert')) setTimeout(() => { st.reverted = true; st.picoLocked = false; tlog('reverted'); }, 4000 / SPEED);
   const acts = [{ id: 'mom', label: T.act.mom }];
   if (out) acts.push({ id: 'friend', label: T.act.friend });
   acts.push({ id: 'mail', label: T.act.mail });
@@ -850,6 +875,7 @@ async function recover() {
   const timer = setInterval(() => {
     const now = Date.now(); const dt = FROZEN ? 0 : (now - last) * SPEED / 1000; last = now;
     if (!st.momSaved && !momDone) { momLeft.v -= dt; if (momLeft.v <= 0) { st.momPaid = true; momDone = true; } }
+    if (st.reverted && frLeft.v > 0) { frLeft.v = 0; const ap = tray && tray.find(a => a.id === 'apply'); if (ap) ap.off = true; }
     if (out && frLeft.v > 0) {
       frLeft.v -= dt * speed;
       const left = receivers.filter(i => !st.notified.has(i) && !st.paid.has(i));
@@ -925,7 +951,7 @@ async function ending() {
   edge.innerHTML = `<span>${esc(fill(T.edge).replace('{n}', n))}</span><button id="edgeNext">›</button>`;
   await new Promise(r => { $('#edgeNext').onclick = r; setTimeout(r, TIMING.endingHold * 1000 / SPEED); });
   edge.className = ''; edge.innerHTML = '';
-  if (st.applied) {
+  if (st.applied && !st.reverted) {
     $('#overlay').className = 'on black'; $('#overlay').textContent = T.later; await sleep(2);
     $('#overlay').className = ''; $('#overlay').textContent = '';
     st.picoLocked = false;
@@ -983,7 +1009,7 @@ async function advice() {
     <details><summary>${esc(UI.more)}</summary><ul>${T.s11more.map(x => `<li>${esc(x)}</li>`).join('')}</ul></details>
     <p style="font-size:11px;color:var(--sub);margin-top:18px">${esc(T.credit)}</p><button class="btn sub" data-act="erase">${esc(T.erase)}</button><button class="btn" data-act="again">${esc(T.again2)}</button></div></div>`;
   view = { name: 'doc', html }; render();
-  tlog('END', JSON.stringify({ route: st.route, sent: st.sentCount, paid: st.friendsPaid, momSaved: st.momSaved, applied: st.applied, mailPw: st.mailPw }));
+  tlog('END', JSON.stringify({ route: st.route, sent: st.sentCount, paid: st.friendsPaid, momSaved: st.momSaved, applied: st.applied, mailPw: st.mailPw, reverted: !!st.reverted }));
 }
 
 /* ---------- 裏にいるとき ---------- */
@@ -1022,6 +1048,12 @@ document.addEventListener('click', e => {
     case 'pwRow': if (view.fromLeak || st.leakFixed) { view.confirm = true; render(); } break;
     case 'pwDo': view.confirm = false; view.pwDone = true; if (view.fromLeak && !st.leakFixed) { st.leakFixed = true; leakAnsweredThen(); } render(); break;
     case 'pwCancel': view.confirm = false; render(); break;
+    case 'loginWhere': gotoView({ name: 'pico', where: true }); break;
+    case 'lcNo': view.lc = 'pw'; render(); break;
+    case 'lcYes': view = { name: 'pico', tab: 'dm' }; render(); break;
+    case 'lcPw': if (raceAction) raceAction.save(); view = { name: 'pico', tab: 'dm' }; render(); break;
+    case 'revertOpen': if (!st.reverted) gotoView({ name: 'protect' }); break;
+    case 'revertDo': st.reverted = true; st.picoLocked = false; tlog('reverted'); render(); break;
     case 'choose': choose(Number(arg)); break;
     case 'trayPick': pickTray(Number(arg)); break;
     case 'inline': { const t = threads[view.name] && threads[view.name][view.th]; if (t && t.inline && t.inline[arg]) t.inline[arg].f(); break; }
