@@ -499,3 +499,6 @@ button { font-family: inherit; }
 .rine .msg.cont { margin-top: 4px; }
 .rine .msg.cont .av { visibility: hidden; height: 0; }
 .rine .msg.cont .bb { border-radius: 18px; }.igBadge { top: -9px; right: -11px; }
+.igPost img.ph { object-fit: cover; height: auto; }
+.msg .bb.img img.ph { display: block; width: 210px; max-width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 14px; }
+.ig .msg .bb.img { padding: 0; border: 0; background: none; }
