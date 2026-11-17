@@ -170,6 +170,21 @@ function msgHTML(app, t, m) {
   else if (m.img) bb = `<div class="bb img">${(SVG[m.img] || '').replace('>ソウタ<', '>' + esc(myName()) + '<')}</div>`;
   else if (m.face) bb = `<div class="bb img"><div class="camslot" style="width:120px;height:120px;margin:0;border-width:2px" data-face="1"></div></div>`;
   else bb = `<div class="bb">${esc(fill(m.text))}</div>`;
+  if (app === 'kotori') {
+    const idx = t.msgs.indexOf(m);
+    const read = me && t.msgs.slice(idx + 1).some(x => !x.me && !x.typing && !x.sys);
+    const side = `<span class="tm">${read ? '既読<br>' : ''}${esc(m.tm || '')}</span>`;
+    /* 本物と同じく、同じ人が続くときは顔としっぽを最初の1つにだけ */
+    const pv = t.msgs[idx - 1];
+    const cont = pv && !pv.sys && !pv.unsent && !!pv.me === !!me ? ' cont' : '';
+    return me ? `<div class="msg me${cont}">${side}${bb}</div>` : `<div class="msg${cont}">${av}${bb}${side}</div>`;
+  }
+  if (app === 'pico') {
+    /* 本物と同じく、同じ人が続くときは顔を最後の1つにだけ出す */
+    const nx = t.msgs[t.msgs.indexOf(m) + 1];
+    const tail = !nx || !!nx.me !== !!me || nx.sys || nx.unsent;
+    return `<div class="msg${me ? ' me' : ''}${tail ? '' : ' cont'}">${av}${bb}</div>`;
+  }
   return `<div class="msg${me ? ' me' : ''}">${av}${bb}<span class="tm">${esc(m.tm || '')}</span></div>`;
 }
 function inlineHTML(app, th) {
@@ -211,32 +226,94 @@ function renderS0() {
   const ios = deviceKind() === 'iPhone' && !navigator.standalone;
   return `<div class="view s0"><div class="inner">${saved ? `<div class="resume"><span>${esc(UI.resume)}</span><button data-act="resume">${esc(UI.goOn)}</button></div>` : ''}<button class="mode" data-act="mode" data-arg="normal"><b>${esc(T.s0.normal.label)}</b><span>${esc(T.s0.normal.desc)}</span></button><button class="mode real" data-act="mode" data-arg="real"><b>${esc(T.s0.real.label)}</b><span>${esc(T.s0.real.desc)}</span></button>${ios ? `<p style="font-size:13px;line-height:1.7;color:#9aa0ab;margin-top:6px">${esc(UI.iosFull)}</p>` : ''}</div></div>`;
 }
+/* ---------- インスタグラフとRINEは、本物のアプリの画面の作りに寄せる（11/17 本人「めっちゃ似せて」）。ロゴは写さない ---------- */
+const IC = {
+  heart: '<svg viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-10.2A4.2 4.2 0 0 1 12 7.3a4.2 4.2 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>',
+  plane: '<svg viewBox="0 0 24 24"><path d="M21.5 3 2.8 9.6l7.4 3 3 7.4z M10.2 12.6 21.5 3" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>',
+  home: '<svg viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7V20.5h-5.5v-6h-6v6H3.5z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>',
+  homeOn: '<svg viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7V20.5h-5.5v-6h-6v6H3.5z" fill="currentColor" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>',
+  search: '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.8" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M15.6 15.6 21 21" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>',
+  plus: '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>',
+  reel: '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M3.5 8.5h17M8.5 3.5l3 5M14 3.5l3 5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10.5 12v5l4.2-2.5z" fill="currentColor"/></svg>',
+  bubble: '<svg viewBox="0 0 24 24"><path d="M20.3 16.4A8.5 8.5 0 1 0 17 19.6l4 1.2z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>',
+  save: '<svg viewBox="0 0 24 24"><path d="M6 3.5h12v17l-6-5-6 5z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>',
+  phone: '<svg viewBox="0 0 24 24"><path d="M6.6 3.6 9 3.2l2 4.8-2.2 1.5a11 11 0 0 0 5.7 5.7L16 13l4.8 2-.4 2.4c-.3 1.5-1.6 2.5-3.1 2.4C10.4 19.4 4.6 13.6 4.2 6.7 4.1 5.2 5.1 3.9 6.6 3.6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  video: '<svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="13" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m15.5 10.5 6-3.5v10l-6-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  camera: '<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+  image: '<svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="9" cy="10" r="1.8" fill="currentColor"/><path d="m4 18 5-5 4 4 3-3 4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+  mic: '<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+  edit: '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  menu: '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>',
+  plus2: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  back: '<svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="19" cy="12" r="1.7" fill="currentColor"/></svg>'
+};
+function igAv(th, size) {
+  const name = th === 'me' ? myName() : (PEOPLE[th] || th);
+  const bg = th === 'me' ? '#c9a38f' : (COLORS[th] || '#999');
+  return `<span class="igav" style="width:${size}px;height:${size}px;background:${bg};font-size:${Math.round(size * 0.4)}px">${esc(String(name).slice(0, 1))}</span>`;
+}
+/* 「心当たりがない」は、通知を消しても、どの画面からも押せるように上に出す */
+const raceRow = () => raceAction ? `<div class="setrow igAlert" data-act="loginAlert"><span>${esc(raceAction.text)}</span><button class="btn">${esc(T.s4button)}</button></div>` : '';
+/* 一覧の表示は「入力中…」ではなく、最後に届いた本物のメッセージで */
+const lastReal = t => t.msgs.slice().reverse().find(x => !x.typing) || t.msgs[t.msgs.length - 1];
+/* インスタの一覧は「今」「3分」のように、経った時間で出す */
+function ago(m) {
+  if (!m || !m.tm) return '';
+  const [h, mi] = m.tm.split(':').map(Number); const now = new Date();
+  let d = now.getHours() * 60 + now.getMinutes() - (h * 60 + mi); if (d < 0) d += 1440;
+  return d < 1 ? '今' : d < 60 ? d + '分' : Math.floor(d / 60) + '時間';
+}
 function renderPico() {
   const v = view;
   if (st.picoLocked && !v.th) {
     const sup = (v.support || []).map(x => x === 'id' ? `<div class="bb">${SVG.idcard}</div>` : x === 'submit' ? `<button class="btn pico" data-act="submitId">${esc(T.submit)}</button>` : `<div class="bb">${esc(x)}</div>`).join('');
-    return `<div class="view pico">${head(UI.apps.pico, true)}<div class="locked"><div class="big">${esc(T.s5locked)}</div><div class="fake"></div><div class="fake"></div><div class="support">${sup}</div></div>${homebar()}</div>`;
+    return `<div class="view pico ig"><div class="pad44"></div><div class="igTop"><span class="igLogo">Instagraph</span></div><div class="locked"><div class="big">${esc(T.s5locked)}</div><div class="fake"></div><div class="fake"></div><div class="support">${sup}</div></div>${homebar()}</div>`;
   }
   if (v.th) {
     const t = thread('pico', v.th);
-    return `<div class="view pico">${head(t.name, true)}<div class="chat">${t.msgs.map(m => msgHTML('pico', t, m)).join('')}${inlineHTML('pico', v.th)}</div>${homebar()}</div>`;
+    return `<div class="view pico ig"><div class="pad44"></div><div class="igChatHead"><button class="igIcon" data-act="back">${IC.back}</button>${igAv(v.th, 32)}<div class="igChatName"><b>${esc(t.name)}</b><span>Instagraph</span></div><span class="igIcon">${IC.phone}</span><span class="igIcon">${IC.video}</span></div><div class="chat">${t.msgs.map(m => msgHTML('pico', t, m)).join('')}${inlineHTML('pico', v.th)}</div><div class="igInput"><span class="igCam">${IC.camera}</span><span class="igPh">メッセージ...</span><span class="igIcon sm">${IC.mic}</span><span class="igIcon sm">${IC.image}</span></div>${homebar()}</div>`;
   }
   const tab = v.tab || 'feed';
-  let body = '';
-  if (tab === 'feed') {
-    body = `<div class="prof"><div class="av"></div><div><div class="nm">${esc(myName())}</div><div class="sb">投稿 ${T.picoPosts.length}　フォロワー 54</div></div></div>` +
-      T.picoPosts.slice().reverse().map(p => `<div class="post">${SVG[p.img]}<div class="cap">${esc(p.text)}${p.tag ? `<small>${esc(p.tag)}</small>` : ''}</div></div>`).join('');
-  } else if (tab === 'dm') {
+  if (tab === 'dm') {
     const list = Object.values(threads.pico).filter(t => t.msgs.length).sort((a, b) => b.t - a.t);
-    body = list.map(t => { const last = t.msgs[t.msgs.length - 1]; const ghost = last && last.ghost; return `<div class="row${t.unread ? ' unread' : ''}${ghost ? ' ghost' : ''}" data-act="th" data-arg="${t.th}"><span class="av" style="background:${COLORS[t.th] || '#888'}">${esc(t.name.slice(0, 1))}</span><div class="mid"><div class="nm">${esc(t.name)}</div><div class="pv${ghost ? ' red' : ''}">${esc(last ? (last.unsent ? T.unsent : last.link ? UI.voteTitle : (last.me ? 'あなた：' : '') + fill(last.text || '')) : '')}</div></div><span class="tm">${esc(last ? last.tm : '')}</span></div>`; }).join('');
-  } else {
-    if (v.confirm) body = `<div class="confirm"><p>${esc(T.s4confirm)}</p><button class="btn pico" data-act="pwDo">${esc(T.s4confirmBtn)}</button><button class="btn sub" data-act="pwCancel">${esc(UI.back)}</button></div>`;
-    else body = (raceAction ? `<div class="setrow" data-act="loginAlert" style="flex-direction:column;gap:8px"><span style="color:var(--danger)">${esc(raceAction.text)}</span><button class="btn" style="padding:10px">${esc(T.s4button)}</button></div>` : '') + `<div class="setrow" data-act="pwRow"><span>${esc(UI.pwRow)}</span><span>›</span></div><div class="setrow dim"><span>通知</span><span>オン</span></div><div class="setrow dim"><span>2段階認証</span><span>オフ</span></div>` + (v.pwDone ? `<div class="sysline">${esc(UI.pwDone)}</div>` : '');
+    const rows = list.map(t => {
+      const last = lastReal(t); const ghost = last && last.ghost;
+      const pv = last ? (last.unsent ? T.unsent : last.link ? 'リンクを送信しました' : last.img ? '写真を送信しました' : (last.me ? 'あなた: ' : '') + fill(last.text || '')) : '';
+      return `<div class="igRow${t.unread ? ' unread' : ''}${ghost ? ' ghost' : ''}" data-act="th" data-arg="${t.th}">${igAv(t.th, 54)}<div class="mid"><div class="nm">${esc(t.name)}</div><div class="pv${ghost ? ' red' : ''}"><span class="txt">${esc(pv)}</span><span class="ago"> · ${esc(ago(last))}</span></div></div>${t.unread ? '<span class="igDot"></span>' : `<span class="igIcon sm dim">${IC.camera}</span>`}</div>`;
+    }).join('');
+    return `<div class="view pico ig"><div class="pad44"></div><div class="igChatHead"><button class="igIcon" data-act="ptab" data-arg="feed">${IC.back}</button><div class="igChatName"><b>${esc(myName())}</b></div><span class="igIcon">${IC.edit}</span></div><div class="scroll">${raceRow()}<div class="igSearch">${IC.search}<span>検索</span></div><div class="igSub"><b>メッセージ</b><span>リクエスト</span></div>${rows}</div>${homebar()}</div>`;
   }
-  return `<div class="view pico">${head('Instagraph', false, 'logo')}<div class="scroll">${body}</div><div class="ptabs">${['feed', 'dm', 'set'].map((k, i) => `<button class="${tab === k ? 'on' : ''}" data-act="ptab" data-arg="${k}">${esc(UI.picoTabs[i])}${k === 'dm' && badge('pico') ? ` (${badge('pico')})` : ''}</button>`).join('')}</div>${homebar()}</div>`;
+  let body = '';
+  if (tab === 'set') {
+    const prof = `<div class="igProf">${igAv('me', 80)}<div class="igNums"><div><b>${T.picoPosts.length}</b><span>投稿</span></div><div><b>54</b><span>フォロワー</span></div><div><b>61</b><span>フォロー中</span></div></div></div><div class="igBio"><b>${esc(myName())}</b></div>`;
+    if (v.confirm) body = prof + `<div class="confirm"><p>${esc(T.s4confirm)}</p><button class="btn pico" data-act="pwDo">${esc(T.s4confirmBtn)}</button><button class="btn sub" data-act="pwCancel">${esc(UI.back)}</button></div>`;
+    else body = prof + raceRow() + `<div class="igSetHead">設定とアクティビティ</div><div class="setrow" data-act="pwRow"><span>${esc(UI.pwRow)}</span><span>›</span></div><div class="setrow dim"><span>通知</span><span>オン</span></div><div class="setrow dim"><span>2段階認証</span><span>オフ</span></div>` + (v.pwDone ? `<div class="sysline">${esc(UI.pwDone)}</div>` : '');
+  } else {
+    const ppl = ['me', 'yuto', 'riko', 'kai', 'f3', 'f4', 'f5'];
+    const stories = ppl.map((k, n) => `<div class="igStory${n === 0 ? ' mine' : ''}"><span class="ring">${igAv(k, 60)}</span><span class="nm">${esc(n === 0 ? 'ストーリーズ' : (PEOPLE[k] || ''))}</span></div>`).join('');
+    const likes = [12, 31, 8, 17];
+    const posts = T.picoPosts.slice().reverse().map((p, n) => `<div class="igPost"><div class="igPostHead">${igAv('me', 32)}<b>${esc(myName())}</b><span class="igIcon sm right">${IC.more}</span></div>${SVG[p.img].replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" ')}<div class="igActs"><span class="igIcon">${IC.heart}</span><span class="igIcon">${IC.bubble}</span><span class="igIcon">${IC.plane}</span><span class="igIcon right">${IC.save}</span></div><div class="igLikes">「いいね！」${likes[n % likes.length]}件</div><div class="igCap"><b>${esc(myName())}</b> ${esc(p.text)}${p.tag ? `<span class="igTag">${esc(p.tag)}</span>` : ''}</div></div>`).join('');
+    body = raceRow() + `<div class="igStories">${stories}</div>${posts}`;
+  }
+  const n = badge('pico');
+  const nav = `<div class="igNav"><button class="igIcon" data-act="ptab" data-arg="feed">${tab === 'feed' ? IC.homeOn : IC.home}</button><span class="igIcon">${IC.search}</span><span class="igIcon">${IC.plus}</span><span class="igIcon">${IC.reel}</span><button class="igIcon me${tab === 'set' ? ' on' : ''}" data-act="ptab" data-arg="set">${igAv('me', 26)}</button></div>`;
+  const top = tab === 'set'
+    ? `<div class="igTop"><span class="igUser">${esc(myName())}</span><span class="igIcon right">${IC.plus}</span><span class="igIcon">${IC.menu}</span></div>`
+    : `<div class="igTop"><span class="igLogo">Instagraph</span><span class="igIcon right">${IC.heart}</span><button class="igIcon dm" data-act="ptab" data-arg="dm">${IC.plane}${n ? `<span class="igBadge">${n}</span>` : ''}</button></div>`;
+  return `<div class="view pico ig"><div class="pad44"></div>${top}<div class="scroll">${body}</div>${nav}${homebar()}</div>`;
 }
 function renderChatApp(app) {
   const v = view;
+  if (app === 'kotori') {
+    if (v.th) {
+      const t = thread(app, v.th);
+      return `<div class="view kotori rine"><div class="pad44"></div><div class="rineHead"><button class="igIcon" data-act="back">${IC.back}</button><b>${esc(t.name)}</b><span class="igIcon">${IC.search}</span><span class="igIcon">${IC.phone}</span><span class="igIcon">${IC.menu}</span></div><div class="chat">${t.msgs.map(m => msgHTML(app, t, m)).join('')}${inlineHTML(app, v.th)}</div><div class="rineInput"><span class="igIcon sm">${IC.plus2}</span><span class="igIcon sm">${IC.camera}</span><span class="igIcon sm">${IC.image}</span><span class="rinePh">Aa</span><span class="igIcon sm">${IC.mic}</span></div>${homebar()}</div>`;
+    }
+    const list = Object.values(threads[app]).filter(t => t.msgs.length).sort((a, b) => b.t - a.t);
+    const rows = list.map(t => { const last = lastReal(t); return `<div class="rineRow" data-act="th" data-arg="${t.th}">${igAv(t.th, 50)}<div class="mid"><div class="nm">${esc(t.name)}</div><div class="pv">${esc(last.img ? '写真を送信しました' : fill(last.text || ''))}</div></div><div class="rineSide"><span>${esc(last.tm || '')}</span>${t.unread ? `<span class="rineCount">${t.unread}</span>` : ''}</div></div>`; }).join('');
+    return `<div class="view kotori rine"><div class="pad44"></div><div class="rineListHead"><b>トーク</b><span class="igIcon right">${IC.search}</span><span class="igIcon">${IC.edit}</span></div><div class="scroll">${rows}</div><div class="rineNav"><span>ホーム</span><span class="on">トーク</span><span>VOOM</span><span>ニュース</span><span>ウォレット</span></div>${homebar()}</div>`;
+  }
   if (v.th) {
     const t = thread(app, v.th);
     return `<div class="view ${app}">${head(t.name, true)}<div class="chat">${t.msgs.map(m => msgHTML(app, t, m)).join('')}${inlineHTML(app, v.th)}</div>${homebar()}</div>`;
@@ -449,7 +526,12 @@ async function runScene(name) {
   st.scene = name; saveProgress(); tlog('scene', name);
   /* 出来事と出来事のあいだに間をあける（何が起きたか確かめられるように） */
   if (['S3', 'S4', 'S4safe', 'S5', 'S6', 'S7', 'S8', 'END'].includes(name)) await sleep(3.5);
-  if (QS.get('hold') === name) setTimeout(() => { FROZEN = true; }, (Number(QS.get('holdAfter')) || 1) * 1000 / SPEED);
+  if (QS.get('hold') === name) setTimeout(() => {
+    FROZEN = true;
+    /* 確かめ用：&peek=アプリ:タブ または アプリ:th:相手 で、止めた時点の画面を開く */
+    const pk = (QS.get('peek') || '').split(':');
+    if (pk[0]) { const b = $('#banners'); if (b) b.innerHTML = ''; view = pk[1] === 'th' ? { name: pk[0], th: pk[2] } : { name: pk[0], tab: pk[1] }; render(); }
+  }, (Number(QS.get('holdAfter')) || 1) * 1000 / SPEED);
   const steps = SCENES[name];
   for (const step of steps) {
     const r = await exec(step);

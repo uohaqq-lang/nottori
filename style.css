@@ -386,3 +386,116 @@ button { font-family: inherit; }
 @keyframes lockIn { from { transform: translateY(-14px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
 .lock .lcard .b { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .ban { touch-action: none; transition: transform .15s ease-out, opacity .15s; }
+
+/* ===== インスタグラフ：本物の写真SNSの画面の作りに寄せる（11/17） ===== */
+.ig { background: #fff; color: #111; }
+.ig .igIcon, .rine .igIcon { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; background: none; padding: 0; color: #111; cursor: pointer; position: relative; flex: none; }
+.ig .igIcon svg, .rine .igIcon svg { width: 26px; height: 26px; }
+.ig .igIcon.sm svg, .rine .igIcon.sm svg { width: 22px; height: 22px; }
+.igIcon.right { margin-left: auto; }
+.ig .igIcon.dim { color: #8e8e8e; }
+.igTop { flex: none; display: flex; align-items: center; gap: 16px; padding: 4px 14px 8px; background: #fff; }
+.igLogo { font-family: "Segoe Script", "Brush Script MT", "Snell Roundhand", cursive; font-size: 27px; font-weight: 600; letter-spacing: -.01em; }
+.igUser { font-size: 21px; font-weight: 700; }
+.igBadge { position: absolute; top: -4px; right: -7px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #ff3040; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-sizing: content-box; }
+.igav { border-radius: 50%; flex: none; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; }
+.igStories { display: flex; gap: 12px; overflow-x: auto; padding: 6px 12px 12px; border-bottom: 1px solid #efefef; scrollbar-width: none; }
+.igStories::-webkit-scrollbar { display: none; }
+.igStory { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: none; width: 70px; }
+.igStory .ring { padding: 2.5px; border-radius: 50%; background: linear-gradient(45deg, #f9ce34, #ee2a7b 55%, #6228d7); display: inline-flex; }
+.igStory .ring .igav { border: 3px solid #fff; }
+.igStory.mine .ring { background: #dbdbdb; padding: 1px; }
+.igStory .nm { font-size: 11.5px; color: #262626; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70px; }
+.igPost { background: #fff; padding-bottom: 14px; }
+.igPostHead { display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: 14px; }
+.igPost .ph { display: block; width: 100%; aspect-ratio: 1 / 1; }
+.igActs { display: flex; align-items: center; gap: 12px; padding: 8px 10px 2px; }
+.igLikes { font-size: 14px; font-weight: 700; padding: 2px 14px; }
+.igCap { font-size: 14px; padding: 3px 14px; line-height: 1.45; }
+.igTag { color: #00376b; margin-left: 4px; }
+.igNav { flex: none; display: flex; justify-content: space-around; align-items: center; padding: 8px 0 6px; border-top: 1px solid #efefef; background: #fff; }
+.igNav .me .igav { outline: 2px solid transparent; outline-offset: 1px; }
+.igNav .me.on .igav { outline-color: #111; }
+.ig .igAlert { flex-direction: column; gap: 8px; background: #fff5f5; }
+.igAlert > span { color: var(--danger); }
+.igAlert .btn { padding: 10px; }
+/* DMの一覧 */
+.igChatHead { flex: none; display: flex; align-items: center; gap: 10px; padding: 4px 12px 8px; border-bottom: 1px solid #efefef; background: #fff; }
+.igChatName { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.igChatName b { font-size: 16px; }
+.igChatName span { font-size: 12px; color: #737373; }
+.igSearch { display: flex; align-items: center; gap: 8px; margin: 10px 14px 4px; padding: 8px 12px; border-radius: 10px; background: #efefef; color: #8e8e8e; font-size: 15px; }
+.igSearch svg { width: 18px; height: 18px; }
+.igSub { display: flex; justify-content: space-between; padding: 12px 16px 6px; font-size: 16px; }
+.igSub span { color: #8e8e8e; font-size: 14px; font-weight: 600; }
+.igRow { display: flex; align-items: center; gap: 12px; padding: 8px 16px; cursor: pointer; }
+.igRow .mid { flex: 1; min-width: 0; }
+.igRow .nm { font-size: 14.5px; }
+.igRow .pv { display: flex; font-size: 14px; color: #737373; margin-top: 2px; white-space: nowrap; }
+.igRow .pv .txt { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.igRow .pv .ago { flex: none; }
+.igRow.unread .nm, .igRow.unread .pv { font-weight: 700; color: #111; }
+.igRow .pv.red .txt { color: var(--danger); }
+.igRow.ghost { animation: slideIn .35s ease-out; }
+.igDot { width: 9px; height: 9px; border-radius: 50%; background: #0095f6; flex: none; }
+/* DMの会話 */
+.ig .chat { background: #fff; padding: 14px 12px 8px; }
+.ig .msg { margin: 2px 0; gap: 8px; }
+.ig .msg .av { width: 26px; height: 26px; font-size: 11px; }
+.ig .msg .bb { background: #efefef; color: #111; border-radius: 22px; box-shadow: none; padding: 9px 14px; }
+.pico.ig .msg.me .bb { background: linear-gradient(135deg, #7638fa, #5b51d8 45%, #3b6cf5); color: #fff; }
+.ig .msg .bb.img, .ig .msg .bb.link, .pico.ig .msg.me .bb.img { background: #fff; border: 1px solid #efefef; border-radius: 18px; color: #111; }
+.ig .msg.me + .msg:not(.me), .ig .msg:not(.me) + .msg.me { margin-top: 12px; }
+.ig .msg.unsent .bb { background: none; border: 0; color: #8e8e8e; }
+.ig .inline { margin-left: 34px; }
+.igInput { flex: none; display: flex; align-items: center; gap: 10px; margin: 6px 10px; padding: 5px 8px 5px 5px; border-radius: 24px; background: #efefef; }
+.igCam { width: 32px; height: 32px; border-radius: 50%; background: #3797f0; color: #fff; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.igCam svg { width: 19px; height: 19px; }
+.igPh { flex: 1; color: #8e8e8e; font-size: 15px; }
+/* プロフィール */
+.igProf { display: flex; align-items: center; gap: 22px; padding: 12px 16px 6px; }
+.igNums { flex: 1; display: flex; justify-content: space-around; text-align: center; }
+.igNums b { display: block; font-size: 17px; }
+.igNums span { font-size: 13px; }
+.igBio { padding: 2px 16px 12px; font-size: 14px; border-bottom: 1px solid #efefef; }
+.igSetHead { padding: 16px 18px 6px; font-size: 13px; color: #737373; font-weight: 600; }
+.ig .setrow { background: #fff; border-color: #f3f3f3; }
+
+/* ===== RINE：本物のメッセージアプリの画面の作りに寄せる（11/17） ===== */
+.rine { background: #fff; color: #111; }
+.rineListHead { flex: none; display: flex; align-items: center; gap: 14px; padding: 4px 16px 10px; }
+.rineListHead b { font-size: 22px; }
+.rineRow { display: flex; align-items: center; gap: 12px; padding: 9px 16px; cursor: pointer; }
+.rineRow .igav { border-radius: 40%; }
+.rineRow .mid { flex: 1; min-width: 0; }
+.rineRow .nm { font-size: 15.5px; font-weight: 700; }
+.rineRow .pv { font-size: 13px; color: #8a8a8a; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rineSide { flex: none; align-self: stretch; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding-top: 4px; font-size: 11px; color: #a0a0a0; }
+.rineCount { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: #06c755; color: #fff; font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+.rineNav { flex: none; display: flex; justify-content: space-around; padding: 9px 0 7px; border-top: 1px solid #ececec; font-size: 10.5px; color: #9a9a9a; }
+.rineNav .on { color: #111; font-weight: 700; }
+.rineHead { flex: none; display: flex; align-items: center; gap: 12px; padding: 4px 12px 8px; color: #111; background: #fff; border-bottom: 1px solid #e6e6e6; }
+.rineHead b { flex: 1; min-width: 0; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rine .chat { background: #7494c0; padding: 14px 10px 8px; }
+.rine .msg { margin: 9px 0; gap: 6px; align-items: flex-end; }
+.rine .msg .av { width: 36px; height: 36px; border-radius: 40%; font-size: 14px; align-self: flex-start; }
+.rine .msg .bb { background: #fff; color: #111; border-radius: 18px; box-shadow: none; max-width: 68%; }
+.rine .msg:not(.me) .bb { border-top-left-radius: 4px; }
+.kotori.rine .msg.me .bb { background: #8de055; border-top-right-radius: 4px; }
+.rine .msg .tm { color: #eef2f8; font-size: 10px; line-height: 1.3; text-align: right; }
+.rine .msg:not(.me) .tm { text-align: left; }
+.rine .msg.unsent .bb { background: none; color: #eef2f8; }
+.rine .sysline { color: #eef2f8; }
+.rine .inline { margin-left: 42px; }
+.rineInput { flex: none; display: flex; align-items: center; gap: 10px; padding: 7px 12px; color: #5a5a5a; background: #fff; border-top: 1px solid #e6e6e6; }
+.rinePh { flex: 1; padding: 7px 12px; border-radius: 18px; background: #f2f2f2; color: #a0a0a0; font-size: 14px; }
+.ig .msg.cont .av { visibility: hidden; }
+.ig .msg .bb.link { padding: 0; overflow: hidden; }
+.ig .msg .bb.link .lk { padding: 10px 14px; }
+
+.rine .msg .bb { position: relative; }
+.rine .msg:not(.cont):not(.me) .bb:not(.img):not(.link)::before { content: ""; position: absolute; top: 0; left: -7px; border-top: 11px solid #fff; border-left: 11px solid transparent; }
+.kotori.rine .msg.me:not(.cont) .bb:not(.img)::before { content: ""; position: absolute; top: 0; right: -7px; border-top: 11px solid #8de055; border-right: 11px solid transparent; }
+.rine .msg.cont { margin-top: 4px; }
+.rine .msg.cont .av { visibility: hidden; height: 0; }
+.rine .msg.cont .bb { border-radius: 18px; }.igBadge { top: -9px; right: -11px; }
