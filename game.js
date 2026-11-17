@@ -710,10 +710,33 @@ async function recover() {
       view = prev; render();
       momStage = 1;
       const i = await askTray([{ label: T.again }, { label: T.writeKotori }]);
-      if (i === 1) { pushMsg('kotori', 'mom', { me: true, text: T.kotoriToMom }); render(); await sleep(TIMING.s8.callback); }
+      if (i === 1) { view = { name: 'kotori', th: 'mom' }; pushMsg('kotori', 'mom', { me: true, text: T.kotoriToMom }); render(); rineQuiz(); return; }
       return momConversation();
     }
     return momConversation(true);
+  };
+  let rineAsked = false;
+  /* RINEで母に知らせる：既読がついて、母が確かめてくる。そのあいだ、ほかの手も打てる */
+  const rineQuiz = async () => {
+    if (rineAsked) return; rineAsked = true;
+    await sleep(10 + Math.random() * 8);
+    if (st.momSaved || momDone) return;
+    for (const l of T.momRineAsk) await deliver({ app: 'kotori', th: 'mom', who: '母', text: l, wait: 1.5 });
+    if (st.momSaved || momDone) return;
+    const t = thread('kotori', 'mom');
+    const answer = async k => {
+      t.inline = null; pushMsg('kotori', 'mom', { me: true, text: T.momQuiz[k].replace(/[「」]/g, '') }); render();
+      if (k === 0) {
+        for (const l of T.momRineRight) await deliver({ app: 'kotori', th: 'mom', who: '母', text: l, wait: 2 });
+        st.momSaved = true; momDone = true; drawBars();
+      } else {
+        await deliver({ app: 'kotori', th: 'mom', who: '母', text: T.momRineWrong, wait: 2 });
+        momLeft.v -= TIMING.s8.orePenalty; drawBars();
+      }
+    };
+    t.inline = T.momQuiz.map((label, k) => ({ label, f: () => answer(k) }));
+    render();
+    if (AUTO) setTimeout(() => { if (t.inline) answer(0); }, 400);
   };
   const momConversation = async (already) => {
     if (st.momSaved || momLeft.v <= 0) return;
