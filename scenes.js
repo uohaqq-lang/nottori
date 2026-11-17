@@ -127,13 +127,13 @@ const T = {
   writeKotori: 'RINEで書く',
   kotoriToMom: 'インスタカム乗っ取られた、買わないで',
   momCall: [
-    'ソウタ？　インスタカムのソウタが、「俺のふりして電話してくる人がいるから出ないで」って…',
+    '{名前}？　インスタカムの{名前}が、「俺のふりして電話してくる人がいるから出ないで」って…',
     '声も今は真似できるってテレビで言ってたし…'
   ],
   replyOre: '「俺だよ、インスタカムが乗っ取られた」',
   replyLetter: '「おばあちゃんの手紙、まだ読んでない」',
   momAfterOre: '……とりあえず、お父さんに聞いてみる',
-  momAfterLetter: ['……ソウタだ。', '今レジの前。やめとく'],
+  momAfterLetter: ['……{名前}だ。', '今レジの前。やめとく'],
   support: [
     'お問い合わせを受け付けました',
     '本人確認のため、身分証の画像をこの画面から提出してください',
@@ -150,7 +150,7 @@ const T = {
   /* 結末 */
   endA: 'コンビニの人にも、詐欺かもって言われた',
   endB: '番号送ったよ。あとで電話してね',
-  edge: 'ソウタだと思って、カードの番号を送った友だち {n}人',
+  edge: '{名前}だと思って、カードの番号を送った友だち {n}人',
   later: '4日後',
   restored: 'アカウントを元に戻しました。',
 
@@ -162,7 +162,7 @@ const T = {
   twoStep: '2段階認証：なし',
   failed3: 'ログイン失敗 3回',
   friends54: '友だち 54人',
-  lastIn: 'ソウタ → 知らない人：久しぶり〜元気？　ごめん番号ミスってそっちにコード行っちゃった',
+  lastIn: '{名前} → 知らない人：久しぶり〜元気？　ごめん番号ミスってそっちにコード行っちゃった',
   lastSafe: 'ミサキ → リコ：久しぶり〜元気？　ごめん番号ミスってそっちにコード行っちゃった',
 
   /* S10 */
@@ -211,6 +211,9 @@ const UI = {
   title: '乗っ取り',
   inGame: 'ゲーム内',
   pcLead: 'スマホで遊ぶと本物になります',
+  nameLabel: 'あなたの呼ばれ方（あだ名でも）',
+  namePh: 'ソウタ',
+  nameNote: '入れた名前は、このスマホの外に出ません。',
   iosFull: 'iPhoneは、共有ボタン →「ホーム画面に追加」から開くと、画面いっぱいで遊べます。',
   back: '戻る',
   ok: 'OK',
@@ -263,7 +266,7 @@ const SCENES = {
 
   S2: [
     { do: 'notify', app: 'pico', text: 'ミサキさんからメッセージ', th: 'misaki' },
-    { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', text: 'ソウタ久しぶり〜元気？', wait: 2, quiet: true },
+    { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', text: '{名前}久しぶり〜元気？', wait: 2, quiet: true },
     { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', text: 'ごめん番号ミスってそっちにコード行っちゃった', wait: 3 },
     { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', text: '届いてたら教えてくれない？🙏', wait: 2 },
     { do: 'msg', app: 'sms', th: 'picosms', who: 'インスタカム', text: T.sms1, wait: 1 },
@@ -300,7 +303,7 @@ const SCENES = {
     { do: 'pause', s: TIMING.s4safeAgain },
     { do: 'notify', app: 'pico', text: 'ログインに失敗しました（{遠い都道府県}）' },
     { do: 'msg', app: 'kotori', th: 'riko', who: 'リコ', text: 'ミサキのインスタカムから変な投票のやつ来たんだけど', wait: 5 },
-    { do: 'msg', app: 'kotori', th: 'riko', who: 'リコ', text: 'ソウタにも来た？', wait: 3 },
+    { do: 'msg', app: 'kotori', th: 'riko', who: 'リコ', text: '{名前}にも来た？', wait: 3 },
     { do: 'choice', id: 'riko', app: 'kotori', th: 'riko', options: [
       { label: '「来た。ミサキ乗っ取られてると思う。開かないで」', me: '来た。ミサキ乗っ取られてると思う。開かないで' },
       { label: '「来た」', me: '来た' }
@@ -319,7 +322,7 @@ const SCENES = {
     { do: 'mail', wait: 2, mail: T.s5mail },
     { do: 'msg', app: 'kotori', th: 'yuto', who: 'ユウト', text: 'インスタカムでお前から「ギフトカード買って」って来たけど本人？', wait: 6 },
     { do: 'msg', app: 'kotori', th: 'yuto', who: 'ユウト', img: 'yutoShot', text: '', wait: 2 },
-    { do: 'msg', when: st => st.faceTaken, app: 'kotori', th: 'riko', who: 'リコ', text: 'ソウタの顔写真つきで「本人です」って来たんだけど', wait: 5 },
+    { do: 'msg', when: st => st.faceTaken, app: 'kotori', th: 'riko', who: 'リコ', text: '{名前}の顔写真つきで「本人です」って来たんだけど', wait: 5 },
     { do: 'goto', to: 'S6' }
   ],
 

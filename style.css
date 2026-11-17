@@ -373,3 +373,6 @@ button { font-family: inherit; }
 /* SMS：シンプル、自分の吹き出しは緑 */
 .sms .msg .bb { background: #e9e9ec; }
 .sms .msg.me .bb { background: #4fb45a; color: #fff; }
+.s0 .nameLab { display: block; font-size: 14px; color: #c9c6bf; margin-top: 10px; }
+.s0 .nameLab input { display: block; width: 100%; margin-top: 8px; padding: 12px 14px; font-size: 18px; border-radius: 12px; border: 1px solid #454b57; background: #262c37; color: #f2f0eb; font-family: inherit; }
+.s0 .nameNote { font-size: 12px !important; color: #9aa0ab; margin: 6px 0 0 !important; }

@@ -19,7 +19,7 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&a
 
 /* ---------- 状態 ---------- */
 const st = {
-  mode: 'normal', answeredS1: false, leakFixed: false, path2: false, path3: false, opened: false,
+  mode: 'normal', name: '', answeredS1: false, leakFixed: false, path2: false, path3: false, opened: false,
   locAllowed: false, lat: null, lon: null, station: null, faceTaken: false, notifAllowed: false,
   route: null, sentCount: 0, picoLocked: false, momSaved: false, momPaid: false,
   notified: new Set(), paid: new Set(), mailPw: false, applied: false, scene: 'S0'
@@ -44,12 +44,14 @@ function timeWord() {
   if (h >= 10 && h < 17) return T.timeWord.day;
   return T.timeWord.night;
 }
+function myName() { return st.name || UI.namePh; }
 function fill(s) {
   const d = new Date();
   let out = String(s);
   const w = timeWord();
   if (!w) out = out.replace('、{時刻の一言}', '').replace('{時刻の一言}', '');
   return out
+    .replace(/\{名前\}/g, myName())
     .replace(/\{遠い都道府県\}/g, farPrefecture(st.lat, st.lon))
     .replace(/\{駅名\}/g, st.station || '')
     .replace(/\{スマホの種類\}/g, deviceKind())
@@ -153,7 +155,7 @@ function msgHTML(app, t, m) {
   let bb;
   if (m.typing) bb = `<div class="bb typing">${esc(UI.typing)}</div>`;
   else if (m.link) bb = `<div class="bb link"><div class="lkimg"></div><div class="lk"><b>${esc(UI.voteTitle)}</b><span>${esc(UI.voteHost)}</span></div></div>`;
-  else if (m.img) bb = `<div class="bb img">${SVG[m.img] || ''}</div>`;
+  else if (m.img) bb = `<div class="bb img">${(SVG[m.img] || '').replace('>ソウタ<', '>' + esc(myName()) + '<')}</div>`;
   else if (m.face) bb = `<div class="bb img"><div class="camslot" style="width:120px;height:120px;margin:0;border-width:2px" data-face="1"></div></div>`;
   else bb = `<div class="bb">${esc(fill(m.text))}</div>`;
   return `<div class="msg${me ? ' me' : ''}">${av}${bb}<span class="tm">${esc(m.tm || '')}</span></div>`;
@@ -189,10 +191,11 @@ function render() {
   if ($('#bars').classList.contains('on')) s.querySelectorAll('.view').forEach(x => x.classList.add('withBars'));
   renderTray();
 }
+function nameField() { return `<label class="nameLab">${esc(UI.nameLabel)}<input id="nameIn" maxlength="8" autocomplete="off" placeholder="${esc(UI.namePh)}" value="${esc(st.name)}"></label><p class="nameNote">${esc(UI.nameNote)}</p>`; }
 function renderS0() {
   const saved = loadProgress();
-  if (view.step === 'real') return `<div class="view s0"><div class="inner"><div class="notes">${T.s0.realNotes.map(p => `<p>${esc(p)}</p>`).join('')}</div><button class="btn go" data-act="start" data-arg="real">${esc(T.s0.start)}</button><button class="backs" data-act="s0back">${esc(UI.back)}</button></div></div>`;
-  if (view.step === 'normal') return `<div class="view s0"><div class="inner"><div class="notes"><p>${esc(T.s0.normalNote)}</p></div><button class="btn go" data-act="start" data-arg="normal">${esc(T.s0.start)}</button><button class="backs" data-act="s0back">${esc(UI.back)}</button></div></div>`;
+  if (view.step === 'real') return `<div class="view s0"><div class="inner"><div class="notes">${T.s0.realNotes.map(p => `<p>${esc(p)}</p>`).join('')}</div>${nameField()}<button class="btn go" data-act="start" data-arg="real">${esc(T.s0.start)}</button><button class="backs" data-act="s0back">${esc(UI.back)}</button></div></div>`;
+  if (view.step === 'normal') return `<div class="view s0"><div class="inner"><div class="notes"><p>${esc(T.s0.normalNote)}</p></div>${nameField()}<button class="btn go" data-act="start" data-arg="normal">${esc(T.s0.start)}</button><button class="backs" data-act="s0back">${esc(UI.back)}</button></div></div>`;
   const ios = deviceKind() === 'iPhone' && !navigator.standalone;
   return `<div class="view s0"><div class="inner">${saved ? `<div class="resume"><span>${esc(UI.resume)}</span><button data-act="fresh">${esc(UI.fromStart)}</button></div>` : ''}<button class="mode" data-act="mode" data-arg="normal"><b>${esc(T.s0.normal.label)}</b><span>${esc(T.s0.normal.desc)}</span></button><button class="mode real" data-act="mode" data-arg="real"><b>${esc(T.s0.real.label)}</b><span>${esc(T.s0.real.desc)}</span></button>${ios ? `<p style="font-size:13px;line-height:1.7;color:#9aa0ab;margin-top:6px">${esc(UI.iosFull)}</p>` : ''}</div></div>`;
 }
@@ -209,7 +212,7 @@ function renderPico() {
   const tab = v.tab || 'feed';
   let body = '';
   if (tab === 'feed') {
-    body = `<div class="prof"><div class="av"></div><div><div class="nm">ソウタ</div><div class="sb">投稿 ${T.picoPosts.length}　フォロワー 54</div></div></div>` +
+    body = `<div class="prof"><div class="av"></div><div><div class="nm">${esc(myName())}</div><div class="sb">投稿 ${T.picoPosts.length}　フォロワー 54</div></div></div>` +
       T.picoPosts.slice().reverse().map(p => `<div class="post">${SVG[p.img]}<div class="cap">${esc(p.text)}${p.tag ? `<small>${esc(p.tag)}</small>` : ''}</div></div>`).join('');
   } else if (tab === 'dm') {
     const list = Object.values(threads.pico).filter(t => t.msgs.length).sort((a, b) => b.t - a.t);
@@ -242,7 +245,7 @@ function renderMail() {
 }
 function renderCall() {
   const v = view;
-  const subs = (v.subs || []).map(x => `<div class="sub${x.me ? ' me' : x.sys ? ' sys' : ''}">${x.who ? `<b>${esc(x.who)}</b>` : ''}${esc(x.text)}</div>`).join('');
+  const subs = (v.subs || []).map(x => `<div class="sub${x.me ? ' me' : x.sys ? ' sys' : ''}">${x.who ? `<b>${esc(x.who)}</b>` : ''}${esc(fill(x.text))}</div>`).join('');
   let btns = '';
   if (v.ringing) btns = `<button class="rb ng" data-act="callNo"><i>✕</i>${esc(UI.decline)}</button><button class="rb ok" data-act="callYes"><i>✆</i>${esc(UI.answer)}</button>`;
   return `<div class="view call"><div class="${v.ringing ? 'ringing' : ''}"><div class="who" style="margin-top:96px"><div class="avatar">母</div>${esc(v.who || '母')}</div><div class="st">${esc(v.status || '')}</div></div><div class="subs">${subs}</div><div class="btns">${btns}</div></div>`;
@@ -744,7 +747,7 @@ async function ending() {
   await deliver({ app: 'kotori', th: 'mom', who: '母', text: st.momSaved ? T.endA : T.endB, wait: TIMING.endingWait });
   const edge = $('#edge');
   edge.className = 'on';
-  edge.innerHTML = `<span>${esc(T.edge.replace('{n}', n))}</span><button id="edgeNext">›</button>`;
+  edge.innerHTML = `<span>${esc(fill(T.edge).replace('{n}', n))}</span><button id="edgeNext">›</button>`;
   await new Promise(r => { $('#edgeNext').onclick = r; setTimeout(r, TIMING.endingHold * 1000 / SPEED); });
   edge.className = ''; edge.innerHTML = '';
   if (st.applied) {
@@ -767,17 +770,17 @@ async function attacker() {
   const paths = [T.path2, T.path3, T.path1];
   const rows = names.map((a, i) => ({ a, p: paths[i % 3], s: i % 5 === 0 ? 'ログイン中' : '送信中' }));
   let me;
-  if (st.route === 'safe') me = { a: 'ソウタ', p: '—', s: T.failed3, me: true };
+  if (st.route === 'safe') me = { a: myName(), p: '—', s: T.failed3, me: true };
   else {
     const p = []; if (!st.leakFixed) p.push(T.path1); if (st.path2) p.push(T.path2); if (st.path3) p.push(T.path3);
-    me = { a: 'ソウタ', p: p.join(' / ') + '　' + T.twoStep, s: 'ログイン中', me: true };
+    me = { a: myName(), p: p.join(' / ') + '　' + T.twoStep, s: 'ログイン中', me: true };
   }
   rows.splice(1, 0, me);
   view = { name: 's9', rows, openDet: false, next: false }; render();
   await new Promise(r => { actWaiters.s9open = r; setTimeout(r, TIMING.s9AutoOpen * 1000 / SPEED); });
   view.openDet = true; render();
   await sleep(TIMING.s9LastLine);
-  view.rows.push({ a: '', p: st.route === 'safe' ? T.lastSafe : T.lastIn, s: '', last: true }); view.next = true; render();
+  view.rows.push({ a: '', p: fill(st.route === 'safe' ? T.lastSafe : T.lastIn), s: '', last: true }); view.next = true; render();
   const sc = $('#screen .scroll'); if (sc) sc.scrollTop = sc.scrollHeight;
   await new Promise(r => { actWaiters.s9next = r; if (AUTO) setTimeout(r, 400); });
 }
@@ -830,7 +833,7 @@ document.addEventListener('click', e => {
     case 'mode': view = { name: 's0', step: arg }; render(); break;
     case 's0back': view = { name: 's0' }; render(); break;
     case 'fresh': eraseProgress(); render(); break;
-    case 'start': begin(arg); break;
+    case 'start': { const el = document.getElementById('nameIn'); st.name = el ? el.value.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 8) : ''; begin(arg); break; }
     case 'unlock': if (!view.locked) { view = { name: 'home' }; render(); } break;
     case 'home': if (!(view.name === 'lock') && view.name !== 'vote') { view = { name: 'home' }; render(); } else if (view.name === 'lock' && !view.locked) { view = { name: 'home' }; render(); } break;
     case 'open': gotoView({ name: arg }); break;
@@ -888,6 +891,8 @@ window.addEventListener('resize', fit);
 fit();
 tlog('size', window.innerWidth, window.innerHeight, document.documentElement.clientWidth, (document.getElementById('phone')||{}).offsetWidth);
 setInterval(() => { if (view.name === 'lock') render(); else statusbar(); }, 10000);
+if (QS.get('s0') === 'real') view = { name: 's0', step: 'real' };
 render();
 if (AUTO) eraseProgress();
+if (AUTO && QS.get('name')) st.name = QS.get('name').slice(0, 8);
 if (AUTO) setTimeout(() => begin(QS.get('mode') === 'real' ? 'real' : 'normal'), 300);
