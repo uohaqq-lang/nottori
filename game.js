@@ -112,6 +112,20 @@ const SVG = {
 };
 const appColor = { pico: 'var(--pico)', kotori: 'var(--kotori)', sms: 'var(--sms)', mail: 'var(--mail)', phone: 'var(--phone)' };
 
+/* アプリのアイコン（実在のアプリのロゴは写さない。種類が分かる色と形だけ寄せる） */
+const ICON = {
+  pico: '<svg viewBox="0 0 60 60"><defs><linearGradient id="gp" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#f6b64f"/><stop offset=".5" stop-color="#e2546f"/><stop offset="1" stop-color="#7a4fc4"/></linearGradient></defs><rect width="60" height="60" rx="14" fill="url(#gp)"/><text x="30" y="41" text-anchor="middle" font-size="30" font-weight="700" font-style="italic" fill="#fff" font-family="Georgia,serif">p</text></svg>',
+  kotori: '<svg viewBox="0 0 60 60"><rect width="60" height="60" rx="14" fill="#3fbf6a"/><path d="M30 15c-9.9 0-18 6.3-18 14.1 0 4.7 2.9 8.9 7.4 11.4-.3 2-1.2 4.2-2.6 5.6 3.6-.4 6.7-1.9 8.6-3.4 1.5.3 3 .5 4.6.5 9.9 0 18-6.3 18-14.1S39.9 15 30 15z" fill="#fff"/><circle cx="24" cy="28" r="2.2" fill="#3fbf6a"/><path d="M33 27l6-2-4 5z" fill="#3fbf6a"/></svg>',
+  sms: '<svg viewBox="0 0 60 60"><rect width="60" height="60" rx="14" fill="#4fb45a"/><ellipse cx="30" cy="28" rx="17" ry="13" fill="#fff"/><path d="M18 36l-3 8 9-5z" fill="#fff"/></svg>',
+  mail: '<svg viewBox="0 0 60 60"><rect width="60" height="60" rx="14" fill="#3b8be0"/><rect x="13" y="19" width="34" height="23" rx="3" fill="#fff"/><path d="M14 21l16 12 16-12" fill="none" stroke="#3b8be0" stroke-width="2.6"/></svg>',
+  cam: '<svg viewBox="0 0 60 60"><rect width="60" height="60" rx="14" fill="#5b5f66"/><rect x="13" y="20" width="34" height="24" rx="5" fill="#e9e9ea"/><circle cx="30" cy="32" r="7" fill="#5b5f66"/></svg>',
+  photo: '<svg viewBox="0 0 60 60"><rect width="60" height="60" rx="14" fill="#fff"/><circle cx="30" cy="21" r="8" fill="#f2b544"/><circle cx="39" cy="30" r="8" fill="#e65f5f"/><circle cx="30" cy="39" r="8" fill="#5a8ee6"/><circle cx="21" cy="30" r="8" fill="#5fc07a"/></svg>',
+  clock: '<svg viewBox="0 0 60 60"><rect width="60" height="60" rx="14" fill="#1f1f22"/><circle cx="30" cy="30" r="17" fill="#fff"/><path d="M30 19v11l7 5" stroke="#1f1f22" stroke-width="3" fill="none"/></svg>',
+  weather: '<svg viewBox="0 0 60 60"><rect width="60" height="60" rx="14" fill="#4a90d9"/><circle cx="24" cy="25" r="8" fill="#f7d34c"/><ellipse cx="34" cy="36" rx="13" ry="8" fill="#fff"/></svg>',
+  map: '<svg viewBox="0 0 60 60"><rect width="60" height="60" rx="14" fill="#e8efe2"/><path d="M10 40L50 18" stroke="#f2c14e" stroke-width="6"/><path d="M30 14c-5 0-9 4-9 9 0 7 9 15 9 15s9-8 9-15c0-5-4-9-9-9z" fill="#e2544a"/><circle cx="30" cy="23" r="3.5" fill="#fff"/></svg>',
+  set: '<svg viewBox="0 0 60 60"><rect width="60" height="60" rx="14" fill="#8e9198"/><circle cx="30" cy="30" r="12" fill="none" stroke="#fff" stroke-width="6" stroke-dasharray="5 3.4"/><circle cx="30" cy="30" r="5" fill="#fff"/></svg>',
+  phone: '<svg viewBox="0 0 60 60"><rect width="60" height="60" rx="14" fill="#43c35e"/><path d="M22 15c1.5 0 4.5 6 4.5 7.5s-3 3-3 4.5 6 9.5 9 9.5 3-3 4.5-3 7.5 3 7.5 4.5-3 6-7.5 6C28 44 16 32 16 21c0-3 4.5-6 6-6z" fill="#fff"/></svg>'
+};
 /* ---------- 描画 ---------- */
 function statusbar() {
   const dark = ['lock', 'home', 'call', 's0'].includes(view.name);
@@ -128,8 +142,9 @@ function badge(app) {
 }
 function appIcon(app, label) {
   const n = badge(app);
-  return `<button class="app" data-act="open" data-arg="${app}"><span class="ic" style="background:${appColor[app]}">${label.slice(0, 1)}</span><span class="nm">${esc(label)}</span>${n ? `<span class="badge">${n}</span>` : ''}</button>`;
+  return `<button class="app" data-act="open" data-arg="${app}"><span class="ic">${ICON[app] || ''}</span><span class="nm">${esc(label)}</span>${n ? `<span class="badge">${n}</span>` : ''}</button>`;
 }
+function dummyIcon(k, label) { return `<button class="app"><span class="ic">${ICON[k]}</span><span class="nm">${esc(label)}</span></button>`; }
 function msgHTML(app, t, m) {
   if (m.unsent) return `<div class="msg"><div class="bb">${esc(T.unsent)}</div></div>`.replace('class="msg"', 'class="msg unsent"');
   if (m.sys) return `<div class="sysline">${esc(m.text)}</div>`;
@@ -155,10 +170,10 @@ function render() {
   if (v.name === 's0') html = renderS0();
   else if (v.name === 'lock') {
     const d = new Date();
-    const cards = lockCards.slice(-6).reverse().map(c => `<div class="lcard"><span class="ico" style="background:${appColor[c.app] || '#888'}"></span><div style="flex:1;min-width:0"><div class="t"><span>${esc(UI.apps[c.app] || c.app)}</span><span>${esc(c.tm)}</span></div><div class="b">${esc(c.text)}</div></div></div>`).join('');
+    const cards = lockCards.slice(-6).reverse().map(c => `<div class="lcard"><span class="ico">${ICON[c.app] || ''}</span><div style="flex:1;min-width:0"><div class="t"><span>${esc(UI.apps[c.app] || c.app)}</span><span>${esc(c.tm)}</span></div><div class="b">${esc(c.text)}</div></div></div>`).join('');
     html = `<div class="view lock"><div class="clock">${hm(d)}</div><div class="date">${d.getMonth() + 1}月${d.getDate()}日（${'日月火水木金土'[d.getDay()]}）</div><div class="cards">${cards}</div><div class="unlock${v.locked ? ' off' : ''}" data-act="unlock">${esc(UI.unlock)}</div>${homebar(true)}</div>`;
   } else if (v.name === 'home') {
-    html = `<div class="view home"><div class="grid">${appIcon('pico', UI.apps.pico)}${appIcon('kotori', UI.apps.kotori)}${appIcon('mail', UI.apps.mail)}${appIcon('sms', UI.apps.sms)}</div><div class="dock">${appIcon('phone', UI.apps.phone)}<span></span><span></span><span></span></div>${homebar(true)}</div>`;
+    html = `<div class="view home"><div class="grid">${appIcon('pico', UI.apps.pico)}${appIcon('kotori', UI.apps.kotori)}${appIcon('mail', UI.apps.mail)}${appIcon('sms', UI.apps.sms)}${dummyIcon('cam','カメラ')}${dummyIcon('photo','写真')}${dummyIcon('clock','時計')}${dummyIcon('weather','天気')}${dummyIcon('map','地図')}${dummyIcon('set','設定')}</div><div class="dock">${appIcon('phone', UI.apps.phone)}<span></span><span></span><span></span></div>${homebar(true)}</div>`;
   } else if (v.name === 'pico') html = renderPico();
   else if (v.name === 'kotori' || v.name === 'sms') html = renderChatApp(v.name);
   else if (v.name === 'mail') html = renderMail();
@@ -203,16 +218,16 @@ function renderPico() {
     if (v.confirm) body = `<div class="confirm"><p>${esc(T.s4confirm)}</p><button class="btn pico" data-act="pwDo">${esc(T.s4confirmBtn)}</button><button class="btn sub" data-act="pwCancel">${esc(UI.back)}</button></div>`;
     else body = `<div class="setrow" data-act="pwRow"><span>${esc(UI.pwRow)}</span><span>›</span></div><div class="setrow dim"><span>通知</span><span>オン</span></div><div class="setrow dim"><span>2段階認証</span><span>オフ</span></div>` + (v.pwDone ? `<div class="sysline">${esc(UI.pwDone)}</div>` : '');
   }
-  return `<div class="view pico">${head(UI.apps.pico, false)}<div class="scroll">${body}</div><div class="ptabs">${['feed', 'dm', 'set'].map((k, i) => `<button class="${tab === k ? 'on' : ''}" data-act="ptab" data-arg="${k}">${esc(UI.picoTabs[i])}${k === 'dm' && badge('pico') ? ` (${badge('pico')})` : ''}</button>`).join('')}</div>${homebar()}</div>`;
+  return `<div class="view pico">${head(UI.apps.pico, false, 'logo')}<div class="scroll">${body}</div><div class="ptabs">${['feed', 'dm', 'set'].map((k, i) => `<button class="${tab === k ? 'on' : ''}" data-act="ptab" data-arg="${k}">${esc(UI.picoTabs[i])}${k === 'dm' && badge('pico') ? ` (${badge('pico')})` : ''}</button>`).join('')}</div>${homebar()}</div>`;
 }
 function renderChatApp(app) {
   const v = view;
   if (v.th) {
     const t = thread(app, v.th);
-    return `<div class="view">${head(t.name, true)}<div class="chat">${t.msgs.map(m => msgHTML(app, t, m)).join('')}${inlineHTML(app, v.th)}</div>${homebar()}</div>`;
+    return `<div class="view ${app}">${head(t.name, true)}<div class="chat">${t.msgs.map(m => msgHTML(app, t, m)).join('')}${inlineHTML(app, v.th)}</div>${homebar()}</div>`;
   }
   const list = Object.values(threads[app]).filter(t => t.msgs.length).sort((a, b) => b.t - a.t);
-  return `<div class="view">${head(UI.apps[app], false)}<div class="scroll">${list.map(t => { const last = t.msgs[t.msgs.length - 1]; return `<div class="row${t.unread ? ' unread' : ''}" data-act="th" data-arg="${t.th}"><span class="av" style="background:${COLORS[t.th] || '#888'}">${esc(t.name.slice(0, 1))}</span><div class="mid"><div class="nm">${esc(t.name)}</div><div class="pv">${esc(last.img ? '画像' : (last.me ? 'あなた：' : '') + fill(last.text || ''))}</div></div><span class="tm">${esc(last.tm || '')}</span></div>`; }).join('')}</div>${homebar()}</div>`;
+  return `<div class="view ${app}">${head(UI.apps[app], false)}<div class="scroll">${list.map(t => { const last = t.msgs[t.msgs.length - 1]; return `<div class="row${t.unread ? ' unread' : ''}" data-act="th" data-arg="${t.th}"><span class="av" style="background:${COLORS[t.th] || '#888'}">${esc(t.name.slice(0, 1))}</span><div class="mid"><div class="nm">${esc(t.name)}</div><div class="pv">${esc(last.img ? '画像' : (last.me ? 'あなた：' : '') + fill(last.text || ''))}</div></div><span class="tm">${esc(last.tm || '')}</span></div>`; }).join('')}</div>${homebar()}</div>`;
 }
 function renderMail() {
   const v = view;
@@ -278,7 +293,7 @@ function banner(app, title, text, opts = {}) {
   sound.notify();
   const box = document.createElement('div');
   box.className = 'ban';
-  box.innerHTML = `<span class="ico" style="background:${appColor[app] || '#888'}"></span><div class="mid"><div class="t"><span>${esc(UI.apps[app] || app)}</span><span>今</span></div>${title ? `<div class="h">${esc(title)}</div>` : ''}<div class="b">${esc(text)}</div>${opts.button ? `<button class="bt">${esc(opts.button)}</button>` : ''}</div>`;
+  box.innerHTML = `<span class="ico">${ICON[app] || ''}</span><div class="mid"><div class="t"><span>${esc(UI.apps[app] || app)}</span><span>今</span></div>${title ? `<div class="h">${esc(title)}</div>` : ''}<div class="b">${esc(text)}</div>${opts.button ? `<button class="bt">${esc(opts.button)}</button>` : ''}</div>`;
   box.addEventListener('click', e => {
     if (opts.button && e.target.classList.contains('bt')) { opts.onButton && opts.onButton(); return; }
     if (opts.open) { gotoView(opts.open); }

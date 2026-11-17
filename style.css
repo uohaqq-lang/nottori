@@ -355,3 +355,21 @@ button { font-family: inherit; }
 .android .ban { border-radius: 14px; }
 .android .homebar i { width: 108px; height: 4px; }
 .android .msg .bb { border-radius: 16px; }
+
+/* ---------- アプリのアイコンと、アプリごとの中の見た目（11/17 本人「アプリっぽく」） ---------- */
+.app .ic, .ban .ico, .lock .lcard .ico { background: none !important; box-shadow: none; overflow: hidden; }
+.app .ic svg, .ban .ico svg, .lock .lcard .ico svg { width: 100%; height: 100%; display: block; }
+.android .app .ic svg rect:first-child { rx: 30; }
+/* コトリ：ふだんのメッセージアプリ。青みのある背景、自分の吹き出しは緑 */
+.kotori .chat { background: #8ea9c8; }
+.kotori .appHead { background: #26324a; color: #fff; border-color: #26324a; }
+.kotori .appHead .back { color: #fff; }
+.kotori .msg.me .bb { background: #8fdc6a; }
+.kotori .msg .tm { color: #f2f5fa; }
+.kotori .sysline { color: #f2f5fa; }
+/* ピコ：写真のSNS。白地、ロゴの文字は筆記体ふう */
+.pico .appHead.logo .ttl { font-family: "Segoe Script", "Brush Script MT", cursive; font-size: 24px; color: var(--ink); letter-spacing: 0; }
+.pico .msg.me .bb { background: linear-gradient(135deg, #8a5bd6, #d9508f); color: #fff; }
+/* SMS：シンプル、自分の吹き出しは緑 */
+.sms .msg .bb { background: #e9e9ec; }
+.sms .msg.me .bb { background: #4fb45a; color: #fff; }
