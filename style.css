@@ -591,3 +591,33 @@ html, body { overscroll-behavior: none; }
 .frleg { display: flex; gap: 12px; padding: 0 12px 6px; font-size: 9.5px; color: #666; }
 .frleg span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 3px; vertical-align: -1px; }
 .frleg .ok::before { background: #2eb85c; } .frleg .doubt::before { background: #f0a400; } .frleg .paid::before { background: #e33; }
+
+/* 序盤のミスの結果（11/17） */
+.doc h2.mycase { font-size: 19px; margin: 6px 0 12px; }
+.doc .cases { display: flex; flex-direction: column; gap: 10px; margin-bottom: 26px; }
+.doc .case { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.04); }
+.doc .case b { flex: none; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; }
+.doc .case.mo b { background: #2e9d4f; } .doc .case.mt b { background: #e09a00; } .doc .case.mx b { background: #d33; }
+.doc .case p { margin: 0 0 3px; font-weight: 700; font-size: 14.5px; line-height: 1.5; }
+.doc .case span { font-size: 13px; color: #555; line-height: 1.6; }
+
+/* アプリの切り替えの動き（11/17 本人「画面がパッと変わるのが自然じゃない」） */
+.navghost { pointer-events: none; }
+@keyframes navOpenIn { from { transform: scale(.86); opacity: 0; border-radius: 44px; } to { transform: none; opacity: 1; border-radius: 0; } }
+@keyframes navDim { to { filter: brightness(.7); transform: scale(.97); } }
+@keyframes navCloseOut { to { transform: scale(.62); opacity: 0; border-radius: 44px; } }
+@keyframes navHomeIn { from { transform: scale(1.08); opacity: .4; } to { transform: none; opacity: 1; } }
+@keyframes navPushIn { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes navPushOut { to { transform: translateX(-28%); filter: brightness(.85); } }
+@keyframes navPopIn { from { transform: translateX(-28%); filter: brightness(.85); } to { transform: none; filter: none; } }
+@keyframes navPopOut { to { transform: translateX(100%); } }
+.nav-open-in { animation: navOpenIn .3s cubic-bezier(.2,.8,.2,1); z-index: 2; }
+.nav-open-out { animation: navDim .3s ease-out forwards; }
+.nav-close-out { animation: navCloseOut .28s cubic-bezier(.4,0,.8,.4) forwards; z-index: 3; }
+.nav-close-in { animation: navHomeIn .32s cubic-bezier(.2,.8,.2,1); }
+.nav-push-in { animation: navPushIn .3s cubic-bezier(.2,.8,.2,1); z-index: 2; box-shadow: -8px 0 24px rgba(0,0,0,.12); }
+.nav-push-out { animation: navPushOut .3s cubic-bezier(.2,.8,.2,1) forwards; }
+.nav-pop-in { animation: navPopIn .3s cubic-bezier(.2,.8,.2,1); }
+.nav-pop-out { animation: navPopOut .3s cubic-bezier(.2,.8,.2,1) forwards; z-index: 3; box-shadow: -8px 0 24px rgba(0,0,0,.12); }
+#screen { overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { [class*="nav-"] { animation: none !important; } }

@@ -92,7 +92,7 @@ const sound = {
 
 /* ---------- データ：会話・メール ---------- */
 const COLORS = { mom: '#c08a5b', misaki: '#9b6fa6', yuto: '#5b84b5', riko: '#c26b7e', kai: '#5f9a7a', stranger: '#7c7c7c', pico: '#b5654f', picosms: '#678c6b' };
-const PEOPLE = { group: 'サークル', official: 'RINE', mom: '母', misaki: 'みさき', yuto: 'ゆうと', riko: 'Riko', kai: 'kai', stranger: UI.stranger, picosms: 'インスタグラフ' };
+const PEOPLE = { group: 'サークル', f0: 'ゆうと', official: 'RINE', mom: '母', misaki: 'みさき', yuto: 'ゆうと', riko: 'Riko', kai: 'kai', stranger: UI.stranger, picosms: 'インスタグラフ' };
 FRIENDS.forEach((n, i) => { const k = 'f' + i; PEOPLE[k] = n; if (!COLORS[k]) COLORS[k] = ['#5b84b5', '#c26b7e', '#5f9a7a', '#a08251', '#6b74b5', '#b56b9c', '#6f8f4f', '#a3655b'][i]; });
 /* アイコンの写真（生成AIで作った。人の顔は写さない）。知らない人は初期アイコンのまま */
 const AVATAR = { me: 'me', mom: 'mom', misaki: 'misaki', yuto: 'yuto', riko: 'riko', kai: 'kai', f0: 'yuto', f1: 'riko', f2: 'kai', f3: 'haruka', f4: 'ren', f5: 'mio', f6: 'daichi', f7: 'aoi' };
@@ -207,7 +207,17 @@ function inlineHTML(app, th) {
   if (!t || !t.inline) return '';
   return `<div class="inline">${t.inline.map((o, i) => `<button data-act="inline" data-arg="${i}">${esc(o.label)}</button>`).join('')}</div>`;
 }
-let lastKey = '';
+let lastKey = '', lastSnap = null;
+const APPS = ['pico', 'kotori', 'mail', 'sms', 'phone'];
+function navKind(o, n) {
+  if (!o || AUTO && !QS.has('anim')) return '';
+  const isApp = x => APPS.includes(x);
+  const depth = v => (v.th || v.id || v.lc || v.where || v.sett) ? (v.lc || v.where || v.sett === 'sec' || v.sett === 'mails' ? 2 : 1) : 0;
+  if (n.name === 'home' && (isApp(o.name) || ['vote', 'protect'].includes(o.name))) return 'close';
+  if ((isApp(n.name) || ['vote', 'protect'].includes(n.name)) && n.name !== o.name) return 'open';
+  if (isApp(n.name) && n.name === o.name) { const a = depth(o), b = depth(n); if (b > a) return 'push'; if (b < a) return 'pop'; }
+  return '';
+}
 function render() {
   statusbar();
   const v = view, s = $('#screen');
@@ -216,7 +226,9 @@ function render() {
   const key = [v.name, v.th, v.tab, v.id, v.sett, v.lc, v.where].join('|');
   const oldSc = s.querySelector('.scroll'), oldCh = s.querySelector('.chat');
   const keep = key === lastKey ? { sc: oldSc ? oldSc.scrollTop : 0, chBottom: !oldCh || oldCh.scrollHeight - oldCh.scrollTop - oldCh.clientHeight < 40, ch: oldCh ? oldCh.scrollTop : 0 } : null;
-  lastKey = key;
+  const nav = key === lastKey ? '' : navKind(lastSnap, v);
+  const oldEl = nav ? s.firstElementChild : null;
+  lastKey = key; lastSnap = { name: v.name, th: v.th, tab: v.tab, id: v.id, sett: v.sett, lc: v.lc, where: v.where };
   if (v.name === 's0') html = renderS0();
   else if (v.name === 'lock') {
     const d = new Date();
@@ -239,6 +251,16 @@ function render() {
   else if (v.name === 's9') html = renderS9();
   else if (v.name === 'doc') html = v.html;
   s.innerHTML = html;
+  if (nav) {
+    const nw = s.firstElementChild;
+    if (nw) nw.classList.add('nav-' + nav + '-in');
+    if (oldEl) {
+      oldEl.classList.add('navghost', 'nav-' + nav + '-out');
+      if (nav === 'close' || nav === 'pop') s.appendChild(oldEl); else s.insertBefore(oldEl, nw);
+      setTimeout(() => oldEl.remove(), 340);
+    }
+    if (nw) setTimeout(() => nw.classList.remove('nav-' + nav + '-in'), 360);
+  }
   if (v.name === 'vote' && v.cam && v.stream) { const vid = s.querySelector('video'); if (vid) { vid.srcObject = v.stream; vid.play().catch(() => {}); } }
   s.querySelectorAll('[data-face]').forEach(el => { if (faceCanvas) { const c = document.createElement('canvas'); c.width = faceCanvas.width; c.height = faceCanvas.height; c.getContext('2d').drawImage(faceCanvas, 0, 0); el.appendChild(c); } else el.innerHTML = SVG.faceDummy; });
   const chat = s.querySelector('.chat'); if (chat) chat.scrollTop = keep && !keep.chBottom ? keep.ch : chat.scrollHeight;
@@ -361,6 +383,7 @@ function renderPico() {
 }
 function renderChatApp(app) {
   const v = view;
+  if (app === 'kotori' && st.rineLost) return `<div class="view kotori rine"><div class="pad44"></div><div class="rineListHead"><b>トーク</b></div><div class="locked"><div class="big">${esc(T.rineLocked)}</div><div class="fake"></div><div class="fake"></div></div>${homebar()}</div>`;
   if (app === 'kotori') {
     if (v.th) {
       const t = thread(app, v.th);
@@ -379,6 +402,7 @@ function renderChatApp(app) {
 }
 function renderMail() {
   const v = view;
+  if (st.mailLost) return `<div class="view">${head(UI.apps.mail, false)}<div class="locked"><div class="big">${esc(T.mailLocked)}</div><div class="fake"></div><div class="fake"></div></div>${homebar()}</div>`;
   if (v.id) {
     const m = mails.find(x => x.id === v.id);
     let acts = '';
@@ -636,7 +660,7 @@ async function exec(step) {
     case 'msg': await deliver(step); return;
     case 'pause': await sleep(step.s); return;
     case 'notify': banner(step.app, '', fill(step.text), { open: step.th ? { name: step.app, th: step.th } : { name: step.app, tab: 'dm' } }); return;
-    case 'mail': await sleep(step.wait || 0); mails.push({ id: 'm' + mails.length, from: step.mail.from, addr: step.mail.addr, subject: step.mail.subject, body: fill(step.mail.body), unread: true, t: hm(new Date()), revert: true, at: Date.now() }); banner('mail', step.mail.from, step.mail.subject, { open: { name: 'mail', id: 'm' + (mails.length - 1) } }); return;
+    case 'mail': await sleep(step.wait || 0); if (!st.leakFixed) { st.mailLost = true; banner('mail', '', T.mailLostBanner, {}); return; } mails.push({ id: 'm' + mails.length, from: step.mail.from, addr: step.mail.addr, subject: step.mail.subject, body: fill(step.mail.body), unread: true, t: hm(new Date()), revert: true, at: Date.now() }); banner('mail', step.mail.from, step.mail.subject, { open: { name: 'mail', id: 'm' + (mails.length - 1) } }); return;
     case 'set': Object.assign(st, step.v); return;
     case 'open': view = Object.assign({}, step.view); render(); return;
     case 'goto': return { goto: step.to };
@@ -873,8 +897,9 @@ async function misaki3() {
 /* 送ってしまった友だちからの連絡（相手はインスタグラフの頼みを本物だと思っている） */
 const friendTh = k => ['yuto', 'riko', 'kai'][k] || 'f' + k;   /* RINEでは、ゆうと・Riko・kai は前からの会話に続ける */
 function paidNotice(k) {
-  const th = friendTh(k); thread('kotori', th).name = FRIENDS[k];
-  deliver({ app: 'kotori', th, who: FRIENDS[k], text: fill(T.paidMsgs[k % T.paidMsgs.length]), wait: 0, noPace: true });
+  const app = st.rineLost ? 'sms' : 'kotori';
+  const th = app === 'sms' ? 'f' + k : friendTh(k); thread(app, th).name = FRIENDS[k];
+  deliver({ app, th, who: FRIENDS[k], text: fill(T.paidMsgs[k % T.paidMsgs.length]), wait: 0, noPace: true });
 }
 /* S8：取り戻す */
 async function recover() {
@@ -893,10 +918,13 @@ async function recover() {
     document.documentElement.style.setProperty('--barsh', $('#bars').offsetHeight + 'px');
   };
   document.querySelectorAll('.view').forEach(v => v.classList.add('withBars'));
+  if (st.path3 && !st.rineLost) { st.rineLost = true; banner('kotori', '', T.rineLostBanner, {}); if (view.name === 'kotori') { view = { name: 'home' }; render(); } }
+  const chat = st.rineLost ? 'sms' : 'kotori';   /* RINEを取られていたら、連絡はSMSと電話だけ */
   if (AUTO && QS.has('revert')) setTimeout(() => { st.reverted = true; st.picoLocked = false; tlog('reverted'); }, 4000 / SPEED);
   const acts = [{ id: 'mom', label: T.act.mom }];
-  if (out) acts.push({ id: 'group', label: T.act.group }, { id: 'friend', label: T.act.friend });
-  acts.push({ id: 'mail', label: T.act.mail });
+  if (out && !st.rineLost) acts.push({ id: 'group', label: T.act.group }, { id: 'friend', label: T.act.friend });
+  if (out && st.rineLost) acts.push({ id: 'fcall', label: T.fcall });
+  if (!st.mailLost) acts.push({ id: 'mail', label: T.act.mail });
   if (out) acts.push({ id: 'apply', label: T.act.apply });
   tray = acts;
   let momCalls = 0, momStage = 0, strangerShown = false;
@@ -913,7 +941,7 @@ async function recover() {
       await sleep(TIMING.s8.sayHold);
       view = prev; render();
       momStage = 1;
-      const i = await askTray([{ label: T.again }, { label: T.writeKotori }]);
+      const i = st.rineLost ? 0 : await askTray([{ label: T.again }, { label: T.writeKotori }]);
       if (i === 1) { view = { name: 'kotori', th: 'mom' }; pushMsg('kotori', 'mom', { me: true, text: T.kotoriToMom }); render(); rineQuiz(); return; }
       return momConversation();
     }
@@ -959,7 +987,7 @@ async function recover() {
       momLeft.v -= TIMING.s8.orePenalty; drawBars();
     }
     await sleep(TIMING.s8.sayHold);
-    if (view.name === 'call') { view = { name: 'kotori', th: 'mom' }; render(); }
+    if (view.name === 'call') { view = st.rineLost ? { name: 'home' } : { name: 'kotori', th: 'mom' }; render(); }
   };
   const t0 = Date.now(); let last = t0;
   const timer = setInterval(() => {
@@ -984,8 +1012,17 @@ async function recover() {
       if (i < 0) break;
       const a = tray[i]; tlog('act', a.id);
       if (a.id === 'mom') { if (!st.momSaved && momLeft.v > 0) await momCall(); }
+      else if (a.id === 'fcall') {
+        /* RINEを取られたので、電話で1人ずつ。1人15秒 */
+        const next = receivers.find(k => !st.notified.has(k) && !st.paid.has(k));
+        if (next == null) { toast('もう知らせる人がいない'); continue; }
+        st.notified.add(next); drawBars();
+        await doBusy(FRIENDS[next] + 'に電話中…', 15);
+        toast(FRIENDS[next] + T.fcallDone);
+        if (st.notified.size >= TIMING.s8.speedUpAfter) speed = TIMING.s8.speedUpRate;
+      }
       else if (a.id === 'group') {
-        a.off = true;
+        a.off = true; st.groupUsed = true;
         const gt = thread('kotori', 'group'); gt.name = T.groupName + '（9）';
         gotoView({ name: 'kotori', th: 'group' });
         const post = { me: true, text: T.groupPost, readN: 0 }; pushMsg('kotori', 'group', post); render();
@@ -1032,9 +1069,9 @@ async function recover() {
   if (trayResolve) pickTray(-1);   /* 出したままの選択肢も片づける */
   tray = null; busy = null;
   const mt = threads.kotori.mom; if (mt) mt.inline = null;   /* 時間切れのあとは答えられない */
-  if (!st.mailPw) { const ot = thread('kotori', 'official'); ot.name = 'RINE'; await deliver({ app: 'kotori', th: 'official', who: 'RINE', text: T.kotoriLogin, wait: 0, noPace: true }); }
+
   $('#bars').className = ''; $('#bars').innerHTML = '';
-  if (view.name === 'call') { view = { name: 'kotori', th: 'mom' }; }
+  if (view.name === 'call') { view = st.rineLost ? { name: 'home' } : { name: 'kotori', th: 'mom' }; }
   render();
   await sleep(2);
 }
@@ -1050,10 +1087,11 @@ function askTray(options, inCall) {
 let pendingTrayOptions = null;
 function pickTray(i) { if (!trayResolve) return; const r = trayResolve; trayResolve = null; pendingTrayOptions = null; $('#tray').className = ''; $('#tray').innerHTML = ''; trayPad(); r(i); }
 async function stranger() {
-  pushMsg('kotori', 'stranger', { sys: true, text: 'このアカウントは友だちに追加されていません' });
-  await deliver({ app: 'kotori', th: 'stranger', who: UI.stranger, text: T.stranger1, wait: TIMING.s8.strangerWait });
-  const t = thread('kotori', 'stranger');
-  t.inline = [{ label: T.ignore, f: () => { t.inline = null; render(); } }, { label: T.listen, f: async () => { t.inline = null; pushMsg('kotori', 'stranger', { me: true, text: T.listen }); render(); await deliver({ app: 'kotori', th: 'stranger', who: UI.stranger, text: T.stranger2, wait: 2 }); t.inline = [{ label: T.quit, f: () => { t.inline = null; pushMsg('kotori', 'stranger', { me: true, text: T.quit }); render(); } }]; render(); } }];
+  const app = st.rineLost ? 'sms' : 'kotori';
+  pushMsg(app, 'stranger', { sys: true, text: 'このアカウントは友だちに追加されていません' });
+  await deliver({ app, th: 'stranger', who: UI.stranger, text: T.stranger1, wait: TIMING.s8.strangerWait });
+  const t = thread(app, 'stranger');
+  t.inline = [{ label: T.ignore, f: () => { t.inline = null; render(); } }, { label: T.listen, f: async () => { st.strangerListened = true; t.inline = null; pushMsg(app, 'stranger', { me: true, text: T.listen }); render(); await deliver({ app, th: 'stranger', who: UI.stranger, text: T.stranger2, wait: 2 }); t.inline = [{ label: T.quit, f: () => { t.inline = null; pushMsg(app, 'stranger', { me: true, text: T.quit }); render(); } }]; render(); } }];
   render();
 }
 
@@ -1062,8 +1100,10 @@ async function ending() {
   const n = st.route === 'out' ? st.paid.size : Math.ceil((st.asked || 0) / 2);
   st.friendsPaid = n;
   if (st.route !== 'out') for (let k = 0; k < n; k++) { paidNotice(k); await sleep(1.2); }
-  view = { name: 'kotori', th: 'mom' };
-  await deliver({ app: 'kotori', th: 'mom', who: '母', text: st.momSaved ? T.endA : T.endB, wait: TIMING.endingWait });
+  const capp = st.rineLost ? 'sms' : 'kotori';
+  thread(capp, 'mom').name = '母';
+  view = { name: capp, th: 'mom' };
+  await deliver({ app: capp, th: 'mom', who: '母', text: st.momSaved ? T.endA : T.endB, wait: TIMING.endingWait });
   const edge = $('#edge');
   edge.className = 'on';
   edge.innerHTML = `<span>${esc(fill(T.edge).replace('{n}', n))}</span><button id="edgeNext">›</button>`;
@@ -1123,12 +1163,27 @@ async function readout() {
 }
 /* S11 */
 async function advice() {
-  const html = `<div class="view doc" style="position:absolute;inset:0"><div class="scroll"><h1>${esc(T.s11title)}</h1>
+  const C = T.myCase, rows = [];
+  rows.push(st.leakFixed ? C.leakYes : C.leakNo);
+  rows.push(st.path2 ? C.codeYes : C.codeNo);
+  rows.push(st.path3 ? C.voteYes : st.opened ? C.voteOpen : C.voteNo);
+  if (st.route === 'in') rows.push(C.raceIn); else if (st.route === 'out') rows.push(C.raceOut);
+  if (st.route === 'out' && st.reverted) rows.push(C.revert);
+  if (st.route === 'out' && st.mailLost) rows.push(C.mailLost);
+  if (st.route !== 'safe') rows.push(st.momSaved ? C.momYes : C.momNo);
+  if (st.route === 'out') {
+    const all = st.sentCount, paid = st.paid.size, ok = [...st.notified].filter(k => !st.paid.has(k)).length;
+    const tip = st.rineLost ? C.tipNoRine : st.groupUsed ? C.tipGroup : C.tipNoGroup;
+    rows.push(C.friends.map(x => x.replace('{mark}', paid === 0 ? '○' : paid <= 2 ? '△' : '✕').replace('{all}', all).replace('{ok}', ok).replace('{paid}', paid).replace('{tip}', tip)));
+  }
+  if (st.strangerListened) rows.push(C.stranger);
+  const mine = `<h2 class="mycase">${esc(T.myCaseTitle)}</h2><div class="cases">${rows.map(r => `<div class="case m${r[0] === '○' ? 'o' : r[0] === '△' ? 't' : 'x'}"><b>${esc(r[0])}</b><div><p>${esc(r[1])}</p><span>${esc(r[2])}</span></div></div>`).join('')}</div>`;
+  const html = `<div class="view doc" style="position:absolute;inset:0"><div class="scroll">${mine}<h1>${esc(T.s11title)}</h1>
     <ul>${T.s11main.map(x => `<li class="cur">${esc(x)}</li>`).join('')}</ul>
     <details><summary>${esc(UI.more)}</summary><ul>${T.s11more.map(x => `<li>${esc(x)}</li>`).join('')}</ul></details>
     <p style="font-size:11px;color:var(--sub);margin-top:18px">${esc(T.credit)}</p><button class="btn sub" data-act="erase">${esc(T.erase)}</button><button class="btn" data-act="again">${esc(T.again2)}</button></div></div>`;
   view = { name: 'doc', html }; render();
-  tlog('END', JSON.stringify({ route: st.route, sent: st.sentCount, paid: st.friendsPaid, momSaved: st.momSaved, applied: st.applied, mailPw: st.mailPw, reverted: !!st.reverted }));
+  tlog('END', JSON.stringify({ route: st.route, sent: st.sentCount, paid: st.friendsPaid, momSaved: st.momSaved, applied: st.applied, mailPw: st.mailPw, reverted: !!st.reverted, rineLost: !!st.rineLost, mailLost: !!st.mailLost, path2: st.path2, path3: st.path3, leakFixed: st.leakFixed }));
 }
 
 /* ---------- 裏にいるとき ---------- */
