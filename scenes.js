@@ -26,7 +26,7 @@ const TIMING = {
     speedUpAfter: 2,     /* 2人目に知らせたところで、送る間隔が短くなる */
     speedUpRate: 2,      /* 短くなったあとの減り方（2倍・仮） */
     mailPw: 10,          /* メールのパスワードを変える（10秒） */
-    apply: 15,           /* インスタカムのアプリから申し込む（15秒） */
+    apply: 15,           /* インスタグラフのアプリから申し込む（15秒） */
     strangerAt: 12,      /* S8の途中で知らない人から（S8に入ってからの秒・仮） */
     strangerWait: 3,     /* （3） */
     sayHold: 3           /* 通話の字幕1行を読む時間（仮） */
@@ -67,11 +67,11 @@ const T = {
     from: 'ゲームサイト',
     subject: '【お詫び】会員情報流出のお知らせ',
     body: '2023年にお預かりしていたメールアドレスとパスワードが流出しました。同じパスワードをほかのサービスでお使いの場合は、変更してください',
-    change: 'インスタカムのパスワードも変える',
+    change: 'インスタグラフのパスワードも変える',
     close: '閉じる'
   },
-  sms1: '【インスタカム】パスワード再設定の確認番号 482913　他の人に教えないでください',
-  sms2: '【インスタカム】パスワード再設定の確認番号 739104　他の人に教えないでください',
+  sms1: '【インスタグラフ】パスワード再設定の確認番号 482913　他の人に教えないでください',
+  sms2: '【インスタグラフ】パスワード再設定の確認番号 739104　他の人に教えないでください',
   code1: '482913',
   code2: '739104',
 
@@ -95,10 +95,10 @@ const T = {
   /* S5 */
   s5locked: 'ログインできません。',
   s5mail: {
-    from: 'インスタカム',
+    from: 'インスタグラフ',
     subject: '登録メールアドレスが変更されました',
     body: '登録メールアドレスが変更されました。心当たりがない場合は…',
-    note: '（このゲームでは）メールのリンクではなく、インスタカムのアプリから手続きします'
+    note: '（このゲームでは）メールのリンクではなく、インスタグラフのアプリから手続きします'
   },
 
   /* S6 */
@@ -122,20 +122,20 @@ const T = {
     mom: '母に電話する',
     friend: '友だちに知らせる',
     mail: 'メールのパスワードを変える',
-    apply: 'インスタカムのアプリから申し込む'
+    apply: 'インスタグラフのアプリから申し込む'
   },
   noAnswer: 'ただいま電話に出ることができません',
   again: 'もう一度かける',
   writeKotori: 'RINEで書く',
-  kotoriToMom: 'インスタカム乗っ取られた、買わないで',
+  kotoriToMom: 'インスタグラフ乗っ取られた、買わないで',
   /* 11/17 本人「乗っ取られたと言う／おばあちゃんの手紙、が意味わからん」→ 母が本人しか知らないことを聞く形に */
   momCall: [
-    '{名前}？　インスタカムの{名前}が、「俺のふりして電話してくる人がいるから出ないで」って言ってたよ',
+    '{名前}？　インスタグラフの{名前}が、「俺のふりして電話してくる人がいるから出ないで」って言ってたよ',
     '声も今は真似できるってテレビで言ってたし…',
     '本当に{名前}なら、きのう送った箱に何が入ってたか言って'
   ],
   momQuiz: ['「みかん」', '「お米」', '「わからない」'],
-  momRight: ['……{名前}だ。', 'じゃあ、インスタカムのほうが偽物なんだね。今レジの前。やめとく'],
+  momRight: ['……{名前}だ。', 'じゃあ、インスタグラフのほうが偽物なんだね。今レジの前。やめとく'],
   momWrong: '……やっぱりおかしい。切るね',
   support: [
     'お問い合わせを受け付けました',
@@ -144,7 +144,7 @@ const T = {
   ],
   submit: '提出する',
   kotoriLogin: '新しい端末からログインがありました',
-  stranger1: 'インスタカムのアカウント、今日中に取り戻します。復旧代行です',
+  stranger1: 'インスタグラフのアカウント、今日中に取り戻します。復旧代行です',
   stranger2: '先払い5,000円と、身分証の写真をお願いします',
   ignore: '無視',
   listen: '話を聞く',
@@ -200,7 +200,7 @@ const T = {
 
   /* 付録：追いかけてくる仕掛け */
   nudge: '見てる？',
-  tabPico: '(1) インスタカム：新しいメッセージ',
+  tabPico: '(1) インスタグラフ：新しいメッセージ',
   tabKotori: '(1) RINE：母',
   bgNotif1: '（ゲーム内）投票結果のお知らせ',
   bgNotif2: '（ゲーム内）{駅名}周辺の会場が決まりました',
@@ -244,7 +244,7 @@ const UI = {
   codeLabel: '確認番号',
   picoTabs: ['ホーム', 'DM', '設定'],
   stranger: '知らない人',
-  apps: { pico: 'インスタカム', kotori: 'RINE', sms: 'SMS', mail: 'メール', phone: '電話' }
+  apps: { pico: 'インスタグラフ', kotori: 'RINE', sms: 'SMS', mail: 'メール', phone: '電話' }
 };
 
 /* ---------- 場面の進み方（進行役 game.js がこの表を上から順に動かす） ---------- */
@@ -273,7 +273,7 @@ const SCENES = {
     { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', text: '{名前}久しぶり〜元気？', wait: 2, quiet: true },
     { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', text: 'ごめん番号ミスってそっちにコード行っちゃった', wait: 3 },
     { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', text: '届いてたら教えてくれない？🙏', wait: 2 },
-    { do: 'msg', app: 'sms', th: 'picosms', who: 'インスタカム', text: T.sms1, wait: 1 },
+    { do: 'msg', app: 'sms', th: 'picosms', who: 'インスタグラフ', text: T.sms1, wait: 1 },
     { do: 'choice', id: 's2', app: 'pico', th: 'misaki', nudge: true, options: [
       { label: '番号を送る', me: T.code1, set: { path2: true }, steps: [
         { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', text: 'ありがと！助かった', wait: TIMING.s2Gap }
@@ -306,7 +306,7 @@ const SCENES = {
     { do: 'notify', app: 'pico', text: 'ログインに失敗しました（{遠い都道府県}）' },
     { do: 'pause', s: TIMING.s4safeAgain },
     { do: 'notify', app: 'pico', text: 'ログインに失敗しました（{遠い都道府県}）' },
-    { do: 'msg', app: 'kotori', th: 'riko', who: 'リコ', text: 'ミサキのインスタカムから変な投票のやつ来たんだけど', wait: 5 },
+    { do: 'msg', app: 'kotori', th: 'riko', who: 'リコ', text: 'ミサキのインスタグラフから変な投票のやつ来たんだけど', wait: 5 },
     { do: 'msg', app: 'kotori', th: 'riko', who: 'リコ', text: '{名前}にも来た？', wait: 3 },
     { do: 'choice', id: 'riko', app: 'kotori', th: 'riko', options: [
       { label: '「来た。ミサキ乗っ取られてると思う。開かないで」', me: '来た。ミサキ乗っ取られてると思う。開かないで' },
@@ -324,7 +324,7 @@ const SCENES = {
     { do: 'set', v: { picoLocked: true } },
     { do: 'open', view: { name: 'pico', tab: 'feed' } },
     { do: 'mail', wait: 2, mail: T.s5mail },
-    { do: 'msg', app: 'kotori', th: 'yuto', who: 'ユウト', text: 'インスタカムでお前から「ギフトカード買って」って来たけど本人？', wait: 6 },
+    { do: 'msg', app: 'kotori', th: 'yuto', who: 'ユウト', text: 'インスタグラフでお前から「ギフトカード買って」って来たけど本人？', wait: 6 },
     { do: 'msg', app: 'kotori', th: 'yuto', who: 'ユウト', img: 'yutoShot', text: '', wait: 2 },
     { do: 'msg', when: st => st.faceTaken, app: 'kotori', th: 'riko', who: 'リコ', text: '{名前}の顔写真つきで「本人です」って来たんだけど', wait: 5 },
     { do: 'goto', to: 'S6' }
@@ -336,7 +336,7 @@ const SCENES = {
   ],
 
   S7: [
-    { do: 'msg', app: 'kotori', th: 'mom', who: '母', text: 'インスタカムで頼まれたカード、今からコンビニ行くね', wait: 4 },
+    { do: 'msg', app: 'kotori', th: 'mom', who: '母', text: 'インスタグラフで頼まれたカード、今からコンビニ行くね', wait: 4 },
     { do: 'msg', app: 'kotori', th: 'mom', who: '母', text: '電話も出られないって言うから', wait: 3 },
     { do: 'goto', to: 'S8' }
   ],

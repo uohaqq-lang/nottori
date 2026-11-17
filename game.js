@@ -92,7 +92,7 @@ const sound = {
 
 /* ---------- データ：会話・メール ---------- */
 const COLORS = { mom: '#c08a5b', misaki: '#9b6fa6', yuto: '#5b84b5', riko: '#c26b7e', kai: '#5f9a7a', stranger: '#7c7c7c', pico: '#b5654f', picosms: '#678c6b' };
-const PEOPLE = { mom: '母', misaki: 'ミサキ', yuto: 'ユウト', riko: 'リコ', kai: 'カイ', stranger: UI.stranger, picosms: 'インスタカム' };
+const PEOPLE = { mom: '母', misaki: 'ミサキ', yuto: 'ユウト', riko: 'リコ', kai: 'カイ', stranger: UI.stranger, picosms: 'インスタグラフ' };
 FRIENDS.forEach((n, i) => { const k = 'f' + i; PEOPLE[k] = n; if (!COLORS[k]) COLORS[k] = ['#5b84b5', '#c26b7e', '#5f9a7a', '#a08251', '#6b74b5', '#b56b9c', '#6f8f4f', '#a3655b'][i]; });
 const threads = { pico: {}, kotori: {}, sms: {} };
 function thread(app, th) {
@@ -233,7 +233,7 @@ function renderPico() {
     if (v.confirm) body = `<div class="confirm"><p>${esc(T.s4confirm)}</p><button class="btn pico" data-act="pwDo">${esc(T.s4confirmBtn)}</button><button class="btn sub" data-act="pwCancel">${esc(UI.back)}</button></div>`;
     else body = (raceAction ? `<div class="setrow" data-act="loginAlert" style="flex-direction:column;gap:8px"><span style="color:var(--danger)">${esc(raceAction.text)}</span><button class="btn" style="padding:10px">${esc(T.s4button)}</button></div>` : '') + `<div class="setrow" data-act="pwRow"><span>${esc(UI.pwRow)}</span><span>›</span></div><div class="setrow dim"><span>通知</span><span>オン</span></div><div class="setrow dim"><span>2段階認証</span><span>オフ</span></div>` + (v.pwDone ? `<div class="sysline">${esc(UI.pwDone)}</div>` : '');
   }
-  return `<div class="view pico">${head('Instacam', false, 'logo')}<div class="scroll">${body}</div><div class="ptabs">${['feed', 'dm', 'set'].map((k, i) => `<button class="${tab === k ? 'on' : ''}" data-act="ptab" data-arg="${k}">${esc(UI.picoTabs[i])}${k === 'dm' && badge('pico') ? ` (${badge('pico')})` : ''}</button>`).join('')}</div>${homebar()}</div>`;
+  return `<div class="view pico">${head('Instagraph', false, 'logo')}<div class="scroll">${body}</div><div class="ptabs">${['feed', 'dm', 'set'].map((k, i) => `<button class="${tab === k ? 'on' : ''}" data-act="ptab" data-arg="${k}">${esc(UI.picoTabs[i])}${k === 'dm' && badge('pico') ? ` (${badge('pico')})` : ''}</button>`).join('')}</div>${homebar()}</div>`;
 }
 function renderChatApp(app) {
   const v = view;
@@ -554,8 +554,8 @@ async function voteFlow() {
   }
   vv.verify = true; render();
   await sleep(1.0);
-  pushMsg('sms', 'picosms', { who: 'インスタカム', text: T.sms2 });
-  banner('sms', 'インスタカム', T.sms2, {});
+  pushMsg('sms', 'picosms', { who: 'インスタグラフ', text: T.sms2 });
+  banner('sms', 'インスタグラフ', T.sms2, {});
   await sleep(0.6);
   tray = null;
   const i = await new Promise(resolve => {
@@ -756,7 +756,7 @@ async function recover() {
         const next = receivers.find(k => !st.notified.has(k) && !st.paid.has(k));
         if (next == null) { toast('もう知らせる人がいない'); continue; }
         view = { name: 'kotori', th: 'f' + next }; thread('kotori', 'f' + next).name = FRIENDS[next];
-        pushMsg('kotori', 'f' + next, { me: true, text: 'インスタカム乗っ取られた。俺から来たのは無視して' }); render();
+        pushMsg('kotori', 'f' + next, { me: true, text: 'インスタグラフ乗っ取られた。俺から来たのは無視して' }); render();
         await doBusy(T.act.friend, TIMING.s8.notifyEach);
         st.notified.add(next);
         if (st.notified.size >= TIMING.s8.speedUpAfter) speed = TIMING.s8.speedUpRate;
@@ -814,7 +814,7 @@ async function ending() {
     $('#overlay').className = 'on black'; $('#overlay').textContent = T.later; await sleep(2);
     $('#overlay').className = ''; $('#overlay').textContent = '';
     st.picoLocked = false;
-    mails.push({ id: 'mr', from: 'インスタカム', subject: T.restored, body: T.restored, unread: true, t: '4日後' });
+    mails.push({ id: 'mr', from: 'インスタグラフ', subject: T.restored, body: T.restored, unread: true, t: '4日後' });
     view = { name: 'pico', tab: 'dm' }; render();
     await sleep(TIMING.laterHold);
   }
