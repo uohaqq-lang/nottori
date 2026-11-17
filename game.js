@@ -342,7 +342,7 @@ function renderCall() {
   const subs = (v.subs || []).map(x => `<div class="sub${x.me ? ' me' : x.sys ? ' sys' : ''}">${x.who ? `<b>${esc(x.who)}</b>` : ''}${esc(fill(x.text))}</div>`).join('');
   let btns = '';
   if (v.ringing) btns = `<button class="rb ng" data-act="callNo"><i>✕</i>${esc(UI.decline)}</button><button class="rb ok" data-act="callYes"><i>✆</i>${esc(UI.answer)}</button>`;
-  return `<div class="view call"><div class="${v.ringing ? 'ringing' : ''}"><div class="who" style="margin-top:96px">${avHTML('mom', 'avatar')}${esc(v.who || '母')}</div><div class="st">${esc(v.status || '')}</div></div><div class="subs">${subs}</div><div class="btns">${btns}</div></div>`;
+  return `<div class="view call${pendingTrayOptions ? ' asking' : ''}"><div class="${v.ringing ? 'ringing' : ''}"><div class="who" style="margin-top:96px">${avHTML('mom', 'avatar')}${esc(v.who || '母')}</div><div class="st">${esc(v.status || '')}</div></div><div class="subs">${subs}</div><div class="btns">${btns}</div></div>`;
 }
 function renderVote() {
   const v = view;
@@ -369,7 +369,10 @@ function renderTray() {
   if (['s9', 'doc', 's0'].includes(view.name)) return;
   if (pendingTrayOptions) {
     el.className = 'on dark';
-    el.innerHTML = pendingTrayOptions.map((o, i) => `<button class="opt" data-act="trayPick" data-arg="${i}"${o.off ? ' disabled' : ''}>${esc(o.label)}</button>`).join('');
+    /* 電話の途中で選ぶときは、相手が最後に言ったことを板の上にも出す（11/17 本人「選択肢でお母さんの言っていることが見えない」） */
+    const said = view.name === 'call' ? (view.subs || []).filter(x => !x.me && !x.sys).slice(-1)[0] : null;
+    const cv = document.querySelector('#screen .view.call'); if (cv) { cv.classList.add('asking'); const sb = cv.querySelector('.subs'); if (sb) sb.scrollTop = sb.scrollHeight; }
+    el.innerHTML = (said ? `<div class="q"><b>${esc(said.who || '')}</b>${esc(fill(said.text))}</div>` : '') + pendingTrayOptions.map((o, i) => `<button class="opt" data-act="trayPick" data-arg="${i}"${o.off ? ' disabled' : ''}>${esc(o.label)}</button>`).join('');
     return;
   }
   if (busy && view.name !== 'call') {
@@ -831,6 +834,7 @@ async function recover() {
     for (const line of T.momCall) { await sleep(TIMING.s8.sayHold); view.subs.push({ who: '母', text: line }); render(); }
     const opts = T.momQuiz.map(label => ({ label }));
     const i = await askTray(opts, true);
+    if (i < 0 || view.name !== 'call') return;   /* 答える前に時間切れになったとき */
     view.subs.push({ me: true, text: T.momQuiz[i].replace(/[「」]/g, '') }); render();
     if (i === 0) {
       for (const l of T.momRight) { await sleep(TIMING.s8.sayHold); view.subs.push({ who: '母', text: l }); render(); }
@@ -883,7 +887,7 @@ async function recover() {
   })();
   await new Promise(resolve => { const iv = setInterval(() => { if (momDone && (!out || frLeft.v <= 0)) { clearInterval(iv); resolve(); } }, 300); });
   clearInterval(timer);
-  if (trayResolve) { const r = trayResolve; trayResolve = null; r(-1); }
+  if (trayResolve) pickTray(-1);   /* 出したままの選択肢も片づける */
   tray = null; busy = null;
   if (!st.mailPw) banner('kotori', '', T.kotoriLogin, {});
   $('#bars').className = ''; $('#bars').innerHTML = '';
@@ -897,7 +901,7 @@ function askTray(options, inCall) {
     trayResolve = resolve;
     pendingTrayOptions = options;
     renderTray();
-    if (AUTO) { const p = PICKS.length ? PICKS.shift() : 0; setTimeout(() => pickTray(Math.min(p, options.length - 1)), 300); }
+    if (AUTO && !(inCall && QS.has('callHold'))) { const p = PICKS.length ? PICKS.shift() : 0; setTimeout(() => pickTray(Math.min(p, options.length - 1)), 300); }  /* callHold は確かめ用：電話の選択肢で止める */
   });
 }
 let pendingTrayOptions = null;

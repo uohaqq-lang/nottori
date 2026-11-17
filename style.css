@@ -514,3 +514,9 @@ span.pic svg { width: 100%; height: 100%; display: block; }
 .s9 .det-wrap .shopm img { width: 100%; height: 100%; display: block; object-fit: cover; }
 .s9 .det-wrap .shopm i { position: absolute; border: 3px solid #e33; box-sizing: border-box; }
 .view.withBars .rineHead, .view.withBars .rineListHead, .view.withBars .igTop, .view.withBars .igChatHead { margin-top: 62px; }
+#tray .q { color: #fff; font-size: 15px; line-height: 1.6; padding: 2px 4px 12px; }
+#tray .q b { display: block; font-size: 12px; opacity: .7; font-weight: 500; }
+.call.asking .who { margin-top: 24px !important; font-size: 22px; }
+.call.asking .avatar { width: 56px; height: 56px; margin-bottom: 8px; }
+.call.asking .subs { padding-top: 14px; padding-bottom: 290px; }
+.call.withBars.asking .who { margin-top: 64px !important; }
