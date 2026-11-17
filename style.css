@@ -341,3 +341,17 @@ button { font-family: inherit; }
 #pageMark { position: fixed; right: 12px; bottom: 10px; font-size: 11px; color: rgba(200,200,200,.5); letter-spacing: .1em; pointer-events: none; }
 @media (max-width: 600px) { #pageMark { display: none; } }
 #testlog { display: none; }
+
+/* ---------- 端末で見た目を変える（11/17 本人「iPhoneかAndroidかで壁紙を変えよう」）。どちらも本物に似せすぎない独自の絵柄 ---------- */
+.ios .lock { background: radial-gradient(120% 80% at 20% 10%, #f2a07b 0%, #c9607a 38%, #4b3a74 72%, #1f1d3a 100%); }
+.ios .home { background: radial-gradient(120% 80% at 80% 0%, #f0b48a 0%, #c06a86 40%, #47407a 75%, #222245 100%); }
+.android .lock { background: radial-gradient(60% 40% at 85% 75%, rgba(120,220,190,.25), transparent 70%), radial-gradient(50% 35% at 10% 30%, rgba(90,160,230,.22), transparent 70%), linear-gradient(160deg, #0f5c5a 0%, #12384f 45%, #0d1f2e 100%); }
+.android .lock .clock { text-align: left; padding-left: 28px; font-size: 92px; font-weight: 400; margin-top: 70px; line-height: .95; }
+.android .lock .date { text-align: left; padding-left: 32px; font-size: 15px; }
+.android .home { background: linear-gradient(170deg, #12584f 0%, #133a52 55%, #0e2233 100%); }
+.android .app .ic { border-radius: 50%; }
+.android .home .dock { background: none; border-radius: 0; }
+.android .home .dock::before { content: ""; grid-column: 1 / -1; height: 44px; border-radius: 22px; background: rgba(255,255,255,.88); margin: 0 6px 14px; }
+.android .ban { border-radius: 14px; }
+.android .homebar i { width: 108px; height: 4px; }
+.android .msg .bb { border-radius: 16px; }

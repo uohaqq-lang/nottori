@@ -178,7 +178,8 @@ function renderS0() {
   const saved = loadProgress();
   if (view.step === 'real') return `<div class="view s0"><div class="inner"><div class="notes">${T.s0.realNotes.map(p => `<p>${esc(p)}</p>`).join('')}</div><button class="btn go" data-act="start" data-arg="real">${esc(T.s0.start)}</button><button class="backs" data-act="s0back">${esc(UI.back)}</button></div></div>`;
   if (view.step === 'normal') return `<div class="view s0"><div class="inner"><div class="notes"><p>${esc(T.s0.normalNote)}</p></div><button class="btn go" data-act="start" data-arg="normal">${esc(T.s0.start)}</button><button class="backs" data-act="s0back">${esc(UI.back)}</button></div></div>`;
-  return `<div class="view s0"><div class="inner">${saved ? `<div class="resume"><span>${esc(UI.resume)}</span><button data-act="fresh">${esc(UI.fromStart)}</button></div>` : ''}<button class="mode" data-act="mode" data-arg="normal"><b>${esc(T.s0.normal.label)}</b><span>${esc(T.s0.normal.desc)}</span></button><button class="mode real" data-act="mode" data-arg="real"><b>${esc(T.s0.real.label)}</b><span>${esc(T.s0.real.desc)}</span></button></div></div>`;
+  const ios = deviceKind() === 'iPhone' && !navigator.standalone;
+  return `<div class="view s0"><div class="inner">${saved ? `<div class="resume"><span>${esc(UI.resume)}</span><button data-act="fresh">${esc(UI.fromStart)}</button></div>` : ''}<button class="mode" data-act="mode" data-arg="normal"><b>${esc(T.s0.normal.label)}</b><span>${esc(T.s0.normal.desc)}</span></button><button class="mode real" data-act="mode" data-arg="real"><b>${esc(T.s0.real.label)}</b><span>${esc(T.s0.real.desc)}</span></button>${ios ? `<p style="font-size:13px;line-height:1.7;color:#9aa0ab;margin-top:6px">${esc(UI.iosFull)}</p>` : ''}</div></div>`;
 }
 function renderPico() {
   const v = view;
@@ -848,6 +849,8 @@ $('#tray').addEventListener('click', e => {
 /* ---------- 始める ---------- */
 async function begin(mode) {
   st.mode = mode; audioInit();
+  /* Android・PCは「始める」を押したときに画面いっぱいにする（iPhoneのSafariはできないので、ホーム画面に追加してもらう） */
+  try { const el = document.documentElement; if (!AUTO && el.requestFullscreen && window.innerWidth <= 600) el.requestFullscreen({ navigationUI: 'hide' }).catch(() => {}); } catch (e) {}
   const saved = loadProgress();
   const startScene = saved && saved.scene && SCENES[saved.scene] && !['S0', 'S1'].includes(saved.scene) ? saved.scene : 'S1';
   if (startScene !== 'S1') {
@@ -865,10 +868,11 @@ function fit() {
   const s = Math.min(1, (window.innerHeight - 40) / 844);
   w.style.transform = `scale(${s})`;
 }
+document.body.classList.add(deviceKind() === 'Android' || QS.get('look') === 'android' ? 'android' : 'ios');
 window.addEventListener('resize', fit);
 fit();
 tlog('size', window.innerWidth, window.innerHeight, document.documentElement.clientWidth, (document.getElementById('phone')||{}).offsetWidth);
-setInterval(statusbar, 10000);
+setInterval(() => { if (view.name === 'lock') render(); else statusbar(); }, 10000);
 render();
 if (AUTO) eraseProgress();
 if (AUTO) setTimeout(() => begin(QS.get('mode') === 'real' ? 'real' : 'normal'), 300);

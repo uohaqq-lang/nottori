@@ -1,0 +1,9 @@
+{
+ "name": "乗っ取り",
+ "short_name": "乗っ取り",
+ "start_url": "./",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#1d222b",
+ "theme_color": "#1d222b"
+}
