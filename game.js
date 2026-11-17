@@ -403,8 +403,9 @@ function renderVote() {
 }
 function renderS9() {
   const v = view;
-  const rows = v.rows.map((r, i) => `<tr class="${r.me ? 'me' : ''}${r.last ? ' last' : ''}"${r.me ? ' data-act="s9open"' : ''}><td>${esc(r.a)}</td><td>${esc(r.p)}</td><td>${esc(r.s)}</td></tr>` + (r.me && v.openDet ? `<tr class="det"><td colspan="3"><div class="det-wrap"><span class="shopm"><img src="img/shop.jpg" alt="" draggable="false"><i style="left:18%;top:21%;width:57%;height:18%"></i><i style="left:81%;top:32%;width:18%;height:7%"></i></span>${st.station ? `<span class="chip">${esc(st.station)}駅</span>` : ''}${st.faceTaken ? '<div class="face" data-face="1"></div>' : ''}<span class="chip">${esc(T.friends54)}</span></div></td></tr>` : '')).join('');
-  return `<div class="view s9" style="position:absolute;inset:0"><div class="scroll"><table><colgroup><col class="c1"><col class="c2"><col class="c3"></colgroup><tr>${T.s9cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr>${rows}</table></div><button class="nx${v.next ? ' on' : ''}" data-act="s9next">›</button></div>`;
+  const rows = v.rows.map((r, i) => (r.last ? `<tr class="lastcap"><td colspan="3">${esc(T.s9capLast)} ↓</td></tr>` : '') + `<tr class="${r.me ? 'me' : ''}${r.last ? ' last' : ''}"${r.me ? ' data-act="s9open"' : ''}><td>${r.me ? `<span class="you">${esc(T.s9you)}</span>` : ''}${esc(r.a)}</td><td>${esc(r.p)}</td><td>${esc(r.s)}</td></tr>` + (r.me && v.openDet ? `<tr class="det"><td colspan="3"><div class="det-wrap"><span class="shopcol"><span class="shopm"><img src="img/shop.jpg" alt="" draggable="false"><i style="left:18%;top:21%;width:57%;height:18%"></i><i style="left:81%;top:32%;width:18%;height:7%"></i></span><span class="cap">${esc(T.s9capShop)}</span></span>${st.station ? `<span class="chip">${esc(st.station)}駅</span>` : ''}${st.faceTaken ? '<div class="face" data-face="1"></div>' : ''}<span class="chip">${esc(T.friends54)}<small>${esc(T.s9capFriends)}</small></span></div></td></tr>` : '')).join('');
+  const total = v.rows.filter(r => !r.last).length, sending = v.rows.filter(r => r.s === '送信中').length;
+  return `<div class="view s9" style="position:absolute;inset:0"><div class="s9bar"><b>${esc(T.s9title)}</b><span>${esc(T.s9stats.replace('{n}', total).replace('{m}', sending))}</span></div>${v.foot ? `<div class="s9foot">${esc(T.s9foot)}</div>` : ''}<div class="scroll"><table><colgroup><col class="c1"><col class="c2"><col class="c3"></colgroup><tr>${T.s9cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr>${rows}</table></div><button class="nx${v.next ? ' on' : ''}" data-act="s9next">›</button></div>`;
 }
 const lockCards = [];
 
@@ -859,6 +860,12 @@ async function misaki3() {
   await sleep(1);
 }
 
+/* 送ってしまった友だちからの連絡（相手はインスタグラフの頼みを本物だと思っている） */
+const friendTh = k => ['yuto', 'riko', 'kai'][k] || 'f' + k;   /* RINEでは、ゆうと・Riko・kai は前からの会話に続ける */
+function paidNotice(k) {
+  const th = friendTh(k); thread('kotori', th).name = FRIENDS[k];
+  deliver({ app: 'kotori', th, who: FRIENDS[k], text: fill(T.paidMsgs[k % T.paidMsgs.length]), wait: 0, noPace: true });
+}
 /* S8：取り戻す */
 async function recover() {
   const out = st.route === 'out';
@@ -951,7 +958,7 @@ async function recover() {
       frLeft.v -= dt * speed;
       const left = receivers.filter(i => !st.notified.has(i) && !st.paid.has(i));
       const shouldPaid = Math.floor((1 - Math.max(0, frLeft.v) / TIMING.lines.friends) * receivers.length);
-      while (st.paid.size < shouldPaid && left.length) { const k = left.shift(); st.paid.add(k); }
+      while (st.paid.size < shouldPaid && left.length) { const k = left.shift(); st.paid.add(k); paidNotice(k); }
     }
     if (!strangerShown && (now - t0) * SPEED / 1000 > TIMING.s8.strangerAt) { strangerShown = true; stranger(); }
     drawBars();
@@ -968,8 +975,8 @@ async function recover() {
         const next = receivers.find(k => !st.notified.has(k) && !st.paid.has(k));
         if (next == null) { toast('もう知らせる人がいない'); continue; }
         st.notified.add(next);   /* 知らせ始めた時点で、この人は送金しない */
-        thread('kotori', 'f' + next).name = FRIENDS[next]; gotoView({ name: 'kotori', th: 'f' + next });
-        pushMsg('kotori', 'f' + next, { me: true, text: 'インスタグラフ乗っ取られた。俺から来たのは無視して' }); render();
+        thread('kotori', friendTh(next)).name = FRIENDS[next]; gotoView({ name: 'kotori', th: friendTh(next) });
+        pushMsg('kotori', friendTh(next), { me: true, text: 'インスタグラフ乗っ取られた。俺から来たのは無視して' }); render();
         await doBusy(T.act.friend, TIMING.s8.notifyEach);
         if (st.notified.size >= TIMING.s8.speedUpAfter) speed = TIMING.s8.speedUpRate;
       } else if (a.id === 'mail') { await doBusy(T.act.mail, TIMING.s8.mailPw); st.mailPw = true; a.off = true; }
@@ -1017,6 +1024,7 @@ async function stranger() {
 async function ending() {
   const n = st.route === 'out' ? st.paid.size : Math.ceil((st.asked || 0) / 2);
   st.friendsPaid = n;
+  if (st.route !== 'out') for (let k = 0; k < n; k++) { paidNotice(k); await sleep(1.2); }
   view = { name: 'kotori', th: 'mom' };
   await deliver({ app: 'kotori', th: 'mom', who: '母', text: st.momSaved ? T.endA : T.endB, wait: TIMING.endingWait });
   const edge = $('#edge');
@@ -1037,9 +1045,9 @@ async function ending() {
 /* S9：向こうの画面 */
 async function attacker() {
   tray = null; choice = null; renderTray();
-  $('#overlay').className = 'on black'; $('#overlay').textContent = '';
-  await sleep(TIMING.s9Dark);
-  $('#overlay').className = '';
+  $('#overlay').className = 'on black s9in'; $('#overlay').textContent = T.s9intro;
+  await sleep(TIMING.s9Dark + 2.5);
+  $('#overlay').className = ''; $('#overlay').textContent = '';
   const names = ['みさき', 'たくみ_07', 'yuu.k', 'さき', 'ren0412', 'まなみ', 'hiro_t', 'りん', 'kazuya', 'あや', 'sora.m', 'しおり', 'tatsu', 'なな', 'ryota_22', 'ゆい', 'kenta.s', 'みお', 'daiki', 'はるか', 'shun', 'あおい', 'mei_k', 'こうた', 'rina', 'つばさ', 'yuto.h', 'かな', 'sho', 'えみ', 'takeru', 'のぞみ'];
   const paths = [T.path2, T.path3, T.path1];
   const rows = names.map((a, i) => ({ a, p: paths[i % 3], s: i % 5 === 0 ? 'ログイン中' : '送信中' }));
@@ -1054,7 +1062,7 @@ async function attacker() {
   await new Promise(r => { actWaiters.s9open = r; setTimeout(r, TIMING.s9AutoOpen * 1000 / SPEED); });
   view.openDet = true; render();
   await sleep(TIMING.s9LastLine);
-  view.rows.push({ a: '', p: fill(st.route === 'safe' ? T.lastSafe : T.lastIn), s: '', last: true }); view.next = true; render();
+  view.rows.push({ a: '', p: fill(st.route === 'safe' ? T.lastSafe : T.lastIn), s: '', last: true }); view.next = true; view.foot = st.route !== 'safe'; render();
   const sc = $('#screen .scroll'); if (sc) sc.scrollTop = sc.scrollHeight;
   await new Promise(r => { actWaiters.s9next = r; if (AUTO) setTimeout(r, 400); });
 }
