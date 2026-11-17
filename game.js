@@ -351,7 +351,7 @@ function renderPico() {
   if (v.sett) return renderSettings(v);
   if (v.th) {
     const t = thread('pico', v.th);
-    return `<div class="view pico ig"><div class="pad44"></div><div class="igChatHead"><button class="igIcon" data-act="back">${IC.back}</button>${igAv(v.th, 32)}<div class="igChatName"><b>${esc(t.name)}</b><span>Instagraph</span></div><span class="igIcon">${IC.phone}</span><span class="igIcon">${IC.video}</span></div><div class="chat">${t.msgs.map(m => msgHTML('pico', t, m)).join('')}${inlineHTML('pico', v.th)}</div><div class="igInput"><span class="igCam">${IC.camera}</span><span class="igPh">メッセージ...</span><span class="igIcon sm">${IC.mic}</span><span class="igIcon sm">${IC.image}</span></div>${homebar()}</div>`;
+    return `<div class="view pico ig"><div class="pad44"></div><div class="igChatHead"><button class="igIcon" data-act="back">${IC.back}</button>${igAv(v.th, 32)}<div class="igChatName"><b>${esc(t.name)}</b><span>Instagraph</span></div><span class="igIcon">${IC.phone}</span><span class="igIcon">${IC.video}</span></div><div class="chat">${t.msgs.map(m => msgHTML('pico', t, m)).join('')}${inlineHTML('pico', v.th)}</div><div class="igInput" data-act="typeHint"><span class="igCam">${IC.camera}</span><span class="igPh">メッセージ...</span><span class="igIcon sm">${IC.mic}</span><span class="igIcon sm">${IC.image}</span></div>${homebar()}</div>`;
   }
   const tab = v.tab || 'feed';
   if (tab === 'dm') {
@@ -387,7 +387,7 @@ function renderChatApp(app) {
   if (app === 'kotori') {
     if (v.th) {
       const t = thread(app, v.th);
-      return `<div class="view kotori rine"><div class="pad44"></div><div class="rineHead"><button class="igIcon" data-act="back">${IC.back}</button><b>${esc(t.name)}</b><span class="igIcon">${IC.search}</span><span class="igIcon">${IC.phone}</span><span class="igIcon">${IC.menu}</span></div><div class="chat">${t.msgs.map(m => msgHTML(app, t, m)).join('')}${inlineHTML(app, v.th)}</div><div class="rineInput"><span class="igIcon sm">${IC.plus2}</span><span class="igIcon sm">${IC.camera}</span><span class="igIcon sm">${IC.image}</span><span class="rinePh">Aa</span><span class="igIcon sm">${IC.mic}</span></div>${homebar()}</div>`;
+      return `<div class="view kotori rine"><div class="pad44"></div><div class="rineHead"><button class="igIcon" data-act="back">${IC.back}</button><b>${esc(t.name)}</b><span class="igIcon">${IC.search}</span><span class="igIcon">${IC.phone}</span><span class="igIcon">${IC.menu}</span></div><div class="chat">${t.msgs.map(m => msgHTML(app, t, m)).join('')}${inlineHTML(app, v.th)}</div><div class="rineInput" data-act="typeHint"><span class="igIcon sm">${IC.plus2}</span><span class="igIcon sm">${IC.camera}</span><span class="igIcon sm">${IC.image}</span><span class="rinePh">Aa</span><span class="igIcon sm">${IC.mic}</span></div>${homebar()}</div>`;
     }
     const list = Object.values(threads[app]).filter(t => t.msgs.length).sort((a, b) => b.t - a.t);
     const rows = list.map(t => { const last = lastReal(t); return `<div class="rineRow" data-act="th" data-arg="${t.th}">${igAv(t.th, 50)}<div class="mid"><div class="nm">${esc(t.name)}</div><div class="pv">${esc(last.img ? '写真を送信しました' : fill(last.text || ''))}</div></div><div class="rineSide"><span>${esc(last.tm || '')}</span>${t.unread ? `<span class="rineCount">${t.unread}</span>` : ''}</div></div>`; }).join('');
@@ -1238,6 +1238,14 @@ document.addEventListener('click', e => {
     case 'loginAlert': if (raceAction) raceAction.press(); break;
     case 'voteX': view = { name: 'home' }; render(); break;
     case 'openVote': if (voteView && !voteView.closed) { view = voteView; render(); } else toast('このページは表示できません'); break;
+    case 'typeHint': {
+      /* 入力欄は見た目だけ。返事は選択肢のボタンから（11/17 本人の質問から） */
+      const bt = document.querySelectorAll('#screen .inline button, #tray .opt');
+      const mine = choice && choice.app === view.name && choice.th === view.th;
+      if (bt.length || mine) { toast('返事は上のボタンから選べます'); bt.forEach(b => { b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); }); }
+      else toast('今は返事を送れる場面ではありません');
+      break;
+    }
     case 'erase': eraseProgress(); toast(UI.erased); break;
     case 'again': eraseProgress(); location.href = location.pathname; break;
   }
