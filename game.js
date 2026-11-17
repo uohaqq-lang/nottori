@@ -845,7 +845,7 @@ async function race() {
   };
   raceAction = { press: onPress, text: T.s4notify.replace('{遠い都道府県}', far), save: () => { if (!done) { saved = true; done = true; } } };
   raceBanner = banner('pico', '新しいログイン', raceAction.text, { sticky: true, onTap: onPress });
-  view = { name: 'pico', tab: 'dm' }; render();
+  render();
   if (AUTO) { const p = PICKS.length ? PICKS.shift() : 0; if (p === 0) setTimeout(() => { onPress(); setTimeout(() => { view.lc = 'pw'; render(); setTimeout(() => raceAction && raceAction.save(), 200); }, 200); }, 3500 / SPEED * 4); }
   const t0 = Date.now(); let hinted = false;
   while (!done) {
@@ -871,9 +871,9 @@ async function race() {
     banner('pico', '', T.s4saved, {});
   } else {
     st.route = 'out'; st.sentCount = TIMING.s4.friends;
-    $('#overlay').className = 'on white'; $('#overlay').textContent = T.s4white;
-    await sleep(3);
-    $('#overlay').className = ''; $('#overlay').textContent = '';
+    /* インスタグラフを見ているときだけ、その場で締め出される。ほかのアプリにいるときは通知で知る（11/17 本人「RINEを開いてるのにインスタのログアウトが出る」） */
+    if (view.name === 'pico') { st.picoLocked = true; $('#overlay').className = 'on white'; $('#overlay').textContent = T.s4white; await sleep(3); $('#overlay').className = ''; $('#overlay').textContent = ''; }
+    else banner('pico', '', T.s4white, { open: { name: 'pico' } });
   }
   render();
 }

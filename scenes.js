@@ -397,7 +397,6 @@ const SCENES = {
 
   S5: [
     { do: 'set', v: { picoLocked: true } },
-    { do: 'open', view: { name: 'pico', tab: 'feed' } },
     { do: 'mail', wait: 2, mail: T.s5mail },
     { do: 'msg', app: 'kotori', th: 'yuto', who: 'ゆうと', text: 'インスタグラフでお前から「ポチペイで3万円払って」って来たけど本人？', wait: 6 },
     { do: 'msg', app: 'kotori', th: 'yuto', who: 'ゆうと', img: 'yutoShot', text: '', wait: 2 },
