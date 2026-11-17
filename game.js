@@ -94,6 +94,15 @@ const sound = {
 const COLORS = { mom: '#c08a5b', misaki: '#9b6fa6', yuto: '#5b84b5', riko: '#c26b7e', kai: '#5f9a7a', stranger: '#7c7c7c', pico: '#b5654f', picosms: '#678c6b' };
 const PEOPLE = { mom: '母', misaki: 'ミサキ', yuto: 'ユウト', riko: 'リコ', kai: 'カイ', stranger: UI.stranger, picosms: 'インスタグラフ' };
 FRIENDS.forEach((n, i) => { const k = 'f' + i; PEOPLE[k] = n; if (!COLORS[k]) COLORS[k] = ['#5b84b5', '#c26b7e', '#5f9a7a', '#a08251', '#6b74b5', '#b56b9c', '#6f8f4f', '#a3655b'][i]; });
+/* アイコンの写真（生成AIで作った。人の顔は写さない）。知らない人は初期アイコンのまま */
+const AVATAR = { me: 'me', mom: 'mom', misaki: 'misaki', yuto: 'yuto', riko: 'riko', kai: 'kai', f0: 'yuto', f1: 'riko', f2: 'kai', f3: 'haruka', f4: 'ren', f5: 'mio', f6: 'daichi', f7: 'aoi' };
+const DEFAULT_AV = '<svg viewBox="0 0 40 40"><rect width="40" height="40" fill="#dbdbdb"/><circle cx="20" cy="16" r="7" fill="#fff"/><path d="M6 38c1.5-8 7-12 14-12s12.5 4 14 12z" fill="#fff"/></svg>';
+function avHTML(th, cls, size) {
+  const st = size ? `width:${size}px;height:${size}px;` : '';
+  if (AVATAR[th]) return `<img class="${cls} pic" src="img/av_${AVATAR[th]}.jpg" alt="" draggable="false" style="${st}">`;
+  if (th === 'picosms') return `<span class="${cls} pic" style="${st}">${ICON.pico}</span>`;
+  return `<span class="${cls} pic" style="${st}">${DEFAULT_AV}</span>`;
+}
 const threads = { pico: {}, kotori: {}, sms: {} };
 function thread(app, th) {
   if (!threads[app][th]) threads[app][th] = { th, name: PEOPLE[th] || th, msgs: [], unread: 0, t: Date.now() };
@@ -119,7 +128,7 @@ const SVG = {
   desk: `<img class="ph" src="img/desk.jpg" alt="" draggable="false">`,  /* 写真は生成AIで作った（実在の店・人ではない） */
   shop: `<img class="ph" src="img/shop.jpg" alt="" draggable="false">`,  /* 写真は生成AIで作った（実在の店・人ではない） */
   nabe: `<img class="ph" src="img/nabe.jpg" alt="" draggable="false">`,  /* 写真は生成AIで作った（実在の店・人ではない） */
-  yutoShot: `<svg viewBox="0 0 220 120" width="200"><rect width="220" height="120" rx="10" fill="#f7f6f3" stroke="#ddd"/><circle cx="22" cy="28" r="12" fill="#c9a38f"/><text x="40" y="32" font-size="11" fill="#333">ソウタ</text><rect x="14" y="48" width="192" height="52" rx="12" fill="#fff" stroke="#e5e2dc"/><text x="24" y="70" font-size="10" fill="#333">ごめん急ぎで、コンビニでギフト</text><text x="24" y="86" font-size="10" fill="#333">カード買って番号送ってくれない？</text></svg>`,
+  yutoShot: `<svg viewBox="0 0 220 120" width="200"><rect width="220" height="120" rx="10" fill="#f7f6f3" stroke="#ddd"/><clipPath id="ysc"><circle cx="22" cy="28" r="12"/></clipPath><image href="img/av_me.jpg" x="10" y="16" width="24" height="24" clip-path="url(#ysc)" preserveAspectRatio="xMidYMid slice"/><text x="40" y="32" font-size="11" fill="#333">ソウタ</text><rect x="14" y="48" width="192" height="52" rx="12" fill="#fff" stroke="#e5e2dc"/><text x="24" y="70" font-size="10" fill="#333">ごめん急ぎで、コンビニでギフト</text><text x="24" y="86" font-size="10" fill="#333">カード買って番号送ってくれない？</text></svg>`,
   idcard: `<svg viewBox="0 0 180 112" class="idcard"><rect width="180" height="112" rx="8" fill="#eef2f6" stroke="#b9c3cf"/><rect x="12" y="22" width="52" height="66" fill="#c9a38f"/><rect x="76" y="26" width="86" height="8" fill="#9aa8bb"/><rect x="76" y="44" width="70" height="8" fill="#9aa8bb"/><rect x="76" y="62" width="80" height="8" fill="#9aa8bb"/><text x="12" y="15" font-size="9" fill="#6b7682">学生証（ゲームの中の絵）</text></svg>`,
   cand: c => `<svg viewBox="0 0 160 160"><rect width="160" height="160" fill="${c}"/><circle cx="80" cy="64" r="30" fill="#fff" opacity=".85"/><rect x="38" y="104" width="84" height="56" rx="30" fill="#fff" opacity=".85"/></svg>`,
   faceDummy: `<svg viewBox="0 0 100 100"><rect width="100" height="100" fill="#f3e4ea"/><circle cx="50" cy="42" r="18" fill="#d9b8c4"/><rect x="24" y="64" width="52" height="36" rx="18" fill="#d9b8c4"/></svg>`
@@ -163,7 +172,7 @@ function msgHTML(app, t, m) {
   if (m.unsent) return `<div class="msg"><div class="bb">${esc(T.unsent)}</div></div>`.replace('class="msg"', 'class="msg unsent"');
   if (m.sys) return `<div class="sysline">${esc(m.text)}</div>`;
   const me = m.me;
-  const av = me ? '' : `<span class="av" style="background:${COLORS[t.th] || '#888'}">${esc((m.who || t.name).slice(0, 1))}</span>`;
+  const av = me ? '' : avHTML(t.th, 'av');
   let bb;
   if (m.typing) bb = `<div class="bb typing">${esc(UI.typing)}</div>`;
   else if (m.link) bb = `<div class="bb link" data-act="openVote"><div class="lkimg"></div><div class="lk"><b>${esc(UI.voteTitle)}</b><span>${esc(UI.voteHost)}</span></div></div>`;
@@ -206,7 +215,7 @@ function render() {
   } else if (v.name === 'pico') html = renderPico();
   else if (v.name === 'kotori' || v.name === 'sms') html = renderChatApp(v.name);
   else if (v.name === 'mail') html = renderMail();
-  else if (v.name === 'phone') html = `<div class="view">${head(UI.apps.phone, true)}<div class="scroll">${calls.slice().reverse().map(c => `<div class="row"><span class="av" style="background:${COLORS.mom}">母</span><div class="mid"><div class="nm"${c.missed ? ' style="color:var(--danger)"' : ''}>${esc(c.who)}</div><div class="pv">${c.missed ? '不在着信' : '通話'}</div></div><span class="tm">${esc(c.tm)}</span></div>`).join('')}</div>${homebar()}</div>`;
+  else if (v.name === 'phone') html = `<div class="view">${head(UI.apps.phone, true)}<div class="scroll">${calls.slice().reverse().map(c => `<div class="row">${avHTML('mom', 'av')}<div class="mid"><div class="nm"${c.missed ? ' style="color:var(--danger)"' : ''}>${esc(c.who)}</div><div class="pv">${c.missed ? '不在着信' : '通話'}</div></div><span class="tm">${esc(c.tm)}</span></div>`).join('')}</div>${homebar()}</div>`;
   else if (v.name === 'call') html = renderCall();
   else if (v.name === 'vote') html = renderVote();
   else if (v.name === 's9') html = renderS9();
@@ -248,11 +257,7 @@ const IC = {
   back: '<svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="19" cy="12" r="1.7" fill="currentColor"/></svg>'
 };
-function igAv(th, size) {
-  const name = th === 'me' ? myName() : (PEOPLE[th] || th);
-  const bg = th === 'me' ? '#c9a38f' : (COLORS[th] || '#999');
-  return `<span class="igav" style="width:${size}px;height:${size}px;background:${bg};font-size:${Math.round(size * 0.4)}px">${esc(String(name).slice(0, 1))}</span>`;
-}
+function igAv(th, size) { return avHTML(th, 'igav', size); }
 /* 「心当たりがない」は、通知を消しても、どの画面からも押せるように上に出す */
 const raceRow = () => raceAction ? `<div class="setrow igAlert" data-act="loginAlert"><span>${esc(raceAction.text)}</span><button class="btn">${esc(T.s4button)}</button></div>` : '';
 /* 一覧の表示は「入力中…」ではなく、最後に届いた本物のメッセージで */
@@ -319,7 +324,7 @@ function renderChatApp(app) {
     return `<div class="view ${app}">${head(t.name, true)}<div class="chat">${t.msgs.map(m => msgHTML(app, t, m)).join('')}${inlineHTML(app, v.th)}</div>${homebar()}</div>`;
   }
   const list = Object.values(threads[app]).filter(t => t.msgs.length).sort((a, b) => b.t - a.t);
-  return `<div class="view ${app}">${head(UI.apps[app], false)}<div class="scroll">${list.map(t => { const last = t.msgs[t.msgs.length - 1]; return `<div class="row${t.unread ? ' unread' : ''}" data-act="th" data-arg="${t.th}"><span class="av" style="background:${COLORS[t.th] || '#888'}">${esc(t.name.slice(0, 1))}</span><div class="mid"><div class="nm">${esc(t.name)}</div><div class="pv">${esc(last.img ? '画像' : (last.me ? 'あなた：' : '') + fill(last.text || ''))}</div></div><span class="tm">${esc(last.tm || '')}</span></div>`; }).join('')}</div>${homebar()}</div>`;
+  return `<div class="view ${app}">${head(UI.apps[app], false)}<div class="scroll">${list.map(t => { const last = t.msgs[t.msgs.length - 1]; return `<div class="row${t.unread ? ' unread' : ''}" data-act="th" data-arg="${t.th}">${avHTML(t.th, 'av')}<div class="mid"><div class="nm">${esc(t.name)}</div><div class="pv">${esc(last.img ? '画像' : (last.me ? 'あなた：' : '') + fill(last.text || ''))}</div></div><span class="tm">${esc(last.tm || '')}</span></div>`; }).join('')}</div>${homebar()}</div>`;
 }
 function renderMail() {
   const v = view;
@@ -337,7 +342,7 @@ function renderCall() {
   const subs = (v.subs || []).map(x => `<div class="sub${x.me ? ' me' : x.sys ? ' sys' : ''}">${x.who ? `<b>${esc(x.who)}</b>` : ''}${esc(fill(x.text))}</div>`).join('');
   let btns = '';
   if (v.ringing) btns = `<button class="rb ng" data-act="callNo"><i>✕</i>${esc(UI.decline)}</button><button class="rb ok" data-act="callYes"><i>✆</i>${esc(UI.answer)}</button>`;
-  return `<div class="view call"><div class="${v.ringing ? 'ringing' : ''}"><div class="who" style="margin-top:96px"><div class="avatar">母</div>${esc(v.who || '母')}</div><div class="st">${esc(v.status || '')}</div></div><div class="subs">${subs}</div><div class="btns">${btns}</div></div>`;
+  return `<div class="view call"><div class="${v.ringing ? 'ringing' : ''}"><div class="who" style="margin-top:96px">${avHTML('mom', 'avatar')}${esc(v.who || '母')}</div><div class="st">${esc(v.status || '')}</div></div><div class="subs">${subs}</div><div class="btns">${btns}</div></div>`;
 }
 function renderVote() {
   const v = view;
@@ -351,7 +356,7 @@ function renderVote() {
 }
 function renderS9() {
   const v = view;
-  const rows = v.rows.map((r, i) => `<tr class="${r.me ? 'me' : ''}${r.last ? ' last' : ''}"${r.me ? ' data-act="s9open"' : ''}><td>${esc(r.a)}</td><td>${esc(r.p)}</td><td>${esc(r.s)}</td></tr>` + (r.me && v.openDet ? `<tr class="det"><td colspan="3"><div class="det-wrap">${SVG.shop.replace('class="ph"', 'class="shopm"').replace('</svg>', '<rect x="56" y="66" width="238" height="42" fill="none" stroke="#e33" stroke-width="3"/><rect x="311" y="146" width="70" height="34" fill="none" stroke="#e33" stroke-width="3"/></svg>')}${st.station ? `<span class="chip">${esc(st.station)}駅</span>` : ''}${st.faceTaken ? '<div class="face" data-face="1"></div>' : ''}<span class="chip">${esc(T.friends54)}</span></div></td></tr>` : '')).join('');
+  const rows = v.rows.map((r, i) => `<tr class="${r.me ? 'me' : ''}${r.last ? ' last' : ''}"${r.me ? ' data-act="s9open"' : ''}><td>${esc(r.a)}</td><td>${esc(r.p)}</td><td>${esc(r.s)}</td></tr>` + (r.me && v.openDet ? `<tr class="det"><td colspan="3"><div class="det-wrap"><span class="shopm"><img src="img/shop.jpg" alt="" draggable="false"><i style="left:18%;top:21%;width:57%;height:18%"></i><i style="left:81%;top:32%;width:18%;height:7%"></i></span>${st.station ? `<span class="chip">${esc(st.station)}駅</span>` : ''}${st.faceTaken ? '<div class="face" data-face="1"></div>' : ''}<span class="chip">${esc(T.friends54)}</span></div></td></tr>` : '')).join('');
   return `<div class="view s9" style="position:absolute;inset:0"><div class="scroll"><table><colgroup><col class="c1"><col class="c2"><col class="c3"></colgroup><tr>${T.s9cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr>${rows}</table></div><button class="nx${v.next ? ' on' : ''}" data-act="s9next">›</button></div>`;
 }
 const lockCards = [];
