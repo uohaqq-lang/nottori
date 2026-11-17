@@ -572,3 +572,22 @@ html, body { overscroll-behavior: none; }
 .s9 .chip small { display: block; font-size: 10px; color: #c22; font-family: system-ui, sans-serif; margin-top: 2px; }
 .s9 tr.lastcap td { border: 0; padding: 12px 5px 3px; color: #c22; font-size: 11px; font-family: system-ui, sans-serif; }
 .s9foot { position: absolute; left: 12px; right: 72px; bottom: 30px; z-index: 3; background: rgba(20,22,28,.92); color: #fff; font-size: 13px; line-height: 1.6; padding: 10px 12px; border-radius: 10px; font-family: system-ui, sans-serif; }
+
+/* 友だちの状態（11/17） */
+.frs { display: flex; gap: 6px; padding: 4px 12px 6px; overflow-x: auto; scrollbar-width: none; }
+.frs .fr { display: flex; flex-direction: column; align-items: center; gap: 1px; flex: none; width: 38px; }
+.frs .frav { width: 28px; height: 28px; border-radius: 50%; border: 2.5px solid #bbb; box-sizing: content-box; }
+.frs .fr i { font-style: normal; font-size: 9px; color: #555; max-width: 38px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.frs .fr.ok .frav { border-color: #2eb85c; }
+.frs .fr.paid .frav { border-color: #e33; filter: grayscale(.6); }
+.frs .fr.paid i { color: #e33; }
+.frs .fr.doubt .frav { border-color: #f0a400; }
+#tray .goal { color: #ffd9a8; font-size: 13px; text-align: center; padding: 0 4px 10px; }
+#toast.hint { white-space: normal; width: 300px; max-width: 86%; text-align: center; line-height: 1.6; bottom: 120px; background: rgba(20,24,34,.95); }
+.rine .msg .gcol { display: flex; flex-direction: column; gap: 2px; max-width: 74%; }
+.rine .msg .gname { font-size: 11px; color: #eef2f8; margin-left: 4px; }
+.rine .msg .grow { display: flex; align-items: flex-end; gap: 6px; }
+.rine .msg .grow .bb { max-width: 100%; }
+.frleg { display: flex; gap: 12px; padding: 0 12px 6px; font-size: 9.5px; color: #666; }
+.frleg span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 3px; vertical-align: -1px; }
+.frleg .ok::before { background: #2eb85c; } .frleg .doubt::before { background: #f0a400; } .frleg .paid::before { background: #e33; }

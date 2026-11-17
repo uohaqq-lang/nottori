@@ -92,7 +92,7 @@ const sound = {
 
 /* ---------- データ：会話・メール ---------- */
 const COLORS = { mom: '#c08a5b', misaki: '#9b6fa6', yuto: '#5b84b5', riko: '#c26b7e', kai: '#5f9a7a', stranger: '#7c7c7c', pico: '#b5654f', picosms: '#678c6b' };
-const PEOPLE = { official: 'RINE', mom: '母', misaki: 'みさき', yuto: 'ゆうと', riko: 'Riko', kai: 'kai', stranger: UI.stranger, picosms: 'インスタグラフ' };
+const PEOPLE = { group: 'サークル', official: 'RINE', mom: '母', misaki: 'みさき', yuto: 'ゆうと', riko: 'Riko', kai: 'kai', stranger: UI.stranger, picosms: 'インスタグラフ' };
 FRIENDS.forEach((n, i) => { const k = 'f' + i; PEOPLE[k] = n; if (!COLORS[k]) COLORS[k] = ['#5b84b5', '#c26b7e', '#5f9a7a', '#a08251', '#6b74b5', '#b56b9c', '#6f8f4f', '#a3655b'][i]; });
 /* アイコンの写真（生成AIで作った。人の顔は写さない）。知らない人は初期アイコンのまま */
 const AVATAR = { me: 'me', mom: 'mom', misaki: 'misaki', yuto: 'yuto', riko: 'riko', kai: 'kai', f0: 'yuto', f1: 'riko', f2: 'kai', f3: 'haruka', f4: 'ren', f5: 'mio', f6: 'daichi', f7: 'aoi' };
@@ -100,6 +100,7 @@ const DEFAULT_AV = '<svg viewBox="0 0 40 40"><rect width="40" height="40" fill="
 function avHTML(th, cls, size) {
   const st = size ? `width:${size}px;height:${size}px;` : '';
   if (AVATAR[th]) return `<img class="${cls} pic" src="img/av_${AVATAR[th]}.jpg" alt="" draggable="false" style="${st}">`;
+  if (th === 'group') return `<img class="${cls} pic" src="img/nabe.jpg" alt="" draggable="false" style="${st}">`;
   if (th === 'picosms') return `<span class="${cls} pic" style="${st}">${ICON.pico}</span>`;
   return `<span class="${cls} pic" style="${st}">${DEFAULT_AV}</span>`;
 }
@@ -130,6 +131,7 @@ const SVG = {
   shop: `<img class="ph" src="img/shop.jpg" alt="" draggable="false">`,  /* 写真は生成AIで作った（実在の店・人ではない） */
   nabe: `<img class="ph" src="img/nabe.jpg" alt="" draggable="false">`,  /* 写真は生成AIで作った（実在の店・人ではない） */
   yutoShot: `<svg viewBox="0 0 220 120" width="200"><rect width="220" height="120" rx="10" fill="#f7f6f3" stroke="#ddd"/><clipPath id="ysc"><circle cx="22" cy="28" r="12"/></clipPath><image href="img/av_me.jpg" x="10" y="16" width="24" height="24" clip-path="url(#ysc)" preserveAspectRatio="xMidYMid slice"/><text x="40" y="32" font-size="11" fill="#333">ソウタ</text><rect x="14" y="48" width="192" height="52" rx="12" fill="#fff" stroke="#e5e2dc"/><text x="24" y="70" font-size="10" fill="#333">ポチペイ使える？送金の限度額切れちゃって</text><text x="24" y="86" font-size="10" fill="#333">さ、3万円だけ代わりに払ってもらえない？</text></svg>`,
+  storyShot: `<svg viewBox="0 0 180 300" width="170"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1b2e"/><stop offset="1" stop-color="#3a2a12"/></linearGradient></defs><rect width="180" height="300" rx="12" fill="url(#sg)"/><rect x="10" y="10" width="160" height="2.5" rx="1" fill="#fff" opacity=".8"/><circle cx="22" cy="28" r="9" fill="#9a9a9a"/><text x="36" y="32" font-size="9" fill="#fff">fukugyo.life_</text><text x="90" y="96" font-size="20" fill="#ffd34d" text-anchor="middle" font-weight="700">副業で</text><text x="90" y="124" font-size="24" fill="#ffd34d" text-anchor="middle" font-weight="700">月50万💰</text><text x="90" y="160" font-size="10" fill="#fff" text-anchor="middle">スマホ1台、1日10分</text><text x="90" y="176" font-size="10" fill="#fff" text-anchor="middle">気になる人はDMください</text><rect x="44" y="210" width="92" height="26" rx="13" fill="#fff"/><text x="90" y="227" font-size="10" fill="#111" text-anchor="middle">DMで詳しく</text><text x="90" y="285" font-size="8" fill="#bbb" text-anchor="middle">（ゲーム内の絵）</text></svg>`,
   selfie: `<svg viewBox="0 0 180 150" class="idcard"><rect width="180" height="150" rx="10" fill="#1d2230"/><ellipse cx="90" cy="72" rx="40" ry="52" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="6 5"/><path d="M30 72 l-12 0 m6 -6 l-6 6 l6 6 M150 72 l12 0 m-6 -6 l6 6 l-6 6" stroke="#fff" stroke-width="3" fill="none"/><text x="90" y="142" font-size="10" fill="#cfd6e4" text-anchor="middle">顔を左右に動かす（ゲーム内の絵）</text></svg>`,
   idcard: `<svg viewBox="0 0 180 112" class="idcard"><rect width="180" height="112" rx="8" fill="#eef2f6" stroke="#b9c3cf"/><rect x="12" y="22" width="52" height="66" fill="#c9a38f"/><rect x="76" y="26" width="86" height="8" fill="#9aa8bb"/><rect x="76" y="44" width="70" height="8" fill="#9aa8bb"/><rect x="76" y="62" width="80" height="8" fill="#9aa8bb"/><text x="12" y="15" font-size="9" fill="#6b7682">学生証（ゲームの中の絵）</text></svg>`,
   cand: c => `<svg viewBox="0 0 160 160"><rect width="160" height="160" fill="#efe9df"/><rect x="18" y="18" width="124" height="124" fill="#8a6a45"/><rect x="26" y="26" width="108" height="108" fill="${c}"/><circle cx="104" cy="54" r="14" fill="#fff" opacity=".8"/><path d="M26 120 L62 72 L86 100 L104 84 L134 120 Z" fill="#fff" opacity=".55"/></svg>`,
@@ -184,10 +186,12 @@ function msgHTML(app, t, m) {
   if (app === 'kotori') {
     const idx = t.msgs.indexOf(m);
     const read = me && t.msgs.slice(idx + 1).some(x => !x.me && !x.typing && !x.sys);
-    const side = `<span class="tm">${read ? '既読<br>' : ''}${esc(m.tm || '')}</span>`;
+    const rd = m.readN != null ? (m.readN ? `既読 ${m.readN}<br>` : '') : read ? '既読<br>' : '';
+    const side = `<span class="tm">${rd}${esc(m.tm || '')}</span>`;
     /* 本物と同じく、同じ人が続くときは顔としっぽを最初の1つにだけ */
     const pv = t.msgs[idx - 1];
-    const cont = pv && !pv.sys && !pv.unsent && !!pv.me === !!me ? ' cont' : '';
+    const cont = pv && !pv.sys && !pv.unsent && !pv.typing && !!pv.me === !!me && (me || pv.from === m.from) ? ' cont' : '';
+    if (t.th === 'group' && !me) return `<div class="msg${cont}">${m.from ? avHTML(m.from, 'av') : av}<div class="gcol">${cont ? '' : `<span class="gname">${esc(m.who || '')}</span>`}<div class="grow">${bb}${side}</div></div></div>`;
     return me ? `<div class="msg me${cont}">${side}${bb}</div>` : `<div class="msg${cont}">${av}${bb}${side}</div>`;
   }
   if (app === 'pico') {
@@ -424,10 +428,11 @@ function renderTray() {
   if (['s9', 'doc', 's0'].includes(view.name)) return;
   if (pendingTrayOptions) {
     el.className = 'on dark';
+    const goal = tray && view.name !== 'call' && pendingTrayOptions.length === tray.length ? `<div class="goal">${esc(T.goal)}</div>` : '';
     /* 電話の途中で選ぶときは、相手が最後に言ったことを板の上にも出す（11/17 本人「選択肢でお母さんの言っていることが見えない」） */
     const said = view.name === 'call' ? (view.subs || []).filter(x => !x.me && !x.sys).slice(-1)[0] : null;
     const cv = document.querySelector('#screen .view.call'); if (cv) { cv.classList.add('asking'); const sb = cv.querySelector('.subs'); if (sb) sb.scrollTop = sb.scrollHeight; }
-    el.innerHTML = (said ? `<div class="q"><b>${esc(said.who || '')}</b>${esc(fill(said.text))}</div>` : '') + pendingTrayOptions.map((o, i) => `<button class="opt" data-act="trayPick" data-arg="${i}"${o.off ? ' disabled' : ''}>${esc(o.label)}</button>`).join('');
+    el.innerHTML = goal + (said ? `<div class="q"><b>${esc(said.who || '')}</b>${esc(fill(said.text))}</div>` : '') + pendingTrayOptions.map((o, i) => `<button class="opt" data-act="trayPick" data-arg="${i}"${o.off ? ' disabled' : ''}>${esc(o.label)}</button>`).join('');
     return;
   }
   if (busy && view.name !== 'call') {
@@ -495,6 +500,7 @@ function wake() {
   setTimeout(() => { o.className = ''; o.style.opacity = ''; o.style.transition = ''; }, 300);
 }
 function dismiss(box) { if (!box || !box.parentNode) return; box.classList.add('out'); setTimeout(() => box.remove(), 320); }
+function hint(t, sec) { const el = $('#toast'); el.textContent = t; el.className = 'on hint'; clearTimeout(hint.tm); hint.tm = setTimeout(() => { el.className = ''; }, (sec || 6) * 1000); }
 function toast(t) { const el = $('#toast'); el.textContent = t; el.className = 'on'; setTimeout(() => { el.className = ''; }, 2200); }
 
 /* ---------- 会話 ---------- */
@@ -533,7 +539,7 @@ async function deliver(step) {
     await sleep(wait);
     t.msgs.splice(t.msgs.indexOf(ty), 1);
   }
-  const m = { who: step.who, text: step.text, img: step.img, link: step.link };
+  const m = { who: step.who, text: step.text, img: step.img, link: step.link, from: step.from };
   const viewing = pushMsg(app, th, m);
   if (!viewing && !step.quiet) banner(app, step.who, step.img ? '画像' : step.link ? UI.voteTitle : fill(step.text), { open: { name: app, th } });
   else if (viewing) sound.tap();
@@ -689,6 +695,7 @@ function explore() {
   return new Promise(resolve => {
     exploreDone = resolve;
     let started = Date.now();   /* 電話が終わったときから数える（ロック画面のままでも進む） */
+    if (!AUTO) setTimeout(() => { if (exploreDone) hint(T.hintS1, 6); }, 4000);
     const iv = setInterval(() => {
       if (view.name !== 'lock' && !started) started = Date.now();
       if (started && (Date.now() - started) * SPEED / 1000 > TIMING.s1ExploreMax) { clearInterval(iv); exploreDone = null; resolve(); }
@@ -816,14 +823,17 @@ async function race() {
   raceBanner = banner('pico', '新しいログイン', raceAction.text, { sticky: true, onTap: onPress });
   view = { name: 'pico', tab: 'dm' }; render();
   if (AUTO) { const p = PICKS.length ? PICKS.shift() : 0; if (p === 0) setTimeout(() => { onPress(); setTimeout(() => { view.lc = 'pw'; render(); setTimeout(() => raceAction && raceAction.save(), 200); }, 200); }, 3500 / SPEED * 4); }
-  const t0 = Date.now();
+  const t0 = Date.now(); let hinted = false;
   while (!done) {
     await sleep(0.25);
+    if (!hinted && !AUTO && (Date.now() - t0) * SPEED / 1000 > 15 && !(view.name === 'pico' && view.lc)) { hinted = true; hint(T.hintS4, 7); }
     const el = (Date.now() - t0) * SPEED / 1000;
     const want = Math.min(TIMING.s4.friends, Math.max(0, Math.floor((el - TIMING.s4.grace) / TIMING.s4.interval) + 1));
     while (sent < want && !done) {
       const k = 'f' + sent; thread('pico', k).name = FRIENDS[sent];
-      pushMsg('pico', k, { me: true, ghost: true, text: T.s4toFriend }); sent++; render();
+      const ty = { me: true, typing: true }; thread('pico', k).msgs.push(ty); thread('pico', k).t = Date.now();
+      setTimeout(() => { const tt = thread('pico', k); const ix = tt.msgs.indexOf(ty); if (ix >= 0) tt.msgs.splice(ix, 1, { me: true, ghost: true, text: T.s4toFriend, tm: hm(new Date()) }); render(); }, 1400 / SPEED);
+      sent++; render();
       /* 少し間をあけて本題。止められたら届かない */
       setTimeout(() => { if (!saved) { pushMsg('pico', k, { me: true, ghost: true, text: T.s4toFriend2 }); st.asked = (st.asked || 0) + 1; render(); } }, (2 + Math.random() * 2) * 1000 / SPEED);
     }
@@ -873,16 +883,19 @@ async function recover() {
   const frLeft = { v: out ? TIMING.lines.friends : 0 };
   const receivers = []; for (let i = 0; i < st.sentCount; i++) receivers.push(i);
   let speed = 1, momDone = false;
+  const doubt = new Set();   /* 犯人に先回りされて迷っている友だち */
   $('#bars').className = 'on';
   const drawBars = () => {
     const bar = (lab, left, total, cls) => `<div class="bar ${cls}"><div class="lab"><span>${esc(lab)}</span><b>${Math.max(0, Math.ceil(left))}秒</b></div><div class="track"><div class="fill" style="width:${Math.max(0, left / total * 100)}%"></div></div></div>`;
-    $('#bars').innerHTML = bar(T.lineMom, momLeft.v, TIMING.lines.mom, st.momSaved ? 'saved' : '') + (out ? bar(T.lineFriends, frLeft.v, TIMING.lines.friends, '') : '');
+    const frs = out ? `<div class="frs">${receivers.map(k => `<span class="fr ${st.paid.has(k) ? 'paid' : st.notified.has(k) ? 'ok' : doubt.has(k) ? 'doubt' : ''}">${avHTML('f' + k, 'frav')}<i>${esc(FRIENDS[k])}</i></span>`).join('')}</div>` : '';
+    const legend = out ? `<div class="frleg"><span class="ok">知らせた</span><span class="doubt">迷っている</span><span class="paid">送ってしまった</span></div>` : '';
+    $('#bars').innerHTML = bar(T.lineMom, momLeft.v, TIMING.lines.mom, st.momSaved ? 'saved' : '') + (out ? bar(T.lineFriends, frLeft.v, TIMING.lines.friends, '') : '') + frs + legend;
     document.documentElement.style.setProperty('--barsh', $('#bars').offsetHeight + 'px');
   };
   document.querySelectorAll('.view').forEach(v => v.classList.add('withBars'));
   if (AUTO && QS.has('revert')) setTimeout(() => { st.reverted = true; st.picoLocked = false; tlog('reverted'); }, 4000 / SPEED);
   const acts = [{ id: 'mom', label: T.act.mom }];
-  if (out) acts.push({ id: 'friend', label: T.act.friend });
+  if (out) acts.push({ id: 'group', label: T.act.group }, { id: 'friend', label: T.act.friend });
   acts.push({ id: 'mail', label: T.act.mail });
   if (out) acts.push({ id: 'apply', label: T.act.apply });
   tray = acts;
@@ -971,13 +984,37 @@ async function recover() {
       if (i < 0) break;
       const a = tray[i]; tlog('act', a.id);
       if (a.id === 'mom') { if (!st.momSaved && momLeft.v > 0) await momCall(); }
+      else if (a.id === 'group') {
+        a.off = true;
+        const gt = thread('kotori', 'group'); gt.name = T.groupName + '（9）';
+        gotoView({ name: 'kotori', th: 'group' });
+        const post = { me: true, text: T.groupPost, readN: 0 }; pushMsg('kotori', 'group', post); render();
+        (async () => {
+          /* 読むのは通知を切っていない人だけ（Ren と 葵 は切っている）。kai は犯人に先回りされている */
+          const readers = [0, 1, 3, 5, 6, 2].filter(k => k < receivers.length);
+          for (const k of readers) {
+            await sleep(1.2 + Math.random() * 2.2);
+            if (momDone && frLeft.v <= 0) return;
+            post.readN++;
+            const who = FRIENDS[k];
+            if (k === 2) { doubt.add(k); await deliver({ app: 'kotori', th: 'group', who, from: 'f' + k, text: T.groupDoubt, wait: 1.5 }); }
+            else if (st.paid.has(k)) { await deliver({ app: 'kotori', th: 'group', who, from: 'f' + k, text: T.groupLate, wait: 1.2 }); }
+            else { st.notified.add(k); if (T.groupOk[k] && Math.random() < 0.8) { await deliver({ app: 'kotori', th: 'group', who, from: 'f' + k, text: T.groupOk[k], wait: 1.2 }); } }
+            if (st.notified.size >= TIMING.s8.speedUpAfter) speed = TIMING.s8.speedUpRate;
+            drawBars(); render();
+          }
+        })();
+      }
       else if (a.id === 'friend') {
-        const next = receivers.find(k => !st.notified.has(k) && !st.paid.has(k));
+        const next = receivers.find(k => doubt.has(k) && !st.paid.has(k)) ?? receivers.find(k => !st.notified.has(k) && !st.paid.has(k));
         if (next == null) { toast('もう知らせる人がいない'); continue; }
         st.notified.add(next);   /* 知らせ始めた時点で、この人は送金しない */
         thread('kotori', friendTh(next)).name = FRIENDS[next]; gotoView({ name: 'kotori', th: friendTh(next) });
-        pushMsg('kotori', friendTh(next), { me: true, text: 'インスタグラフ乗っ取られた。俺から来たのは無視して' }); render();
+        pushMsg('kotori', friendTh(next), { me: true, text: T.friendMsg }); render();
         await doBusy(T.act.friend, TIMING.s8.notifyEach);
+        const wasDoubt = doubt.has(next); doubt.delete(next);
+        deliver({ app: 'kotori', th: friendTh(next), who: FRIENDS[next], text: st.paid.has(next) ? T.friendLate : wasDoubt ? T.friendDoubtOk : T.friendOk[next % T.friendOk.length], wait: 1.5 });
+        drawBars();
         if (st.notified.size >= TIMING.s8.speedUpAfter) speed = TIMING.s8.speedUpRate;
       } else if (a.id === 'mail') { await doBusy(T.act.mail, TIMING.s8.mailPw); st.mailPw = true; a.off = true; }
       else if (a.id === 'apply') {
