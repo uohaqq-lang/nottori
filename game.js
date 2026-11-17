@@ -1020,14 +1020,16 @@ async function recover() {
     }
     return momConversation(true);
   };
-  let rineAsked = false;
+  let rineAsked = false, momTalked = false;
   /* RINEで母に知らせる：既読がついて、母が確かめてくる。そのあいだ、ほかの手も打てる */
   const rineQuiz = async () => {
     if (rineAsked) return; rineAsked = true;
     await sleep(10 + Math.random() * 8);
-    if (st.momSaved || momDone) return;
-    for (const l of T.momRineAsk) await deliver({ app: 'kotori', th: 'mom', who: '母', text: l, wait: 1.5 });
-    if (st.momSaved || momDone) return;
+    /* 電話がつながったら、母はRINEで確かめるのをやめる。呼び出し中は待つ（11/17 本人「電話してるのに母からめっちゃラインきてんの変」） */
+    const hold = async () => { while (view.name === 'call' && !momTalked && !momDone) await sleep(0.5); return st.momSaved || momDone || momTalked; };
+    if (await hold()) return;
+    for (const l of T.momRineAsk) { if (await hold()) return; await deliver({ app: 'kotori', th: 'mom', who: '母', text: l, wait: 1.5 }); }
+    if (await hold()) return;
     const t = thread('kotori', 'mom');
     const answer = async k => {
       if (momDone) { t.inline = null; render(); return; }
@@ -1047,7 +1049,9 @@ async function recover() {
   const momConversation = async (already) => {
     if (st.momSaved || momLeft.v <= 0) return;
     if (!already) { view = { name: 'call', who: '母', status: UI.calling, subs: [] }; render(); sound.dialOnce(); await sleep(TIMING.s8.ring * 0.5); if (momDone) return; }
-    view = { name: 'call', who: '母', status: '通話中', subs: [] }; render();
+    view = { name: 'call', who: '母', status: '通話中', subs: [] }; momTalked = true;
+    { const mt = threads.kotori.mom; if (mt) mt.inline = null; }   /* 電話がつながったら、RINEの質問は電話で聞く */
+    render();
     for (const line of T.momCall) { await sleep(TIMING.s8.sayHold); if (view.name !== 'call' || momDone) return; view.subs.push({ who: '母', text: line }); render(); }
     const opts = T.momQuiz.map(label => ({ label }));
     const i = await askTray(opts, true);
