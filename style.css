@@ -634,3 +634,17 @@ html, body { overscroll-behavior: none; }
 .ban .bimg { flex: none; width: 46px; height: 46px; border-radius: 8px; overflow: hidden; margin-left: 8px; align-self: center; }
 .ban .bimg img, .ban .bimg svg { width: 100%; height: 100%; object-fit: cover; display: block; }
 .igCmtAll { font-size: 13.5px; color: #737373; padding: 2px 14px; }
+
+/* 2回目のバグ探しを受けて（11/17） */
+#tray .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+#tray .opt.sm { margin: 0; padding: 9px 8px; font-size: 13px; line-height: 1.35; border-radius: 12px; }
+#tray .trayHandle { display: block; width: 100%; border: 0; background: rgba(255,255,255,.12); color: #fff; border-radius: 12px; padding: 10px; font-size: 13.5px; cursor: pointer; }
+#tray .trayHandle.sub { margin-top: 8px; background: none; color: #c9cfda; padding: 4px; }
+#tray .goal { padding-bottom: 8px; }
+.locked { overflow-y: auto; min-height: 0; padding-top: 40px; }
+#screen .scroll, #screen .chat { padding-bottom: 12px; }
+.s9bar { white-space: nowrap; height: 34px; box-sizing: border-box; align-items: center; }
+.s9bar b { overflow: hidden; text-overflow: ellipsis; }
+.s9bar span { font-size: 10.5px; }
+#screen .s9 .scroll { padding-bottom: 150px !important; }
+.s9 th { top: 0; }
