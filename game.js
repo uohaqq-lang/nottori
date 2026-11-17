@@ -719,23 +719,17 @@ async function recover() {
     if (st.momSaved || momLeft.v <= 0) return;
     view = { name: 'call', who: '母', status: '通話中', subs: [] }; render();
     for (const line of T.momCall) { await sleep(TIMING.s8.sayHold); view.subs.push({ who: '母', text: line }); render(); }
-    const opts = [{ label: T.replyOre }]; if (st.answeredS1) opts.push({ label: T.replyLetter });
-    let saidOre = false;
-    while (true) {
-      const i = await askTray(opts, true);
-      if (i === 0) {
-        view.subs.push({ me: true, text: T.replyOre.replace(/[「」]/g, '') }); render();
-        await sleep(TIMING.s8.sayHold); view.subs.push({ who: '母', text: T.momAfterOre }); render();
-        momLeft.v -= TIMING.s8.orePenalty; drawBars();
-        if (!st.answeredS1 || saidOre) { await sleep(TIMING.s8.sayHold); break; }
-        saidOre = true;
-      } else {
-        view.subs.push({ me: true, text: T.replyLetter.replace(/[「」]/g, '') }); render();
-        for (const l of T.momAfterLetter) { await sleep(TIMING.s8.sayHold); view.subs.push({ who: '母', text: l }); render(); }
-        st.momSaved = true; momDone = true; drawBars();
-        await sleep(TIMING.s8.sayHold); break;
-      }
+    const opts = T.momQuiz.map(label => ({ label }));
+    const i = await askTray(opts, true);
+    view.subs.push({ me: true, text: T.momQuiz[i].replace(/[「」]/g, '') }); render();
+    if (i === 0) {
+      for (const l of T.momRight) { await sleep(TIMING.s8.sayHold); view.subs.push({ who: '母', text: l }); render(); }
+      st.momSaved = true; momDone = true; drawBars();
+    } else {
+      await sleep(TIMING.s8.sayHold); view.subs.push({ who: '母', text: T.momWrong }); render();
+      momLeft.v -= TIMING.s8.orePenalty; drawBars();
     }
+    await sleep(TIMING.s8.sayHold);
     view = { name: 'kotori', th: 'mom' }; render();
   };
   const t0 = Date.now(); let last = t0;
