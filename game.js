@@ -364,11 +364,11 @@ function renderPico() {
   }
   const tab = v.tab || 'feed';
   if (tab === 'dm') {
-    const list = Object.values(threads.pico).filter(t => t.msgs.length).sort((a, b) => b.t - a.t);
+    const list = Object.values(threads.pico).filter(t => t.msgs.some(x => !x.typing)).sort((a, b) => b.t - a.t);
     const rows = list.map(t => {
       const last = lastReal(t); const ghost = last && last.ghost;
       const pv = last ? (last.unsent ? T.unsent : last.link ? 'リンクを送信しました' : last.img ? '写真を送信しました' : (last.me ? 'あなた: ' : '') + fill(last.text || '')) : '';
-      return `<div class="igRow${t.unread ? ' unread' : ''}${ghost ? ' ghost' : ''}" data-act="th" data-arg="${t.th}">${igAv(t.th, 54)}<div class="mid"><div class="nm">${esc(t.name)}</div><div class="pv${ghost ? ' red' : ''}"><span class="txt">${esc(pv)}</span><span class="ago"> · ${esc(ago(last))}</span></div></div>${t.unread ? '<span class="igDot"></span>' : `<span class="igIcon sm dim">${IC.camera}</span>`}</div>`;
+      return `<div class="igRow${t.unread ? ' unread' : ''}${ghost ? ' ghost' : ''}" data-act="th" data-arg="${t.th}">${igAv(t.th, 54)}<div class="mid"><div class="nm">${esc(t.name)}</div><div class="pv"><span class="txt">${esc(pv)}</span><span class="ago"> · ${esc(ago(last))}</span></div></div>${t.unread ? '<span class="igDot"></span>' : `<span class="igIcon sm dim">${IC.camera}</span>`}</div>`;
     }).join('');
     return `<div class="view pico ig"><div class="pad44"></div><div class="igChatHead"><button class="igIcon" data-act="ptab" data-arg="feed">${IC.back}</button><div class="igChatName"><b>${esc(myName())}</b></div><span class="igIcon">${IC.edit}</span></div><div class="scroll"><div class="igSearch">${IC.search}<span>検索</span></div><div class="igSub"><b>メッセージ</b><span>リクエスト</span></div>${rows}</div>${homebar()}</div>`;
   }
@@ -887,8 +887,8 @@ async function race() {
     const want = Math.min(TIMING.s4.friends, Math.max(0, Math.floor((el - TIMING.s4.grace) / TIMING.s4.interval) + 1));
     while (sent < want && !done) {
       const k = 'f' + sent; thread('pico', k).name = FRIENDS[sent];
-      const ty = { me: true, typing: true }; thread('pico', k).msgs.push(ty); thread('pico', k).t = Date.now();
-      setTimeout(() => { const tt = thread('pico', k); const ix = tt.msgs.indexOf(ty); if (ix >= 0) tt.msgs.splice(ix, 1, { me: true, ghost: true, text: T.s4toFriend, tm: hm(new Date()) }); render(); }, 1400 / SPEED);
+      /* 本物と同じく、別の端末から送られたメッセージが、そのまま自分の送信として一覧に増えていく（自分の側に「入力中」は出ない） */
+      pushMsg('pico', k, { me: true, ghost: true, text: T.s4toFriend });
       sent++; render();
       /* 少し間をあけて本題。止められたら届かない */
       setTimeout(() => { if (!saved) { pushMsg('pico', k, { me: true, ghost: true, text: T.s4toFriend2 }); st.asked = (st.asked || 0) + 1; render(); } }, (2 + Math.random() * 2) * 1000 / SPEED);
