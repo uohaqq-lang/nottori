@@ -624,3 +624,9 @@ html, body { overscroll-behavior: none; }
 @keyframes flashBtn { 0%,100% { box-shadow: 0 0 0 0 rgba(0,149,246,0); } 40% { box-shadow: 0 0 0 4px rgba(0,149,246,.55); } }
 .flash { animation: flashBtn .9s ease-out 2; }
 .igInput, .rineInput { cursor: text; }
+
+/* 返事できるかを入力欄で見せる（11/17） */
+.rineInput.can .rinePh, .igInput.can .igPh { background: #e3f6e8; color: #17803a; font-weight: 600; }
+.igInput.can { background: #e3f6e8; }
+.rineInput.off .rinePh, .igInput.off .igPh { color: #b9b9b9; }
+.inline button { border-color: #2eb85c; box-shadow: 0 0 0 1px rgba(46,184,92,.25); }

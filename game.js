@@ -105,6 +105,7 @@ function avHTML(th, cls, size) {
   return `<span class="${cls} pic" style="${st}">${DEFAULT_AV}</span>`;
 }
 const threads = { pico: {}, kotori: {}, sms: {} };
+setTimeout(() => { const gt = thread('kotori', 'group'); gt.name = T.groupName + '（9）'; gt.t = Date.now() - 86400000; T.groupOld.forEach(([who, from, text]) => gt.msgs.push({ who, from, text, tm: '昨日' })); }, 0);
 function thread(app, th) {
   if (!threads[app][th]) threads[app][th] = { th, name: PEOPLE[th] || th, msgs: [], unread: 0, t: Date.now() };
   return threads[app][th];
@@ -201,6 +202,10 @@ function msgHTML(app, t, m) {
     return `<div class="msg${me ? ' me' : ''}${tail ? '' : ' cont'}">${av}${bb}</div>`;
   }
   return `<div class="msg${me ? ' me' : ''}">${av}${bb}<span class="tm">${esc(m.tm || '')}</span></div>`;
+}
+function canReply(app, th) {
+  const t = threads[app] && threads[app][th];
+  return !!(t && t.inline && t.inline.length) || !!(choice && choice.app === app && choice.th === th);
 }
 function inlineHTML(app, th) {
   const t = threads[app] && threads[app][th];
@@ -351,7 +356,7 @@ function renderPico() {
   if (v.sett) return renderSettings(v);
   if (v.th) {
     const t = thread('pico', v.th);
-    return `<div class="view pico ig"><div class="pad44"></div><div class="igChatHead"><button class="igIcon" data-act="back">${IC.back}</button>${igAv(v.th, 32)}<div class="igChatName"><b>${esc(t.name)}</b><span>Instagraph</span></div><span class="igIcon">${IC.phone}</span><span class="igIcon">${IC.video}</span></div><div class="chat">${t.msgs.map(m => msgHTML('pico', t, m)).join('')}${inlineHTML('pico', v.th)}</div><div class="igInput" data-act="typeHint"><span class="igCam">${IC.camera}</span><span class="igPh">メッセージ...</span><span class="igIcon sm">${IC.mic}</span><span class="igIcon sm">${IC.image}</span></div>${homebar()}</div>`;
+    return `<div class="view pico ig"><div class="pad44"></div><div class="igChatHead"><button class="igIcon" data-act="back">${IC.back}</button>${igAv(v.th, 32)}<div class="igChatName"><b>${esc(t.name)}</b><span>Instagraph</span></div><span class="igIcon">${IC.phone}</span><span class="igIcon">${IC.video}</span></div><div class="chat">${t.msgs.map(m => msgHTML('pico', t, m)).join('')}${inlineHTML('pico', v.th)}</div><div class="igInput${canReply('pico', v.th) ? ' can' : ' off'}" data-act="typeHint"><span class="igCam">${IC.camera}</span><span class="igPh">${esc(canReply('pico', v.th) ? T.canReply : T.cannotReply)}</span><span class="igIcon sm">${IC.mic}</span><span class="igIcon sm">${IC.image}</span></div>${homebar()}</div>`;
   }
   const tab = v.tab || 'feed';
   if (tab === 'dm') {
@@ -387,7 +392,7 @@ function renderChatApp(app) {
   if (app === 'kotori') {
     if (v.th) {
       const t = thread(app, v.th);
-      return `<div class="view kotori rine"><div class="pad44"></div><div class="rineHead"><button class="igIcon" data-act="back">${IC.back}</button><b>${esc(t.name)}</b><span class="igIcon">${IC.search}</span><span class="igIcon">${IC.phone}</span><span class="igIcon">${IC.menu}</span></div><div class="chat">${t.msgs.map(m => msgHTML(app, t, m)).join('')}${inlineHTML(app, v.th)}</div><div class="rineInput" data-act="typeHint"><span class="igIcon sm">${IC.plus2}</span><span class="igIcon sm">${IC.camera}</span><span class="igIcon sm">${IC.image}</span><span class="rinePh">Aa</span><span class="igIcon sm">${IC.mic}</span></div>${homebar()}</div>`;
+      return `<div class="view kotori rine"><div class="pad44"></div><div class="rineHead"><button class="igIcon" data-act="back">${IC.back}</button><b>${esc(t.name)}</b><span class="igIcon">${IC.search}</span><span class="igIcon">${IC.phone}</span><span class="igIcon">${IC.menu}</span></div><div class="chat">${t.msgs.map(m => msgHTML(app, t, m)).join('')}${inlineHTML(app, v.th)}</div><div class="rineInput${canReply(app, v.th) ? ' can' : ' off'}" data-act="typeHint"><span class="igIcon sm">${IC.plus2}</span><span class="igIcon sm">${IC.camera}</span><span class="igIcon sm">${IC.image}</span><span class="rinePh">${esc(canReply(app, v.th) ? T.canReply : T.cannotReply)}</span><span class="igIcon sm">${IC.mic}</span></div>${homebar()}</div>`;
     }
     const list = Object.values(threads[app]).filter(t => t.msgs.length).sort((a, b) => b.t - a.t);
     const rows = list.map(t => { const last = lastReal(t); return `<div class="rineRow" data-act="th" data-arg="${t.th}">${igAv(t.th, 50)}<div class="mid"><div class="nm">${esc(t.name)}</div><div class="pv">${esc(last.img ? '写真を送信しました' : fill(last.text || ''))}</div></div><div class="rineSide"><span>${esc(last.tm || '')}</span>${t.unread ? `<span class="rineCount">${t.unread}</span>` : ''}</div></div>`; }).join('');
@@ -662,6 +667,13 @@ async function exec(step) {
     case 'notify': banner(step.app, '', fill(step.text), { open: step.th ? { name: step.app, th: step.th } : { name: step.app, tab: 'dm' } }); return;
     case 'mail': await sleep(step.wait || 0); if (!st.leakFixed) { st.mailLost = true; banner('mail', '', T.mailLostBanner, {}); return; } mails.push({ id: 'm' + mails.length, from: step.mail.from, addr: step.mail.addr, subject: step.mail.subject, body: fill(step.mail.body), unread: true, t: hm(new Date()), revert: true, at: Date.now() }); banner('mail', step.mail.from, step.mail.subject, { open: { name: 'mail', id: 'm' + (mails.length - 1) } }); return;
     case 'set': Object.assign(st, step.v); return;
+    case 'qr': {
+      if (st.route !== 'out') return;
+      const t = thread('kotori', step.th);
+      if (step.th === 'group') { if (!st.groupUsed && !st.rineLost) t.inline = [{ label: T.qrGroup, f: () => groupPost() }]; }
+      else if (!st.notified.has(step.k)) t.inline = [{ label: T.qrHijacked, f: () => replyHijacked(step.th, step.k) }];
+      render(); return;
+    }
     case 'open': view = Object.assign({}, step.view); render(); return;
     case 'goto': return { goto: step.to };
     case 'branch': return { goto: step.next(st) };
@@ -874,6 +886,7 @@ async function race() {
     /* インスタグラフを見ているときだけ、その場で締め出される。ほかのアプリにいるときは通知で知る（11/17 本人「RINEを開いてるのにインスタのログアウトが出る」） */
     if (view.name === 'pico') { st.picoLocked = true; $('#overlay').className = 'on white'; $('#overlay').textContent = T.s4white; await sleep(3); $('#overlay').className = ''; $('#overlay').textContent = ''; }
     else banner('pico', '', T.s4white, { open: { name: 'pico' } });
+    if (!AUTO) setTimeout(() => hint(T.hintOut, 8), 1500);
   }
   render();
 }
@@ -894,12 +907,48 @@ async function misaki3() {
   await sleep(1);
 }
 
+const doubt = new Set();   /* 犯人に先回りされて迷っている友だち */
+let speedUp = false;       /* 知らせが広まったら、犯人は急ぐ */
+let drawBarsNow = null;    /* S8の上の表示を描き直す */
+function told() { if (st.notified.size >= TIMING.s8.speedUpAfter) speedUp = true; if (drawBarsNow) drawBarsNow(); }
+/* グループに書く（締め出された直後から、S8の板からも） */
+function groupPost() {
+  if (st.groupUsed || st.rineLost) return;
+  st.groupUsed = true;
+  const gt = thread('kotori', 'group'); gt.inline = null;
+  const post = { me: true, text: T.groupPost, readN: 0 }; pushMsg('kotori', 'group', post); render();
+  (async () => {
+    /* 読むのは通知を切っていない人だけ（Ren と 葵 は切っている）。kai は犯人に先回りされている */
+    const readers = [0, 1, 3, 5, 6, 2].filter(k => k < st.sentCount);
+    for (const k of readers) {
+      await sleep(1.2 + Math.random() * 2.2);
+      if (['S9', 'S10', 'S11', 'END'].includes(st.scene)) return;
+      post.readN++;
+      const who = FRIENDS[k], from = 'f' + k;
+      if (k === 2 && !st.notified.has(k)) { doubt.add(k); await deliver({ app: 'kotori', th: 'group', who, from, text: T.groupDoubt, wait: 1.5 }); }
+      else if (st.paid.has(k)) await deliver({ app: 'kotori', th: 'group', who, from, text: T.groupLate, wait: 1.2 });
+      else { st.notified.add(k); if (T.groupOk[k] && Math.random() < 0.8) await deliver({ app: 'kotori', th: 'group', who, from, text: T.groupOk[k], wait: 1.2 }); }
+      told(); render();
+    }
+  })();
+}
+/* 届いた連絡に返す：その友だちは、その場で守られる */
+function replyHijacked(th, k) {
+  const t = thread('kotori', th); t.inline = null;
+  pushMsg('kotori', th, { me: true, text: T.qrHijacked.replace(/[「」]/g, '') }); render();
+  const late = st.paid.has(k); if (!late) { st.notified.add(k); doubt.delete(k); told(); }
+  deliver({ app: 'kotori', th, who: FRIENDS[k], text: late ? T.friendLate : T.friendOk[k % T.friendOk.length], wait: 1.5 });
+}
 /* 送ってしまった友だちからの連絡（相手はインスタグラフの頼みを本物だと思っている） */
 const friendTh = k => ['yuto', 'riko', 'kai'][k] || 'f' + k;   /* RINEでは、ゆうと・Riko・kai は前からの会話に続ける */
 function paidNotice(k) {
   const app = st.rineLost ? 'sms' : 'kotori';
   const th = app === 'sms' ? 'f' + k : friendTh(k); thread(app, th).name = FRIENDS[k];
-  deliver({ app, th, who: FRIENDS[k], text: fill(T.paidMsgs[k % T.paidMsgs.length]), wait: 0, noPace: true });
+  deliver({ app, th, who: FRIENDS[k], text: fill(T.paidMsgs[k % T.paidMsgs.length]), wait: 0, noPace: true }).then(() => {
+    const t = thread(app, th);
+    t.inline = [{ label: T.qrFake, f: () => { t.inline = null; pushMsg(app, th, { me: true, text: T.qrFake.replace(/[「」]/g, '') }); render(); deliver({ app, th, who: FRIENDS[k], text: T.fakeReply, wait: 1.5 }); } }];
+    render();
+  });
 }
 /* S8：取り戻す */
 async function recover() {
@@ -908,7 +957,6 @@ async function recover() {
   const frLeft = { v: out ? TIMING.lines.friends : 0 };
   const receivers = []; for (let i = 0; i < st.sentCount; i++) receivers.push(i);
   let speed = 1, momDone = false;
-  const doubt = new Set();   /* 犯人に先回りされて迷っている友だち */
   $('#bars').className = 'on';
   const drawBars = () => {
     const bar = (lab, left, total, cls) => `<div class="bar ${cls}"><div class="lab"><span>${esc(lab)}</span><b>${Math.max(0, Math.ceil(left))}秒</b></div><div class="track"><div class="fill" style="width:${Math.max(0, left / total * 100)}%"></div></div></div>`;
@@ -918,11 +966,12 @@ async function recover() {
     document.documentElement.style.setProperty('--barsh', $('#bars').offsetHeight + 'px');
   };
   document.querySelectorAll('.view').forEach(v => v.classList.add('withBars'));
+  drawBarsNow = drawBars;
   if (st.path3 && !st.rineLost) { st.rineLost = true; banner('kotori', '', T.rineLostBanner, {}); if (view.name === 'kotori') { view = { name: 'home' }; render(); } }
   const chat = st.rineLost ? 'sms' : 'kotori';   /* RINEを取られていたら、連絡はSMSと電話だけ */
   if (AUTO && QS.has('revert')) setTimeout(() => { st.reverted = true; st.picoLocked = false; tlog('reverted'); }, 4000 / SPEED);
   const acts = [{ id: 'mom', label: T.act.mom }];
-  if (out && !st.rineLost) acts.push({ id: 'group', label: T.act.group }, { id: 'friend', label: T.act.friend });
+  if (out && !st.rineLost) acts.push({ id: 'group', label: T.act.group, off: !!st.groupUsed }, { id: 'friend', label: T.act.friend });
   if (out && st.rineLost) acts.push({ id: 'fcall', label: T.fcall });
   if (!st.mailLost) acts.push({ id: 'mail', label: T.act.mail });
   if (out) acts.push({ id: 'apply', label: T.act.apply });
@@ -993,6 +1042,7 @@ async function recover() {
   const timer = setInterval(() => {
     const now = Date.now(); const dt = FROZEN ? 0 : (now - last) * SPEED / 1000; last = now;
     if (!st.momSaved && !momDone) { momLeft.v -= dt; if (momLeft.v <= 0) { st.momPaid = true; momDone = true; } }
+    if (speedUp && speed < TIMING.s8.speedUpRate) speed = TIMING.s8.speedUpRate;
     if (st.reverted && frLeft.v > 0) { frLeft.v = 0; const ap = tray && tray.find(a => a.id === 'apply'); if (ap) ap.off = true; }
     if (st.momSaved && tray) { const mo = tray.find(a => a.id === 'mom'); if (mo && !mo.off) { mo.off = true; if (pendingTrayOptions && !busy) { const r = trayResolve; trayResolve = null; pendingTrayOptions = null; r && r(-2); } } }
     if (out && frLeft.v > 0) {
@@ -1019,28 +1069,11 @@ async function recover() {
         st.notified.add(next); drawBars();
         await doBusy(FRIENDS[next] + 'に電話中…', 15);
         toast(FRIENDS[next] + T.fcallDone);
-        if (st.notified.size >= TIMING.s8.speedUpAfter) speed = TIMING.s8.speedUpRate;
+        told();
       }
       else if (a.id === 'group') {
-        a.off = true; st.groupUsed = true;
-        const gt = thread('kotori', 'group'); gt.name = T.groupName + '（9）';
-        gotoView({ name: 'kotori', th: 'group' });
-        const post = { me: true, text: T.groupPost, readN: 0 }; pushMsg('kotori', 'group', post); render();
-        (async () => {
-          /* 読むのは通知を切っていない人だけ（Ren と 葵 は切っている）。kai は犯人に先回りされている */
-          const readers = [0, 1, 3, 5, 6, 2].filter(k => k < receivers.length);
-          for (const k of readers) {
-            await sleep(1.2 + Math.random() * 2.2);
-            if (momDone && frLeft.v <= 0) return;
-            post.readN++;
-            const who = FRIENDS[k];
-            if (k === 2) { doubt.add(k); await deliver({ app: 'kotori', th: 'group', who, from: 'f' + k, text: T.groupDoubt, wait: 1.5 }); }
-            else if (st.paid.has(k)) { await deliver({ app: 'kotori', th: 'group', who, from: 'f' + k, text: T.groupLate, wait: 1.2 }); }
-            else { st.notified.add(k); if (T.groupOk[k] && Math.random() < 0.8) { await deliver({ app: 'kotori', th: 'group', who, from: 'f' + k, text: T.groupOk[k], wait: 1.2 }); } }
-            if (st.notified.size >= TIMING.s8.speedUpAfter) speed = TIMING.s8.speedUpRate;
-            drawBars(); render();
-          }
-        })();
+        a.off = true;
+        gotoView({ name: 'kotori', th: 'group' }); groupPost();
       }
       else if (a.id === 'friend') {
         const next = receivers.find(k => doubt.has(k) && !st.paid.has(k)) ?? receivers.find(k => !st.notified.has(k) && !st.paid.has(k));
@@ -1052,7 +1085,7 @@ async function recover() {
         const wasDoubt = doubt.has(next); doubt.delete(next);
         deliver({ app: 'kotori', th: friendTh(next), who: FRIENDS[next], text: st.paid.has(next) ? T.friendLate : wasDoubt ? T.friendDoubtOk : T.friendOk[next % T.friendOk.length], wait: 1.5 });
         drawBars();
-        if (st.notified.size >= TIMING.s8.speedUpAfter) speed = TIMING.s8.speedUpRate;
+        told();
       } else if (a.id === 'mail') { await doBusy(T.act.mail, TIMING.s8.mailPw); st.mailPw = true; a.off = true; }
       else if (a.id === 'apply') {
         a.off = true; support = []; gotoView({ name: 'pico' });
@@ -1065,10 +1098,10 @@ async function recover() {
     }
   })();
   await new Promise(resolve => { const iv = setInterval(() => { if (momDone && (!out || frLeft.v <= 0)) { clearInterval(iv); resolve(); } }, 300); });
-  clearInterval(timer);
+  clearInterval(timer); drawBarsNow = null;
   if (trayResolve) pickTray(-1);   /* 出したままの選択肢も片づける */
   tray = null; busy = null;
-  const mt = threads.kotori.mom; if (mt) mt.inline = null;   /* 時間切れのあとは答えられない */
+  for (const app of ['kotori', 'sms']) for (const k in threads[app]) threads[app][k].inline = null;   /* 時間切れのあとは答えられない */
 
   $('#bars').className = ''; $('#bars').innerHTML = '';
   if (view.name === 'call') { view = st.rineLost ? { name: 'home' } : { name: 'kotori', th: 'mom' }; }

@@ -189,6 +189,15 @@ const T = {
   s9foot: 'あなたのアカウントは、次の人をだます道具として使われています。',
   /* 11/17 本人「友だちの部分をひねって」「リアルに怖く」：グループなら一度に届くが、通知を切っている人と、犯人に先回りされた人には届かない */
   groupName: 'サークル',
+  /* 11/17 本人「こっちがリアクションできるかを分かりやすく」「みんなに連絡するのがどのタイミングでできるか分からない」 */
+  canReply: '↑ 返事を選べます',
+  cannotReply: 'いまは返事できません',
+  qrHijacked: '「乗っ取られた。お金の話は無視して」',
+  qrGroup: '乗っ取られたことをグループに書く',
+  qrFake: '「それ偽物。乗っ取られてた」',
+  fakeReply: 'まじか……。取り返せるかな',
+  hintOut: '乗っ取られた。友だちや母に早く知らせよう。RINEのグループや、届いたメッセージへの返事から知らせられる',
+  groupOld: [['Riko', 'f1', '鍋の写真あげたよー'], ['ゆうと', 'f0', 'また来週やろ'], ['はるか', 'f3', '次はたこ焼きがいい']],
   groupPost: 'インスタグラフ乗っ取られた！俺のアカウントからお金の話が来ても全部無視して。絶対送らないで',
   groupOk: { 0: 'うわ、マジか。今ちょうど送るとこだった', 1: '了解！ほかの人にも回しとく', 3: 'え、こわ。無視する', 5: '気づいてよかった…', 6: '了解' },
   groupLate: 'ごめん、もう送っちゃった…',
@@ -397,13 +406,16 @@ const SCENES = {
 
   S5: [
     { do: 'set', v: { picoLocked: true } },
+    { do: 'qr', th: 'group' },
     { do: 'mail', wait: 2, mail: T.s5mail },
     { do: 'msg', app: 'kotori', th: 'yuto', who: 'ゆうと', text: 'インスタグラフでお前から「ポチペイで3万円払って」って来たけど本人？', wait: 6 },
     { do: 'msg', app: 'kotori', th: 'yuto', who: 'ゆうと', img: 'yutoShot', text: '', wait: 2 },
+    { do: 'qr', th: 'yuto', k: 0 },
     { do: 'msg', when: st => st.faceTaken, app: 'kotori', th: 'riko', who: 'Riko', text: '{名前}の顔写真つきで「本人です」って来たんだけど', wait: 5 },
     { do: 'msg', app: 'kotori', th: 'riko', who: 'Riko', text: T.storyAsk, wait: 4 },
     { do: 'msg', app: 'kotori', th: 'riko', who: 'Riko', img: 'storyShot', text: '', wait: 1 },
     { do: 'msg', app: 'kotori', th: 'riko', who: 'Riko', text: T.storyAsk2, wait: 2 },
+    { do: 'qr', th: 'riko', k: 1 },
     { do: 'goto', to: 'S6' }
   ],
 
