@@ -60,8 +60,9 @@ const T = {
   /* S1 */
   picoPosts: [
     { img: 'desk', text: '課題おわらん' },
-    { img: 'shop', text: '実家帰ってた' },
-    { img: 'nabe', text: 'サークルの鍋', tag: '@yuto_0921 @riko.s' }
+    { img: 'nabe', text: 'サークルの鍋', tag: '@yuto_0921 @riko.s' },
+    /* 11/17 本人「家の写真を見る人がいない」→ いちばん新しい投稿にして、Rikoのコメントの通知から開かせる */
+    { img: 'shop', text: '実家帰ってた', comment: ['riko.s', '実家のお店いいね！'] }
   ],
   leakMail: {
     from: 'ゲームサイト',
@@ -348,6 +349,7 @@ const SCENES = {
       ] },
       { label: UI.decline, steps: [{ do: 'missed', who: '母' }] }
     ] },
+    { do: 'notify', app: 'pico', text: 'riko.sがあなたの投稿にコメントしました：「実家のお店いいね！」', view: { name: 'pico', tab: 'feed' } },
     { do: 'explore' },
     { do: 'goto', to: 'S2' }
   ],

@@ -630,3 +630,7 @@ html, body { overscroll-behavior: none; }
 .igInput.can { background: #e3f6e8; }
 .rineInput.off .rinePh, .igInput.off .igPh { color: #b9b9b9; }
 .inline button { border-color: #2eb85c; box-shadow: 0 0 0 1px rgba(46,184,92,.25); }
+.ban { display: flex; }
+.ban .bimg { flex: none; width: 46px; height: 46px; border-radius: 8px; overflow: hidden; margin-left: 8px; align-self: center; }
+.ban .bimg img, .ban .bimg svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+.igCmtAll { font-size: 13.5px; color: #737373; padding: 2px 14px; }

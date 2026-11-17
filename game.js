@@ -376,7 +376,7 @@ function renderPico() {
     const ppl = ['me', 'yuto', 'riko', 'kai', 'f3', 'f4', 'f5'];
     const stories = ppl.map((k, n) => `<div class="igStory${n === 0 ? ' mine' : ''}"><span class="ring">${igAv(k, 60)}</span><span class="nm">${esc(n === 0 ? 'ストーリーズ' : (PEOPLE[k] || ''))}</span></div>`).join('');
     const likes = [12, 31, 8, 17];
-    const posts = T.picoPosts.slice().reverse().map((p, n) => `<div class="igPost"><div class="igPostHead">${igAv('me', 32)}<b>${esc(myName())}</b><span class="igIcon sm right">${IC.more}</span></div>${SVG[p.img].replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" ')}<div class="igActs"><span class="igIcon">${IC.heart}</span><span class="igIcon">${IC.bubble}</span><span class="igIcon">${IC.plane}</span><span class="igIcon right">${IC.save}</span></div><div class="igLikes">「いいね！」${likes[n % likes.length]}件</div><div class="igCap"><b>${esc(myName())}</b> ${esc(p.text)}${p.tag ? `<span class="igTag">${esc(p.tag)}</span>` : ''}</div></div>`).join('');
+    const posts = T.picoPosts.slice().reverse().map((p, n) => `<div class="igPost"><div class="igPostHead">${igAv('me', 32)}<b>${esc(myName())}</b><span class="igIcon sm right">${IC.more}</span></div>${SVG[p.img].replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" ')}<div class="igActs"><span class="igIcon">${IC.heart}</span><span class="igIcon">${IC.bubble}</span><span class="igIcon">${IC.plane}</span><span class="igIcon right">${IC.save}</span></div><div class="igLikes">「いいね！」${likes[n % likes.length]}件</div><div class="igCap"><b>${esc(myName())}</b> ${esc(p.text)}${p.tag ? `<span class="igTag">${esc(p.tag)}</span>` : ''}</div>${p.comment ? `<div class="igCmtAll">コメント1件を見る</div><div class="igCap"><b>${esc(p.comment[0])}</b> ${esc(p.comment[1])}</div>` : ''}</div>`).join('');
     body = `<div class="igStories">${stories}</div>${posts}`;
   }
   const n = badge('pico');
@@ -488,7 +488,7 @@ function banner(app, title, text, opts = {}) {
   if (shown.length >= 2) dismiss(shown[0]);
   const box = document.createElement('div');
   box.className = 'ban' + (opts.sticky ? ' sticky' : '');
-  box.innerHTML = `<span class="ico">${ICON[app] || ''}</span><div class="mid"><div class="t"><span>${esc(UI.apps[app] || app)}</span><span>今</span></div>${title ? `<div class="h">${esc(title)}</div>` : ''}<div class="b">${esc(text)}</div>${opts.button ? `<button class="bt">${esc(opts.button)}</button>` : ''}</div>`;
+  box.innerHTML = `<span class="ico">${ICON[app] || ''}</span><div class="mid"><div class="t"><span>${esc(UI.apps[app] || app)}</span><span>今</span></div>${title ? `<div class="h">${esc(title)}</div>` : ''}<div class="b">${esc(text)}</div>${opts.button ? `<button class="bt">${esc(opts.button)}</button>` : ''}</div>${opts.img && SVG[opts.img] ? `<span class="bimg">${SVG[opts.img]}</span>` : ''}`;
   /* 上にはらうと消える（11/17 本人「通知をどかせない・消せないのが嫌」） */
   let y0 = null, moved = false;
   const sStart = y => { y0 = y; moved = false; };
@@ -664,7 +664,7 @@ async function exec(step) {
     case 'lock': view = { name: 'lock', locked: false }; render(); return;
     case 'msg': await deliver(step); return;
     case 'pause': await sleep(step.s); return;
-    case 'notify': banner(step.app, '', fill(step.text), { open: step.th ? { name: step.app, th: step.th } : { name: step.app, tab: 'dm' } }); return;
+    case 'notify': banner(step.app, '', fill(step.text), { open: step.view || (step.th ? { name: step.app, th: step.th } : { name: step.app, tab: 'dm' }) }); return;
     case 'mail': await sleep(step.wait || 0); if (!st.leakFixed) { st.mailLost = true; banner('mail', '', T.mailLostBanner, {}); return; } mails.push({ id: 'm' + mails.length, from: step.mail.from, addr: step.mail.addr, subject: step.mail.subject, body: fill(step.mail.body), unread: true, t: hm(new Date()), revert: true, at: Date.now() }); banner('mail', step.mail.from, step.mail.subject, { open: { name: 'mail', id: 'm' + (mails.length - 1) } }); return;
     case 'set': Object.assign(st, step.v); return;
     case 'qr': {
@@ -898,8 +898,8 @@ async function misaki3() {
   for (const l of lines) {
     await sleep(TIMING.s6Gap * (0.25 + Math.random() * 0.45));
     const text = l.img ? '写真' : fill(l.text);
-    if (st.picoLocked) banner('pico', 'みさき', text, { hold: TIMING.s6UnsendAfter });
-    else { const m = { who: 'みさき', text: l.img ? '' : text, img: l.img, priv: !l.img && !T.s6photo.includes(l) }; pushMsg('pico', 'misaki', m); shown.push(m); if (!(view.name === 'pico' && view.th === 'misaki')) banner('pico', 'みさき', text, { open: { name: 'pico', th: 'misaki' }, hold: TIMING.s6UnsendAfter }); render(); }
+    if (st.picoLocked) banner('pico', 'みさき', text, { hold: TIMING.s6UnsendAfter, img: l.img });
+    else { const m = { who: 'みさき', text: l.img ? '' : text, img: l.img, priv: !l.img && !T.s6photo.includes(l) }; pushMsg('pico', 'misaki', m); shown.push(m); if (!(view.name === 'pico' && view.th === 'misaki')) banner('pico', 'みさき', text, { open: { name: 'pico', th: 'misaki' }, hold: TIMING.s6UnsendAfter, img: l.img }); render(); }
   }
   await sleep(TIMING.s6UnsendAfter);
   shown.forEach(m => { m.unsent = true; });
