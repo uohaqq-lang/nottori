@@ -641,7 +641,7 @@ function choose(i) {
 const KEY = 'nottori.progress';
 function saveProgress() {
   try {
-    const keepSt = {}; ['name', 'answeredS1', 'leakFixed', 'path2', 'path3', 'opened', 'route', 'sentCount', 'picoLocked', 'momSaved', 'momPaid', 'mailPw', 'applied', 'reverted', 'asked', 'mailLost', 'rineLost', 'groupUsed', 'strangerListened'].forEach(k => { keepSt[k] = st[k]; });
+    const keepSt = {}; ['name', 'answeredS1', 'leakFixed', 'path2', 'path3', 'opened', 'route', 'sentCount', 'picoLocked', 'momSaved', 'momPaid', 'mailPw', 'applied', 'reverted', 'asked', 'mailLost', 'rineLost', 'groupUsed', 'strangerListened', 'strangerPaid'].forEach(k => { keepSt[k] = st[k]; });
     keepSt.notified = [...st.notified]; keepSt.paid = [...st.paid];
     const th = {}; for (const app in threads) { th[app] = {}; for (const k in threads[app]) { const t = threads[app][k]; th[app][k] = { th: t.th, name: t.name, unread: t.unread, t: t.t, msgs: t.msgs.filter(m => !m.typing && !m.priv && !m.face) }; } }
     localStorage.setItem(KEY, JSON.stringify({ scene: st.scene, mode: st.mode, st: keepSt, threads: th, mails: mails.map(m => Object.assign({}, m)) }));
@@ -914,7 +914,8 @@ async function race() {
 
 /* S6：みさきの3通（5秒で取り消し） */
 async function misaki3() {
-  const lines = (st.opened ? T.s6opened.filter(l => !l.needStation || st.station) : []).concat(T.s6photo);
+  const lines = st.opened ? T.s6opened.filter(l => !l.needStation || st.station) : [];   /* 店の写真を送り返すのはやめた（11/17） */
+  if (!lines.length) return;
   const shown = [];
   for (const l of lines) {
     await sleep(TIMING.s6Gap * (0.25 + Math.random() * 0.45));
@@ -1143,12 +1144,22 @@ function askTray(options, inCall) {
 }
 let pendingTrayOptions = null;
 function pickTray(i) { if (!trayResolve) return; const r = trayResolve; trayResolve = null; pendingTrayOptions = null; $('#tray').className = ''; $('#tray').innerHTML = ''; trayPad(); r(i); }
+/* 払ってしまったとき：追加を求められ、払っても相手は消える */
+async function strangerPay(app, t) {
+  t.inline = null; st.strangerPaid = true;
+  pushMsg(app, 'stranger', { me: true, text: T.strangerPayMe }); pushMsg(app, 'stranger', { me: true, img: 'idcard' }); render();
+  await deliver({ app, th: 'stranger', who: UI.stranger, text: T.stranger3, wait: 2 });
+  await deliver({ app, th: 'stranger', who: UI.stranger, text: T.stranger4, wait: 6 });
+  if (['END', 'S9', 'S10', 'S11'].includes(st.scene)) return;
+  t.inline = [{ label: T.strangerPay2, f: async () => { t.inline = null; pushMsg(app, 'stranger', { me: true, text: T.strangerPay2Me }); render(); await deliver({ app, th: 'stranger', who: UI.stranger, text: T.stranger5, wait: 2 }); await sleep(6); pushMsg(app, 'stranger', { sys: true, text: T.strangerGone }); render(); } }, { label: T.quit, f: () => { t.inline = null; pushMsg(app, 'stranger', { me: true, text: T.quit }); render(); } }];
+  render();
+}
 async function stranger() {
   const app = st.rineLost ? 'sms' : 'kotori';
   if (app === 'kotori') pushMsg(app, 'stranger', { sys: true, text: 'このアカウントは友だちに追加されていません' });
   await deliver({ app, th: 'stranger', who: UI.stranger, text: T.stranger1, wait: TIMING.s8.strangerWait });
   const t = thread(app, 'stranger');
-  t.inline = [{ label: T.ignore, f: () => { t.inline = null; render(); } }, { label: T.listen, f: async () => { st.strangerListened = true; t.inline = null; pushMsg(app, 'stranger', { me: true, text: T.listen }); render(); await deliver({ app, th: 'stranger', who: UI.stranger, text: T.stranger2, wait: 2 }); t.inline = [{ label: T.quit, f: () => { t.inline = null; pushMsg(app, 'stranger', { me: true, text: T.quit }); render(); } }]; render(); } }];
+  t.inline = [{ label: T.ignore, f: () => { t.inline = null; render(); } }, { label: T.listen, f: async () => { st.strangerListened = true; t.inline = null; pushMsg(app, 'stranger', { me: true, text: T.listen }); render(); await deliver({ app, th: 'stranger', who: UI.stranger, text: T.stranger2, wait: 2 }); t.inline = [{ label: T.strangerPay, f: () => strangerPay(app, t) }, { label: T.quit, f: () => { t.inline = null; pushMsg(app, 'stranger', { me: true, text: T.quit }); render(); } }]; render(); } }];
   render();
 }
 
@@ -1236,7 +1247,7 @@ async function advice() {
     const tip = st.rineLost ? C.tipNoRine : st.groupUsed ? C.tipGroup : C.tipNoGroup;
     rows.push(C.friends.map(x => x.replace('{mark}', paid === 0 ? '○' : paid <= 2 ? '△' : '✕').replace('{all}', all).replace('{ok}', ok).replace('{paid}', paid).replace('{tip}', tip)));
   }
-  if (st.strangerListened) rows.push(C.stranger);
+  if (st.strangerPaid) rows.push(C.strangerPaid); else if (st.strangerListened) rows.push(C.stranger);
   const mine = `<h2 class="mycase">${esc(T.myCaseTitle)}</h2><div class="cases">${rows.map(r => `<div class="case m${r[0] === '○' ? 'o' : r[0] === '△' ? 't' : 'x'}"><b>${esc(r[0])}</b><div><p>${esc(r[1])}</p><span>${esc(r[2])}</span></div></div>`).join('')}</div>`;
   const html = `<div class="view doc" style="position:absolute;inset:0"><div class="scroll">${mine}<h1>${esc(T.s11title)}</h1>
     <ul>${T.s11main.map(x => `<li class="cur">${esc(x)}</li>`).join('')}</ul>
