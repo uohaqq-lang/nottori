@@ -664,13 +664,13 @@ async function race() {
 
 /* S6：ミサキの3通（5秒で取り消し） */
 async function misaki3() {
-  const lines = st.opened ? T.s6opened.filter(l => !l.needStation || st.station) : T.s6notOpened;
+  const lines = (st.opened ? T.s6opened.filter(l => !l.needStation || st.station) : []).concat(T.s6photo);
   const shown = [];
   for (const l of lines) {
     await sleep(TIMING.s6Gap * (0.25 + Math.random() * 0.45));
-    const text = fill(l.text);
+    const text = l.img ? '写真' : fill(l.text);
     if (st.picoLocked) banner('pico', 'ミサキ', text, { hold: TIMING.s6UnsendAfter });
-    else { const m = { who: 'ミサキ', text }; pushMsg('pico', 'misaki', m); shown.push(m); if (!(view.name === 'pico' && view.th === 'misaki')) banner('pico', 'ミサキ', text, { open: { name: 'pico', th: 'misaki' }, hold: TIMING.s6UnsendAfter }); render(); }
+    else { const m = { who: 'ミサキ', text: l.img ? '' : text, img: l.img }; pushMsg('pico', 'misaki', m); shown.push(m); if (!(view.name === 'pico' && view.th === 'misaki')) banner('pico', 'ミサキ', text, { open: { name: 'pico', th: 'misaki' }, hold: TIMING.s6UnsendAfter }); render(); }
   }
   await sleep(TIMING.s6UnsendAfter);
   shown.forEach(m => { m.unsent = true; });
