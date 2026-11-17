@@ -376,3 +376,12 @@ button { font-family: inherit; }
 .s0 .nameLab { display: block; font-size: 14px; color: #c9c6bf; margin-top: 10px; }
 .s0 .nameLab input { display: block; width: 100%; margin-top: 8px; padding: 12px 14px; font-size: 18px; border-radius: 12px; border: 1px solid #454b57; background: #262c37; color: #f2f0eb; font-family: inherit; }
 .s0 .nameNote { font-size: 12px !important; color: #9aa0ab; margin: 6px 0 0 !important; }
+
+/* ---------- 通知を本物らしく（11/17 本人「通知の仕方がリアルだともっと気持ち悪い」） ---------- */
+.ban { animation: drop .45s cubic-bezier(.18,1.15,.4,1); }
+.ban .t span:first-child { text-transform: none; font-weight: 600; letter-spacing: .02em; }
+.ban .b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ban + .ban:not(.sticky) { transform: scale(.96); opacity: .92; margin-top: -2px; }
+.lock .lcard:first-child { animation: lockIn .5s ease-out; }
+@keyframes lockIn { from { transform: translateY(-14px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
+.lock .lcard .b { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }

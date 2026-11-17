@@ -9,6 +9,7 @@ const SPEED = Math.max(1, Number(QS.get('fast')) || 1);
 const PICKS = (QS.get('pick') || '').split(',').filter(s => s !== '').map(Number);
 const AUTO = PICKS.length > 0 || QS.has('auto');
 let FROZEN = false;   /* 確かめ用：?hold=場面名&holdAfter=秒 で、その時点で止める */
+const PACE = 1.6;   /* 会話の間の倍率 */
 const sleep = s => FROZEN ? new Promise(() => {}) : new Promise(r => setTimeout(() => { if (!FROZEN) r(); }, Math.max(0, s) * 1000 / SPEED));
 function tlog(...a) { const el = document.getElementById('testlog'); if (el) el.textContent += a.join(' ') + '\n'; console.log('[game]', ...a); }
 window.addEventListener('error', e => tlog('ERROR', e.message, e.lineno));
@@ -73,7 +74,15 @@ function tone(freq, t0, dur, vol = 0.12, type = 'sine') {
   o.connect(g); g.connect(audio.destination); o.start(audio.currentTime + t0); o.stop(audio.currentTime + t0 + dur + 0.02);
 }
 const sound = {
-  notify() { tone(988, 0, 0.12); tone(1319, 0.09, 0.18); if (isAndroid && navigator.vibrate) navigator.vibrate(60); },
+  /* アプリごとに違う、短い通知音（本物のアプリの音は使わない） */
+  notify(app) {
+    if (app === 'kotori') { tone(880, 0, 0.07, 0.13); tone(1175, 0.08, 0.12, 0.13); }
+    else if (app === 'pico') { tone(1568, 0, 0.25, 0.08); tone(2093, 0.06, 0.35, 0.05); }
+    else if (app === 'sms') { tone(1319, 0, 0.09); tone(1568, 0.11, 0.09); tone(2093, 0.22, 0.14); }
+    else if (app === 'mail') { tone(660, 0, 0.18, 0.07); tone(990, 0.12, 0.2, 0.06); }
+    else { tone(988, 0, 0.12); tone(1319, 0.09, 0.18); }
+    if (isAndroid && navigator.vibrate) navigator.vibrate(app === 'kotori' ? [40, 60, 40] : 70);
+  },
   ringOnce() { for (let i = 0; i < 8; i++) { tone(1046, i * 0.1, 0.08, 0.1, 'triangle'); tone(1318, i * 0.1 + 0.05, 0.05, 0.08, 'triangle'); } if (isAndroid && navigator.vibrate) navigator.vibrate([400, 200, 400]); },
   dialOnce() { tone(400, 0, 1.0, 0.07); },
   tap() { tone(1500, 0, 0.03, 0.03); }
@@ -292,21 +301,40 @@ function renderTray() {
 /* ---------- お知らせ ---------- */
 function banner(app, title, text, opts = {}) {
   const tm = hm(new Date());
-  lockCards.push({ app, text: title ? `${title}${text ? '　' + text : ''}` : text, tm });
-  sound.notify();
+  lockCards.push({ app, text: title ? `${title}${text ? '　' + text : ''}` : text, tm, fresh: true });
+  sound.notify(app);
+  bgNotify(text);
+  /* ロック画面のときは、上から降ろさず、暗い画面が光ってロック画面に積む */
+  if (view.name === 'lock' && !opts.sticky) { wake(); render(); return null; }
+  /* 上に出しておくのは2枚まで（古いものから引っ込める） */
+  const shown = [...document.querySelectorAll('#banners .ban:not(.out):not(.sticky)')];
+  if (shown.length >= 2) dismiss(shown[0]);
   const box = document.createElement('div');
-  box.className = 'ban';
+  box.className = 'ban' + (opts.sticky ? ' sticky' : '');
   box.innerHTML = `<span class="ico">${ICON[app] || ''}</span><div class="mid"><div class="t"><span>${esc(UI.apps[app] || app)}</span><span>今</span></div>${title ? `<div class="h">${esc(title)}</div>` : ''}<div class="b">${esc(text)}</div>${opts.button ? `<button class="bt">${esc(opts.button)}</button>` : ''}</div>`;
   box.addEventListener('click', e => {
     if (opts.button && e.target.classList.contains('bt')) { opts.onButton && opts.onButton(); return; }
     if (opts.open) { gotoView(opts.open); }
     if (!opts.sticky) dismiss(box);
   });
-  $('#banners').appendChild(box);
-  if (!opts.sticky) setTimeout(() => dismiss(box), (opts.hold || 4.5) * 1000);
-  if (view.name === 'lock') render();
-  bgNotify(text);
+  $('#banners').prepend(box);
+  if (!opts.sticky) setTimeout(() => dismiss(box), (opts.hold || 5.5) * 1000);
   return box;
+}
+/* 画面が暗くなる → 通知で光る */
+let asleep = false;
+async function screenSleep() {
+  view = { name: 'lock', locked: false }; backStack.length = 0; render();
+  const o = $('#overlay'); o.className = 'on black'; o.textContent = ''; o.style.transition = 'opacity 1.6s'; o.style.opacity = '0';
+  requestAnimationFrame(() => { o.style.opacity = '1'; });
+  asleep = true;
+  await sleep(2.2);
+}
+function wake() {
+  if (!asleep) { const lc = document.querySelector('.lock .cards'); if (lc) lc.classList.add('pulse'); return; }
+  asleep = false;
+  const o = $('#overlay'); o.style.transition = 'opacity .25s'; o.style.opacity = '0';
+  setTimeout(() => { o.className = ''; o.style.opacity = ''; o.style.transition = ''; }, 300);
 }
 function dismiss(box) { if (!box || !box.parentNode) return; box.classList.add('out'); setTimeout(() => box.remove(), 320); }
 function toast(t) { const el = $('#toast'); el.textContent = t; el.className = 'on'; setTimeout(() => { el.className = ''; }, 2200); }
@@ -325,7 +353,9 @@ async function deliver(step) {
   const { app, th } = step;
   if (step.when && !step.when(st)) return;
   const t = thread(app, th);
-  const wait = step.wait || 0;
+  /* 読ませる速さ：台本の間を1.6倍にし、字数に応じた最低の間をとる（11/17 本人「すごい速さで出てきて怖さがない」） */
+  const len = String(step.text || '').length;
+  const wait = step.noPace ? (step.wait || 0) : Math.max((step.wait || 0) * PACE, 1.6 + len * 0.09);
   if (wait > 0) {
     const ty = { typing: true };
     t.msgs.push(ty); if (view.name === app && view.th === th) render();
@@ -390,6 +420,7 @@ let leakAnswered = false;
 let exploreDone = null;
 async function runScene(name) {
   st.scene = name; saveProgress(); tlog('scene', name);
+  if (name === 'S2' && !AUTO) await screenSleep();   /* 画面が暗くなってから、通知で光る */
   if (QS.get('hold') === name) setTimeout(() => { FROZEN = true; }, (Number(QS.get('holdAfter')) || 1) * 1000 / SPEED);
   const steps = SCENES[name];
   for (const step of steps) {
