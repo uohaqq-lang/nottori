@@ -315,9 +315,15 @@ function banner(app, title, text, opts = {}) {
   box.innerHTML = `<span class="ico">${ICON[app] || ''}</span><div class="mid"><div class="t"><span>${esc(UI.apps[app] || app)}</span><span>今</span></div>${title ? `<div class="h">${esc(title)}</div>` : ''}<div class="b">${esc(text)}</div>${opts.button ? `<button class="bt">${esc(opts.button)}</button>` : ''}</div>`;
   /* 上にはらうと消える（11/17 本人「通知をどかせない・消せないのが嫌」） */
   let y0 = null, moved = false;
-  box.addEventListener('pointerdown', e => { y0 = e.clientY; moved = false; box.setPointerCapture && box.setPointerCapture(e.pointerId); });
-  box.addEventListener('pointermove', e => { if (y0 == null) return; const dy = e.clientY - y0; if (dy < -6) { moved = true; box.style.transform = `translateY(${dy}px)`; box.style.opacity = String(Math.max(0, 1 + dy / 120)); } });
-  box.addEventListener('pointerup', e => { if (y0 == null) return; const dy = e.clientY - y0; y0 = null; if (dy < -40) { dismiss(box); if (opts.onSwipe) opts.onSwipe(); } else { box.style.transform = ''; box.style.opacity = ''; } });
+  const sStart = y => { y0 = y; moved = false; };
+  const sMove = (y, e) => { if (y0 == null) return; const dy = y - y0; if (dy < -6) { moved = true; if (e && e.cancelable) e.preventDefault(); box.style.transition = 'none'; box.style.transform = `translateY(${dy}px)`; box.style.opacity = String(Math.max(0, 1 + dy / 120)); } };
+  const sEnd = y => { if (y0 == null) return; const dy = y - y0; y0 = null; box.style.transition = ''; if (dy < -35) { dismiss(box); if (opts.onSwipe) opts.onSwipe(); } else { box.style.transform = ''; box.style.opacity = ''; } };
+  box.addEventListener('touchstart', e => sStart(e.touches[0].clientY), { passive: true });
+  box.addEventListener('touchmove', e => sMove(e.touches[0].clientY, e), { passive: false });
+  box.addEventListener('touchend', e => sEnd(e.changedTouches[0].clientY));
+  box.addEventListener('mousedown', e => sStart(e.clientY));
+  window.addEventListener('mousemove', e => sMove(e.clientY));
+  window.addEventListener('mouseup', e => sEnd(e.clientY));
   box.addEventListener('click', e => {
     if (moved) { moved = false; return; }
     if (opts.button && e.target.classList.contains('bt')) { opts.onButton && opts.onButton(); return; }
@@ -619,8 +625,11 @@ async function race() {
   const onPress = () => {
     if (done || st.route) return;
     $('#overlay').className = 'on modal';
-    $('#overlay').innerHTML = `<div class="dlg"><p>${esc(T.s4confirm)}</p><button class="btn" id="pwgo">${esc(T.s4confirmBtn)}</button></div>`;
-    $('#pwgo').onclick = () => { $('#overlay').className = ''; $('#overlay').innerHTML = ''; if (!done) { saved = true; done = true; } };
+    $('#overlay').innerHTML = `<div class="dlg"><p>${esc(T.s4confirm)}</p><button class="btn" id="pwgo">${esc(T.s4confirmBtn)}</button><button class="btn sub" id="pwno" style="margin-top:10px">キャンセル</button></div>`;
+    const close = () => { $('#overlay').className = ''; $('#overlay').innerHTML = ''; $('#overlay').onclick = null; };
+    $('#pwgo').onclick = e => { e.stopPropagation(); close(); if (!done) { saved = true; done = true; } };
+    $('#pwno').onclick = e => { e.stopPropagation(); close(); };
+    $('#overlay').onclick = e => { if (e.target.id === 'overlay') close(); };
   };
   raceAction = { press: onPress, text: T.s4notify.replace('{遠い都道府県}', far) };
   raceBanner = banner('pico', '', raceAction.text, { sticky: true, button: T.s4button, onButton: onPress });
