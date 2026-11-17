@@ -73,6 +73,7 @@ function tone(freq, t0, dur, vol = 0.12, type = 'sine') {
   g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + t0 + dur);
   o.connect(g); g.connect(audio.destination); o.start(audio.currentTime + t0); o.stop(audio.currentTime + t0 + dur + 0.02);
 }
+function haptic() { try { const l = document.getElementById('hapt'); if (l) l.click(); } catch (e) {} }
 const sound = {
   /* アプリごとに違う、短い通知音（本物のアプリの音は使わない） */
   notify(app) {
@@ -82,6 +83,7 @@ const sound = {
     else if (app === 'mail') { tone(660, 0, 0.18, 0.07); tone(990, 0.12, 0.2, 0.06); }
     else { tone(988, 0, 0.12); tone(1319, 0.09, 0.18); }
     if (isAndroid && navigator.vibrate) navigator.vibrate(app === 'kotori' ? [40, 60, 40] : 70);
+    else haptic();   /* iPhone（iOS 18以降のSafari）は、スイッチの小さな振動を借りる */
   },
   ringOnce() { for (let i = 0; i < 8; i++) { tone(1046, i * 0.1, 0.08, 0.1, 'triangle'); tone(1318, i * 0.1 + 0.05, 0.05, 0.08, 'triangle'); } if (isAndroid && navigator.vibrate) navigator.vibrate([400, 200, 400]); },
   dialOnce() { tone(400, 0, 1.0, 0.07); },
