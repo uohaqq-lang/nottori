@@ -9,7 +9,7 @@ const SPEED = Math.max(1, Number(QS.get('fast')) || 1);
 const PICKS = (QS.get('pick') || '').split(',').filter(s => s !== '').map(Number);
 const AUTO = PICKS.length > 0 || QS.has('auto');
 let FROZEN = false;   /* 確かめ用：?hold=場面名&holdAfter=秒 で、その時点で止める */
-const PACE = 1.6;   /* 会話の間の倍率 */
+const PACE = 2.0;   /* 会話の間の倍率 */
 const sleep = s => FROZEN ? new Promise(() => {}) : new Promise(r => setTimeout(() => { if (!FROZEN) r(); }, Math.max(0, s) * 1000 / SPEED));
 function tlog(...a) { const el = document.getElementById('testlog'); if (el) el.textContent += a.join(' ') + '\n'; console.log('[game]', ...a); }
 window.addEventListener('error', e => tlog('ERROR', e.message, e.lineno));
@@ -163,7 +163,7 @@ function msgHTML(app, t, m) {
   const av = me ? '' : `<span class="av" style="background:${COLORS[t.th] || '#888'}">${esc((m.who || t.name).slice(0, 1))}</span>`;
   let bb;
   if (m.typing) bb = `<div class="bb typing">${esc(UI.typing)}</div>`;
-  else if (m.link) bb = `<div class="bb link"><div class="lkimg"></div><div class="lk"><b>${esc(UI.voteTitle)}</b><span>${esc(UI.voteHost)}</span></div></div>`;
+  else if (m.link) bb = `<div class="bb link" data-act="openVote"><div class="lkimg"></div><div class="lk"><b>${esc(UI.voteTitle)}</b><span>${esc(UI.voteHost)}</span></div></div>`;
   else if (m.img) bb = `<div class="bb img">${(SVG[m.img] || '').replace('>ソウタ<', '>' + esc(myName()) + '<')}</div>`;
   else if (m.face) bb = `<div class="bb img"><div class="camslot" style="width:120px;height:120px;margin:0;border-width:2px" data-face="1"></div></div>`;
   else bb = `<div class="bb">${esc(fill(m.text))}</div>`;
@@ -318,7 +318,7 @@ function banner(app, title, text, opts = {}) {
     if (!opts.sticky) dismiss(box);
   });
   $('#banners').prepend(box);
-  if (!opts.sticky) setTimeout(() => dismiss(box), (opts.hold || 5.5) * 1000);
+  if (!opts.sticky) setTimeout(() => dismiss(box), (opts.hold || 7) * 1000);
   return box;
 }
 /* 画面が暗くなる → 通知で光る */
@@ -372,7 +372,6 @@ async function deliver(step) {
 /* ---------- 画面の移動 ---------- */
 const backStack = [];
 function gotoView(v) {
-  if (view.name === 'lock' && view.locked) return;
   backStack.push(view);
   view = Object.assign({}, v);
   if (view.th && threads[view.name] && threads[view.name][view.th]) threads[view.name][view.th].unread = 0;
@@ -420,6 +419,8 @@ let leakAnswered = false;
 let exploreDone = null;
 async function runScene(name) {
   st.scene = name; saveProgress(); tlog('scene', name);
+  /* 出来事と出来事のあいだに間をあける（何が起きたか確かめられるように） */
+  if (['S3', 'S4', 'S4safe', 'S5', 'S6', 'S7', 'S8', 'END'].includes(name)) await sleep(3.5);
   if (QS.get('hold') === name) setTimeout(() => { FROZEN = true; }, (Number(QS.get('holdAfter')) || 1) * 1000 / SPEED);
   const steps = SCENES[name];
   for (const step of steps) {
@@ -433,7 +434,7 @@ async function runSteps(steps) {
 }
 async function exec(step) {
   switch (step.do) {
-    case 'lock': view = { name: 'lock', locked: true }; render(); return;
+    case 'lock': view = { name: 'lock', locked: false }; render(); return;
     case 'msg': await deliver(step); return;
     case 'pause': await sleep(step.s); return;
     case 'notify': banner(step.app, '', fill(step.text), { open: step.th ? { name: step.app, th: step.th } : { name: step.app, tab: 'dm' } }); return;
@@ -510,19 +511,20 @@ function leakFix(auto) {
 }
 
 /* S3：投票ページ */
+let voteView = null;   /* 投票ページを離れても、戻れるように持っておく */
 async function voteFlow() {
   st.opened = true;
-  view = { name: 'vote', verify: false };
+  const vv = { name: 'vote', verify: false }; voteView = vv; view = vv;
   render();
   await sleep(1.2);
   for (const kind of ['loc', 'cam', 'notif']) {
-    view.card = kind; render();
+    vv.card = kind; render();
     await waitAct('voteCard');
-    view.card = null; render();
+    vv.card = null; render();
     if (st.mode === 'real') await realPerm(kind);
-    else { view.perm = kind; render(); const ok = await waitAct('fakePerm'); view.perm = null; if (kind === 'loc') st.locAllowed = false; render(); if (kind === 'cam' && ok) st.faceTaken = false; }
+    else { vv.perm = kind; render(); const ok = await waitAct('fakePerm'); vv.perm = null; if (kind === 'loc') st.locAllowed = false; render(); if (kind === 'cam' && ok) st.faceTaken = false; }
   }
-  view.verify = true; render();
+  vv.verify = true; render();
   await sleep(1.0);
   pushMsg('sms', 'picosms', { who: 'インスタカム', text: T.sms2 });
   banner('sms', 'インスタカム', T.sms2, {});
@@ -534,15 +536,17 @@ async function voteFlow() {
     if (AUTO) { const p = PICKS.length ? PICKS.shift() : 0; setTimeout(() => choose(p), 300); }
   });
   if (i === 0) {
-    st.path3 = true; view.code = true; render();
+    st.path3 = true; vv.code = true; render();
     await sleep(1.2);
-    view.verify = false; view.card = null; render();
-    $('#screen .scroll').insertAdjacentHTML('afterbegin', `<div class="vverify" style="margin-top:14px"><div class="h">投票ありがとうございました</div></div>`);
+    vv.verify = false; vv.card = null; render();
+    if (view === vv) $('#screen .scroll').insertAdjacentHTML('afterbegin', `<div class="vverify" style="margin-top:14px"><div class="h">投票ありがとうございました</div></div>`);
     await sleep(2);
   }
-  view = { name: 'pico', th: 'misaki' }; render();
+  voteView = null;
+  if (view === vv) { view = { name: 'pico', th: 'misaki' }; render(); }
 }
 function renderVoteTray() {
+  if (view !== voteView) return;
   const el = $('#tray');
   el.className = 'on';
   el.innerHTML = choice.options.map((o, i) => `<button class="opt" data-act="choose" data-arg="${i}">${esc(o.label)}</button>`).join('');
@@ -566,7 +570,7 @@ async function realPerm(kind) {
     } else if (kind === 'cam' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false }).catch(() => null);
       if (stream) {
-        view.card = 'cam'; view.stream = stream; render();
+        const vv = voteView || view; vv.card = 'cam'; vv.stream = stream; render();
         await sleep(2.5);
         const vid = $('#screen video');
         if (vid && vid.videoWidth) {
@@ -576,7 +580,7 @@ async function realPerm(kind) {
           faceCanvas = c; st.faceTaken = true;
         }
         stream.getTracks().forEach(t => t.stop());       /* 1枚撮ったらすぐ止める */
-        view.stream = null; view.card = null; render();
+        vv.stream = null; vv.card = null; render();
       }
     } else if (kind === 'notif' && 'Notification' in window) {
       const p = await Notification.requestPermission().catch(() => 'denied');
@@ -605,7 +609,7 @@ async function race() {
   while (!done) {
     await sleep(0.25);
     const el = (Date.now() - t0) * SPEED / 1000;
-    const want = Math.min(TIMING.s4.friends, Math.floor(el / TIMING.s4.interval));
+    const want = Math.min(TIMING.s4.friends, Math.max(0, Math.floor((el - TIMING.s4.grace) / TIMING.s4.interval) + 1));
     while (sent < want && !done) {
       const k = 'f' + sent; thread('pico', k).name = FRIENDS[sent];
       pushMsg('pico', k, { me: true, ghost: true, text: T.s4toFriend }); sent++; render();
@@ -865,7 +869,7 @@ document.addEventListener('click', e => {
     case 'fresh': eraseProgress(); render(); break;
     case 'start': { const el = document.getElementById('nameIn'); st.name = el ? el.value.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 8) : ''; begin(arg); break; }
     case 'unlock': if (!view.locked) { view = { name: 'home' }; render(); } break;
-    case 'home': if (!(view.name === 'lock') && view.name !== 'vote') { view = { name: 'home' }; render(); } else if (view.name === 'lock' && !view.locked) { view = { name: 'home' }; render(); } break;
+    case 'home': if (view.name !== 'call') { view = { name: 'home' }; render(); } break;
     case 'open': gotoView({ name: arg }); break;
     case 'back': goBack(); break;
     case 'th': gotoView({ name: view.name, th: arg }); break;
@@ -881,7 +885,8 @@ document.addEventListener('click', e => {
     case 'inline': { const t = threads[view.name] && threads[view.name][view.th]; if (t && t.inline && t.inline[arg]) t.inline[arg].f(); break; }
     case 'callYes': if (view.onPick) view.onPick(0); break;
     case 'callNo': if (view.onPick) view.onPick(1); break;
-    case 'voteX': break;
+    case 'voteX': view = { name: 'home' }; render(); break;
+    case 'openVote': if (voteView) { view = voteView; render(); } break;
     case 'erase': eraseProgress(); toast(UI.erased); break;
     case 'again': eraseProgress(); location.href = location.pathname; break;
   }
