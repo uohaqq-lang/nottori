@@ -420,7 +420,6 @@ let leakAnswered = false;
 let exploreDone = null;
 async function runScene(name) {
   st.scene = name; saveProgress(); tlog('scene', name);
-  if (name === 'S2' && !AUTO) await screenSleep();   /* 画面が暗くなってから、通知で光る */
   if (QS.get('hold') === name) setTimeout(() => { FROZEN = true; }, (Number(QS.get('holdAfter')) || 1) * 1000 / SPEED);
   const steps = SCENES[name];
   for (const step of steps) {
