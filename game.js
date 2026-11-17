@@ -356,13 +356,26 @@ function pushMsg(app, th, m) {
   if (!m.me && !viewing) t.unread++;
   return viewing;
 }
+/* 人ごとの打つ速さと、ばらつき（11/17 本人「等間隔が嫌。ランダムに。構えている相手はポンポン来る」）
+   ミサキ（乗っ取り犯が用意した文）・復旧代行は速い。母はゆっくり。友だちはふつう。同じ人が続けて送るときは短い。 */
+const TYPING = { misaki: 0.35, stranger: 0.4, mom: 1.35, picosms: 0, yuto: 0.9, riko: 0.85, kai: 0.9 };
+let lastFrom = { th: null, t: 0 };
+function humanWait(th, step, len) {
+  const base = Math.max((step.wait || 0) * PACE, 1.6 + len * 0.09);
+  const f = TYPING[th] != null ? TYPING[th] : 0.9;
+  let w = base * f * (0.55 + Math.random() * 0.9);
+  if (lastFrom.th === th && Date.now() - lastFrom.t < 6000 / SPEED) w *= 0.45 + Math.random() * 0.3;   /* 続けて送るときはポンポン */
+  if (Math.random() < 0.12 && f >= 0.8) w += 2 + Math.random() * 3;   /* たまに考え込む */
+  lastFrom = { th, t: Date.now() };
+  return Math.max(0.5, w);
+}
 async function deliver(step) {
   const { app, th } = step;
   if (step.when && !step.when(st)) return;
   const t = thread(app, th);
   /* 読ませる速さ：台本の間を1.6倍にし、字数に応じた最低の間をとる（11/17 本人「すごい速さで出てきて怖さがない」） */
   const len = String(step.text || '').length;
-  const wait = step.noPace ? (step.wait || 0) : Math.max((step.wait || 0) * PACE, 1.6 + len * 0.09);
+  const wait = step.noPace ? (step.wait || 0) : humanWait(th, step, len);
   if (wait > 0) {
     const ty = { typing: true };
     t.msgs.push(ty); if (view.name === app && view.th === th) render();
@@ -643,7 +656,7 @@ async function misaki3() {
   const lines = st.opened ? T.s6opened.filter(l => !l.needStation || st.station) : T.s6notOpened;
   const shown = [];
   for (const l of lines) {
-    await sleep(TIMING.s6Gap);
+    await sleep(TIMING.s6Gap * (0.25 + Math.random() * 0.45));
     const text = fill(l.text);
     if (st.picoLocked) banner('pico', 'ミサキ', text, { hold: TIMING.s6UnsendAfter });
     else { const m = { who: 'ミサキ', text }; pushMsg('pico', 'misaki', m); shown.push(m); if (!(view.name === 'pico' && view.th === 'misaki')) banner('pico', 'ミサキ', text, { open: { name: 'pico', th: 'misaki' }, hold: TIMING.s6UnsendAfter }); render(); }
