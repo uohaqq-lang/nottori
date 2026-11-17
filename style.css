@@ -81,7 +81,7 @@ button { font-family: inherit; }
 /* ---------- 画面の本体 ---------- */
 #screen { position: absolute; inset: 0; overflow: hidden; }
 .view { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--paper); }
-.view.withBars .appHead { margin-top: 44px; }
+.view.withBars .appHead { margin-top: var(--barsh, 44px); }
 .pad44 { height: 44px; flex: none; }
 .appHead {
   flex: none; height: 52px; display: flex; align-items: center; gap: 8px;
@@ -513,7 +513,7 @@ span.pic svg { width: 100%; height: 100%; display: block; }
 .s9 .det-wrap .shopm { position: relative; display: inline-block; width: 200px; height: 200px; border: 1px solid #ccc; }
 .s9 .det-wrap .shopm img { width: 100%; height: 100%; display: block; object-fit: cover; }
 .s9 .det-wrap .shopm i { position: absolute; border: 3px solid #e33; box-sizing: border-box; }
-.view.withBars .rineHead, .view.withBars .rineListHead, .view.withBars .igTop, .view.withBars .igChatHead { margin-top: 62px; }
+.view.withBars .rineHead, .view.withBars .rineListHead, .view.withBars .igTop, .view.withBars .igChatHead { margin-top: var(--barsh, 62px); }
 #tray .q { color: #fff; font-size: 15px; line-height: 1.6; padding: 2px 4px 12px; }
 #tray .q b { display: block; font-size: 12px; opacity: .7; font-weight: 500; }
 .call.asking .who { margin-top: 24px !important; font-size: 22px; }
@@ -542,3 +542,20 @@ span.pic svg { width: 100%; height: 100%; display: block; }
 .lwic svg { width: 22px; height: 22px; }
 .mailbody .b { white-space: pre-line; }.ig .btn.sub { background: #efefef; color: #111; border: 0; }
 .lcfld { font-size: 18px; letter-spacing: .2em; }
+
+/* 11/17 バグ探しを受けて */
+:root { --trayh: 0px; }
+#screen .chat { padding-bottom: calc(10px + var(--trayh)); }
+#screen .scroll { padding-bottom: calc(10px + var(--trayh)); }
+#screen .s9 .scroll { padding-bottom: 80px; }
+.igGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+.igGrid img, .igGrid svg { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; }
+.igSetNote { padding: 2px 18px 12px; font-size: 12.5px; color: #737373; line-height: 1.6; }
+body.standalone #statusbar { visibility: hidden; }
+.s9 .scroll { margin-top: 44px; padding-top: 0 !important; }
+.s9 th { top: 0; z-index: 2; }
+.call.withBars.asking .who { margin-top: calc(var(--barsh, 62px) + 22px) !important; }
+#pcSide .pcLead { width: auto; white-space: nowrap; }
+html, body { overscroll-behavior: none; }
+#pcSide img.qr { border: 0; border-radius: 10px; background: #fff; display: block; }
+#pcSide .pcUrl { font-size: 12px; color: #9aa0ab; margin-top: 10px; }
