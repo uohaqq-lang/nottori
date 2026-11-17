@@ -516,7 +516,7 @@ async function incoming(step) {
 function explore() {
   return new Promise(resolve => {
     exploreDone = resolve;
-    let started = null;
+    let started = Date.now();   /* 電話が終わったときから数える（ロック画面のままでも進む） */
     const iv = setInterval(() => {
       if (view.name !== 'lock' && !started) started = Date.now();
       if (started && (Date.now() - started) * SPEED / 1000 > TIMING.s1ExploreMax) { clearInterval(iv); exploreDone = null; resolve(); }
