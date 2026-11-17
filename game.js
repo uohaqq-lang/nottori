@@ -92,7 +92,7 @@ const sound = {
 
 /* ---------- データ：会話・メール ---------- */
 const COLORS = { mom: '#c08a5b', misaki: '#9b6fa6', yuto: '#5b84b5', riko: '#c26b7e', kai: '#5f9a7a', stranger: '#7c7c7c', pico: '#b5654f', picosms: '#678c6b' };
-const PEOPLE = { mom: '母', misaki: 'ミサキ', yuto: 'ユウト', riko: 'リコ', kai: 'カイ', stranger: UI.stranger, picosms: 'インスタグラフ' };
+const PEOPLE = { mom: '母', misaki: 'みさき', yuto: 'ゆうと', riko: 'Riko', kai: 'kai', stranger: UI.stranger, picosms: 'インスタグラフ' };
 FRIENDS.forEach((n, i) => { const k = 'f' + i; PEOPLE[k] = n; if (!COLORS[k]) COLORS[k] = ['#5b84b5', '#c26b7e', '#5f9a7a', '#a08251', '#6b74b5', '#b56b9c', '#6f8f4f', '#a3655b'][i]; });
 /* アイコンの写真（生成AIで作った。人の顔は写さない）。知らない人は初期アイコンのまま */
 const AVATAR = { me: 'me', mom: 'mom', misaki: 'misaki', yuto: 'yuto', riko: 'riko', kai: 'kai', f0: 'yuto', f1: 'riko', f2: 'kai', f3: 'haruka', f4: 'ren', f5: 'mio', f6: 'daichi', f7: 'aoi' };
@@ -447,7 +447,7 @@ function pushMsg(app, th, m) {
   return viewing;
 }
 /* 人ごとの打つ速さと、ばらつき（11/17 本人「等間隔が嫌。ランダムに。構えている相手はポンポン来る」）
-   ミサキ（乗っ取り犯が用意した文）・復旧代行は速い。母はゆっくり。友だちはふつう。同じ人が続けて送るときは短い。 */
+   みさき（乗っ取り犯が用意した文）・復旧代行は速い。母はゆっくり。友だちはふつう。同じ人が続けて送るときは短い。 */
 const TYPING = { misaki: 0.35, stranger: 0.4, mom: 1.35, picosms: 0, yuto: 0.9, riko: 0.85, kai: 0.9 };
 let lastFrom = { th: null, t: 0 };
 function humanWait(th, step, len) {
@@ -749,15 +749,15 @@ async function race() {
   render();
 }
 
-/* S6：ミサキの3通（5秒で取り消し） */
+/* S6：みさきの3通（5秒で取り消し） */
 async function misaki3() {
   const lines = (st.opened ? T.s6opened.filter(l => !l.needStation || st.station) : []).concat(T.s6photo);
   const shown = [];
   for (const l of lines) {
     await sleep(TIMING.s6Gap * (0.25 + Math.random() * 0.45));
     const text = l.img ? '写真' : fill(l.text);
-    if (st.picoLocked) banner('pico', 'ミサキ', text, { hold: TIMING.s6UnsendAfter });
-    else { const m = { who: 'ミサキ', text: l.img ? '' : text, img: l.img }; pushMsg('pico', 'misaki', m); shown.push(m); if (!(view.name === 'pico' && view.th === 'misaki')) banner('pico', 'ミサキ', text, { open: { name: 'pico', th: 'misaki' }, hold: TIMING.s6UnsendAfter }); render(); }
+    if (st.picoLocked) banner('pico', 'みさき', text, { hold: TIMING.s6UnsendAfter });
+    else { const m = { who: 'みさき', text: l.img ? '' : text, img: l.img }; pushMsg('pico', 'misaki', m); shown.push(m); if (!(view.name === 'pico' && view.th === 'misaki')) banner('pico', 'みさき', text, { open: { name: 'pico', th: 'misaki' }, hold: TIMING.s6UnsendAfter }); render(); }
   }
   await sleep(TIMING.s6UnsendAfter);
   shown.forEach(m => { m.unsent = true; });
@@ -903,6 +903,7 @@ function askTray(options, inCall) {
 let pendingTrayOptions = null;
 function pickTray(i) { if (!trayResolve) return; const r = trayResolve; trayResolve = null; pendingTrayOptions = null; $('#tray').className = ''; $('#tray').innerHTML = ''; r(i); }
 async function stranger() {
+  pushMsg('kotori', 'stranger', { sys: true, text: 'このアカウントは友だちに追加されていません' });
   await deliver({ app: 'kotori', th: 'stranger', who: UI.stranger, text: T.stranger1, wait: TIMING.s8.strangerWait });
   const t = thread('kotori', 'stranger');
   t.inline = [{ label: T.ignore, f: () => { t.inline = null; render(); } }, { label: T.listen, f: async () => { t.inline = null; pushMsg('kotori', 'stranger', { me: true, text: T.listen }); render(); await deliver({ app: 'kotori', th: 'stranger', who: UI.stranger, text: T.stranger2, wait: 2 }); t.inline = [{ label: T.quit, f: () => { t.inline = null; pushMsg('kotori', 'stranger', { me: true, text: T.quit }); render(); } }]; render(); } }];
@@ -936,7 +937,7 @@ async function attacker() {
   $('#overlay').className = 'on black'; $('#overlay').textContent = '';
   await sleep(TIMING.s9Dark);
   $('#overlay').className = '';
-  const names = ['ミサキ', 'たくみ_07', 'yuu.k', 'さき', 'ren0412', 'まなみ', 'hiro_t', 'りん', 'kazuya', 'あや', 'sora.m', 'しおり', 'tatsu', 'なな', 'ryota_22', 'ゆい', 'kenta.s', 'みお', 'daiki', 'はるか', 'shun', 'あおい', 'mei_k', 'こうた', 'rina', 'つばさ', 'yuto.h', 'かな', 'sho', 'えみ', 'takeru', 'のぞみ'];
+  const names = ['みさき', 'たくみ_07', 'yuu.k', 'さき', 'ren0412', 'まなみ', 'hiro_t', 'りん', 'kazuya', 'あや', 'sora.m', 'しおり', 'tatsu', 'なな', 'ryota_22', 'ゆい', 'kenta.s', 'みお', 'daiki', 'はるか', 'shun', 'あおい', 'mei_k', 'こうた', 'rina', 'つばさ', 'yuto.h', 'かな', 'sho', 'えみ', 'takeru', 'のぞみ'];
   const paths = [T.path2, T.path3, T.path1];
   const rows = names.map((a, i) => ({ a, p: paths[i % 3], s: i % 5 === 0 ? 'ログイン中' : '送信中' }));
   let me;

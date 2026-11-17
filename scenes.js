@@ -9,13 +9,13 @@
 const TIMING = {
   s1CallAfter: 4,        /* S1「少しして」着信（台本に秒なし・仮） */
   s1RingMax: 25,         /* 出ないまま鳴りやむまで（仮） */
-  s1ExploreMax: 25,     /* 11/17 本人「ミサキから連絡が来るまでがちょい遅い」60→25秒（電話を切ってから数える） */
+  s1ExploreMax: 25,     /* 11/17 本人「みさきから連絡が来るまでがちょい遅い」60→25秒（電話を切ってから数える） */
   s1AfterMail: 8,        /* 流出メールの選択がすんでから S2 まで（仮） */
   nudge: 30,             /* 付録：返事を待つ場面で放っておくと（30秒） */
   s2Gap: 2,              /* ソウタが送ってから相手が返すまで（仮） */
   s4: { interval: 6, friends: 8, lockout: 60, grace: 6 },   /* 11/17 本人「何が起きているか確認できる猶予を」で 4→6秒・40→60秒 */   /* S4 40秒・4秒に1人・友だち8人 */
   s4safeAgain: 10,       /* S4safe 10秒後、もう一度 */
-  s6Gap: 4,              /* S6 ミサキの3通の間（仮） */
+  s6Gap: 4,              /* S6 みさきの3通の間（仮） */
   s6UnsendAfter: 8,      /* S6 5秒で「送信を取り消しました」 */
   lines: { mom: 150, friends: 150 },   /* 11/17 90→150秒 */               /* S7 2本の線 */
   s8: {
@@ -40,7 +40,7 @@ const TIMING = {
 };
 
 /* 人の名前（ほか友だち5人の名前は台本にないので仮） */
-const FRIENDS = ['ユウト', 'リコ', 'カイ', 'ハルカ', 'レン', 'ミオ', 'ダイチ', 'アオイ'];
+const FRIENDS = ['ゆうと', 'Riko', 'kai', 'はるか', 'Ren', 'みお', '大地', '葵'];
 
 /* ---------- 台本の文言 ---------- */
 const T = {
@@ -61,7 +61,7 @@ const T = {
   picoPosts: [
     { img: 'desk', text: '課題おわらん' },
     { img: 'shop', text: '実家帰ってた' },
-    { img: 'nabe', text: 'サークルの鍋', tag: 'ユウト・リコ' }
+    { img: 'nabe', text: 'サークルの鍋', tag: '@yuto_0921 @riko.s' }
   ],
   leakMail: {
     from: 'ゲームサイト',
@@ -170,7 +170,7 @@ const T = {
   failed3: 'ログイン失敗 3回',
   friends54: '友だち 54人',
   lastIn: '{名前} → 知らない人：久しぶり〜元気？　ごめん番号ミスってそっちにコード行っちゃった',
-  lastSafe: 'ミサキ → リコ：久しぶり〜元気？　ごめん番号ミスってそっちにコード行っちゃった',
+  lastSafe: 'みさき → Riko：久しぶり〜元気？　ごめん番号ミスってそっちにコード行っちゃった',
 
   /* S10 */
   s10title: 'このゲームが読み取ったもの',
@@ -247,7 +247,7 @@ const UI = {
   phoneLabel: '電話番号',
   codeLabel: '確認番号',
   picoTabs: ['ホーム', 'DM', '設定'],
-  stranger: '知らない人',
+  stranger: '復旧サポート窓口',
   apps: { pico: 'インスタグラフ', kotori: 'RINE', sms: 'SMS', mail: 'メール', phone: '電話' }
 };
 
@@ -273,31 +273,31 @@ const SCENES = {
   ],
 
   S2: [
-    { do: 'notify', app: 'pico', text: 'ミサキさんからメッセージ', th: 'misaki' },
-    { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', text: '{名前}久しぶり〜元気？', wait: 2, quiet: true },
-    { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', text: 'ごめん番号ミスってそっちにコード行っちゃった', wait: 3 },
-    { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', text: '届いてたら教えてくれない？🙏', wait: 2 },
+    { do: 'notify', app: 'pico', text: 'みさきさんからメッセージ', th: 'misaki' },
+    { do: 'msg', app: 'pico', th: 'misaki', who: 'みさき', text: '{名前}久しぶり〜元気？', wait: 2, quiet: true },
+    { do: 'msg', app: 'pico', th: 'misaki', who: 'みさき', text: 'ごめん番号ミスってそっちにコード行っちゃった', wait: 3 },
+    { do: 'msg', app: 'pico', th: 'misaki', who: 'みさき', text: '届いてたら教えてくれない？🙏', wait: 2 },
     { do: 'msg', app: 'sms', th: 'picosms', who: 'インスタグラフ', text: T.sms1, wait: 1 },
     { do: 'choice', id: 's2', app: 'pico', th: 'misaki', nudge: true, options: [
       { label: '番号を送る', me: T.code1, set: { path2: true }, steps: [
-        { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', text: 'ありがと！助かった', wait: TIMING.s2Gap }
+        { do: 'msg', app: 'pico', th: 'misaki', who: 'みさき', text: 'ありがと！助かった', wait: TIMING.s2Gap }
       ], next: 'S4' },
       { label: '「なんのコード？」', me: 'なんのコード？', steps: [
-        { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', text: 'あ、大丈夫！ごめんね', wait: TIMING.s2Gap }
+        { do: 'msg', app: 'pico', th: 'misaki', who: 'みさき', text: 'あ、大丈夫！ごめんね', wait: TIMING.s2Gap }
       ], next: 'S3' }
     ] }
   ],
 
   S3: [
-    { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', text: 'いとこがオーディション出てて、投票してくれたらうれしい！1分で終わる', wait: 4 },
-    { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', link: true, text: '（リンク）', wait: 1 },
+    { do: 'msg', app: 'pico', th: 'misaki', who: 'みさき', text: 'いとこがオーディション出てて、投票してくれたらうれしい！1分で終わる', wait: 4 },
+    { do: 'msg', app: 'pico', th: 'misaki', who: 'みさき', link: true, text: '（リンク）', wait: 1 },
     { do: 'choice', id: 's3', app: 'pico', th: 'misaki', nudge: true, options: [
       { label: '開く', steps: [{ do: 'vote' }] },
       { label: '開かない', steps: [
-        { do: 'msg', app: 'pico', th: 'misaki', who: 'ミサキ', text: 'そっか、ありがと！', wait: TIMING.s2Gap }
+        { do: 'msg', app: 'pico', th: 'misaki', who: 'みさき', text: 'そっか、ありがと！', wait: TIMING.s2Gap }
       ] }
     ] },
-    { do: 'msg', app: 'kotori', th: 'yuto', who: 'ユウト', text: '明日の1限出る？', wait: 4 },
+    { do: 'msg', app: 'kotori', th: 'yuto', who: 'ゆうと', text: '明日の1限出る？', wait: 4 },
     { do: 'choice', id: 'yuto', app: 'kotori', th: 'yuto', options: [
       { label: '出る', me: '出る' },
       { label: 'むり', me: 'むり' }
@@ -310,10 +310,10 @@ const SCENES = {
     { do: 'notify', app: 'pico', text: 'ログインに失敗しました（{遠い都道府県}）' },
     { do: 'pause', s: TIMING.s4safeAgain },
     { do: 'notify', app: 'pico', text: 'ログインに失敗しました（{遠い都道府県}）' },
-    { do: 'msg', app: 'kotori', th: 'riko', who: 'リコ', text: 'ミサキのインスタグラフから変な投票のやつ来たんだけど', wait: 5 },
-    { do: 'msg', app: 'kotori', th: 'riko', who: 'リコ', text: '{名前}にも来た？', wait: 3 },
+    { do: 'msg', app: 'kotori', th: 'riko', who: 'Riko', text: 'みさきのインスタグラフから変な投票のやつ来たんだけど', wait: 5 },
+    { do: 'msg', app: 'kotori', th: 'riko', who: 'Riko', text: '{名前}にも来た？', wait: 3 },
     { do: 'choice', id: 'riko', app: 'kotori', th: 'riko', options: [
-      { label: '「来た。ミサキ乗っ取られてると思う。開かないで」', me: '来た。ミサキ乗っ取られてると思う。開かないで' },
+      { label: '「来た。みさき乗っ取られてると思う。開かないで」', me: '来た。みさき乗っ取られてると思う。開かないで' },
       { label: '「来た」', me: '来た' }
     ] },
     { do: 'goto', to: 'S6' }
@@ -328,9 +328,9 @@ const SCENES = {
     { do: 'set', v: { picoLocked: true } },
     { do: 'open', view: { name: 'pico', tab: 'feed' } },
     { do: 'mail', wait: 2, mail: T.s5mail },
-    { do: 'msg', app: 'kotori', th: 'yuto', who: 'ユウト', text: 'インスタグラフでお前から「ギフトカード買って」って来たけど本人？', wait: 6 },
-    { do: 'msg', app: 'kotori', th: 'yuto', who: 'ユウト', img: 'yutoShot', text: '', wait: 2 },
-    { do: 'msg', when: st => st.faceTaken, app: 'kotori', th: 'riko', who: 'リコ', text: '{名前}の顔写真つきで「本人です」って来たんだけど', wait: 5 },
+    { do: 'msg', app: 'kotori', th: 'yuto', who: 'ゆうと', text: 'インスタグラフでお前から「ギフトカード買って」って来たけど本人？', wait: 6 },
+    { do: 'msg', app: 'kotori', th: 'yuto', who: 'ゆうと', img: 'yutoShot', text: '', wait: 2 },
+    { do: 'msg', when: st => st.faceTaken, app: 'kotori', th: 'riko', who: 'Riko', text: '{名前}の顔写真つきで「本人です」って来たんだけど', wait: 5 },
     { do: 'goto', to: 'S6' }
   ],
 
