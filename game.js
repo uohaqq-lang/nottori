@@ -207,7 +207,7 @@ function renderS0() {
   if (view.step === 'real') return `<div class="view s0"><div class="inner"><div class="notes">${T.s0.realNotes.map(p => `<p>${esc(p)}</p>`).join('')}</div>${nameField()}<button class="btn go" data-act="start" data-arg="real">${esc(T.s0.start)}</button><button class="backs" data-act="s0back">${esc(UI.back)}</button></div></div>`;
   if (view.step === 'normal') return `<div class="view s0"><div class="inner"><div class="notes"><p>${esc(T.s0.normalNote)}</p></div>${nameField()}<button class="btn go" data-act="start" data-arg="normal">${esc(T.s0.start)}</button><button class="backs" data-act="s0back">${esc(UI.back)}</button></div></div>`;
   const ios = deviceKind() === 'iPhone' && !navigator.standalone;
-  return `<div class="view s0"><div class="inner">${saved ? `<div class="resume"><span>${esc(UI.resume)}</span><button data-act="fresh">${esc(UI.fromStart)}</button></div>` : ''}<button class="mode" data-act="mode" data-arg="normal"><b>${esc(T.s0.normal.label)}</b><span>${esc(T.s0.normal.desc)}</span></button><button class="mode real" data-act="mode" data-arg="real"><b>${esc(T.s0.real.label)}</b><span>${esc(T.s0.real.desc)}</span></button>${ios ? `<p style="font-size:13px;line-height:1.7;color:#9aa0ab;margin-top:6px">${esc(UI.iosFull)}</p>` : ''}</div></div>`;
+  return `<div class="view s0"><div class="inner">${saved ? `<div class="resume"><span>${esc(UI.resume)}</span><button data-act="resume">${esc(UI.goOn)}</button></div>` : ''}<button class="mode" data-act="mode" data-arg="normal"><b>${esc(T.s0.normal.label)}</b><span>${esc(T.s0.normal.desc)}</span></button><button class="mode real" data-act="mode" data-arg="real"><b>${esc(T.s0.real.label)}</b><span>${esc(T.s0.real.desc)}</span></button>${ios ? `<p style="font-size:13px;line-height:1.7;color:#9aa0ab;margin-top:6px">${esc(UI.iosFull)}</p>` : ''}</div></div>`;
 }
 function renderPico() {
   const v = view;
@@ -888,6 +888,7 @@ document.addEventListener('click', e => {
     case 'mode': view = { name: 's0', step: arg }; render(); break;
     case 's0back': view = { name: 's0' }; render(); break;
     case 'fresh': eraseProgress(); render(); break;
+    case 'resume': wantResume = true; { const sv = loadProgress(); begin(sv && sv.mode === 'real' ? 'real' : 'normal'); } break;
     case 'start': { const el = document.getElementById('nameIn'); st.name = el ? el.value.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 8) : ''; begin(arg); break; }
     case 'unlock': if (!view.locked) { view = { name: 'home' }; render(); } break;
     case 'home': if (view.name !== 'call') { view = { name: 'home' }; render(); } break;
@@ -922,12 +923,15 @@ $('#tray').addEventListener('click', e => {
 }, true);
 
 /* ---------- 始める ---------- */
+let wantResume = false;
 async function begin(mode) {
   st.mode = mode; audioInit();
   /* Android・PCは「始める」を押したときに画面いっぱいにする（iPhoneのSafariはできないので、ホーム画面に追加してもらう） */
   try { const el = document.documentElement; if (!AUTO && el.requestFullscreen && window.innerWidth <= 600) el.requestFullscreen({ navigationUI: 'hide' }).catch(() => {}); } catch (e) {}
   const saved = loadProgress();
-  const startScene = saved && saved.scene && SCENES[saved.scene] && !['S0', 'S1'].includes(saved.scene) ? saved.scene : 'S1';
+  /* 続きからは「続きから」を押したときだけ。ふつうに選んだら最初から（11/17 最初の母の電話が飛ばされたため） */
+  const startScene = wantResume && saved && saved.scene && SCENES[saved.scene] && !['S0', 'S1'].includes(saved.scene) ? saved.scene : 'S1';
+  if (startScene === 'S1') eraseProgress();
   if (startScene !== 'S1') {
     view = { name: 'home' }; render();
     banner('pico', T.welcomeApp, T.welcome, {});
