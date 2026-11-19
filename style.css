@@ -570,6 +570,8 @@ html, body { overscroll-behavior: none; }
 .s9 .shopcol { display: inline-flex; flex-direction: column; gap: 4px; }
 .s9 .cap { font-size: 11px; color: #c22; font-family: system-ui, sans-serif; }
 .s9 .chip small { display: block; font-size: 10px; color: #c22; font-family: system-ui, sans-serif; margin-top: 2px; }
+/* 11/19 自分の行の「いま」に、受け取ったカードの番号を別の行で */
+.s9 .got { display: block; margin-top: 4px; color: #c22; font-weight: 700; }
 .s9 tr.lastcap td { border: 0; padding: 12px 5px 3px; color: #c22; font-size: 11px; font-family: system-ui, sans-serif; }
 .s9foot { position: absolute; left: 12px; right: 72px; bottom: 30px; z-index: 3; background: rgba(20,22,28,.92); color: #fff; font-size: 13px; line-height: 1.6; padding: 10px 12px; border-radius: 10px; font-family: system-ui, sans-serif; }
 
@@ -648,3 +650,10 @@ html, body { overscroll-behavior: none; }
 .s9bar span { font-size: 10.5px; }
 #screen .s9 .scroll { padding-bottom: 150px !important; }
 .s9 th { top: 0; }
+/* 11/19 360幅で見出しが「乗っ取ったアカウントの…」と切れていた → 見出しは縮めず、件数のほうを2行に折る */
+.s9bar b { flex: none; overflow: visible; }
+.s9bar span { white-space: normal; text-align: right; line-height: 1.25; min-width: 0; }
+.s9bar span i { font-style: normal; display: inline-block; white-space: nowrap; margin-left: .8em; }
+@media (max-width: 380px) { .s9bar { padding: 4px 10px; } .s9bar b { font-size: 12px; } .s9bar span { font-size: 9.5px; } }
+/* 11/19 最後の行は1つの欄に */
+.s9 tr.last td { padding: 8px 8px; line-height: 1.6; font-size: 11px; }

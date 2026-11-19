@@ -131,7 +131,7 @@ const SVG = {
   desk: `<img class="ph" src="img/desk.jpg" alt="" draggable="false">`,  /* 写真は生成AIで作った（実在の店・人ではない） */
   shop: `<img class="ph" src="img/shop.jpg" alt="" draggable="false">`,  /* 写真は生成AIで作った（実在の店・人ではない） */
   nabe: `<img class="ph" src="img/nabe.jpg" alt="" draggable="false">`,  /* 写真は生成AIで作った（実在の店・人ではない） */
-  yutoShot: `<svg viewBox="0 0 220 120" width="200"><rect width="220" height="120" rx="10" fill="#f7f6f3" stroke="#ddd"/><clipPath id="ysc"><circle cx="22" cy="28" r="12"/></clipPath><image href="img/av_me.jpg" x="10" y="16" width="24" height="24" clip-path="url(#ysc)" preserveAspectRatio="xMidYMid slice"/><text x="40" y="32" font-size="11" fill="#333">ソウタ</text><rect x="14" y="48" width="192" height="52" rx="12" fill="#fff" stroke="#e5e2dc"/><text x="24" y="70" font-size="10" fill="#333">ポチペイ使える？送金の限度額切れちゃって</text><text x="24" y="86" font-size="10" fill="#333">さ、3万円だけ代わりに払ってもらえない？</text></svg>`,
+  yutoShot: `<svg viewBox="0 0 220 120" width="200"><rect width="220" height="120" rx="10" fill="#f7f6f3" stroke="#ddd"/><clipPath id="ysc"><circle cx="22" cy="28" r="12"/></clipPath><image href="img/av_me.jpg" x="10" y="16" width="24" height="24" clip-path="url(#ysc)" preserveAspectRatio="xMidYMid slice"/><text x="40" y="32" font-size="11" fill="#333">ソウタ</text><rect x="14" y="48" width="192" height="52" rx="12" fill="#fff" stroke="#e5e2dc"/><text x="24" y="70" font-size="10" fill="#333">コンビニで電子マネーのカード買ってきて</text><text x="24" y="86" font-size="10" fill="#333">くれない？裏の番号を写真で送ってほしい</text></svg>`,
   storyShot: `<svg viewBox="0 0 180 300" width="170"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1b2e"/><stop offset="1" stop-color="#3a2a12"/></linearGradient></defs><rect width="180" height="300" rx="12" fill="url(#sg)"/><rect x="10" y="10" width="160" height="2.5" rx="1" fill="#fff" opacity=".8"/><circle cx="22" cy="28" r="9" fill="#9a9a9a"/><text x="36" y="32" font-size="9" fill="#fff">fukugyo.life_</text><text x="90" y="96" font-size="20" fill="#ffd34d" text-anchor="middle" font-weight="700">副業で</text><text x="90" y="124" font-size="24" fill="#ffd34d" text-anchor="middle" font-weight="700">月50万💰</text><text x="90" y="160" font-size="10" fill="#fff" text-anchor="middle">スマホ1台、1日10分</text><text x="90" y="176" font-size="10" fill="#fff" text-anchor="middle">気になる人はDMください</text><rect x="44" y="210" width="92" height="26" rx="13" fill="#fff"/><text x="90" y="227" font-size="10" fill="#111" text-anchor="middle">DMで詳しく</text><text x="90" y="285" font-size="8" fill="#bbb" text-anchor="middle">（ゲーム内の絵）</text></svg>`,
   selfie: `<svg viewBox="0 0 180 150" class="idcard"><rect width="180" height="150" rx="10" fill="#1d2230"/><ellipse cx="90" cy="72" rx="40" ry="52" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="6 5"/><path d="M30 72 l-12 0 m6 -6 l-6 6 l6 6 M150 72 l12 0 m-6 -6 l6 6 l-6 6" stroke="#fff" stroke-width="3" fill="none"/><text x="90" y="142" font-size="10" fill="#cfd6e4" text-anchor="middle">顔を左右に動かす（ゲーム内の絵）</text></svg>`,
   idcard: `<svg viewBox="0 0 180 112" class="idcard"><rect width="180" height="112" rx="8" fill="#eef2f6" stroke="#b9c3cf"/><rect x="12" y="22" width="52" height="66" fill="#c9a38f"/><rect x="76" y="26" width="86" height="8" fill="#9aa8bb"/><rect x="76" y="44" width="70" height="8" fill="#9aa8bb"/><rect x="76" y="62" width="80" height="8" fill="#9aa8bb"/><text x="12" y="15" font-size="9" fill="#6b7682">学生証（ゲームの中の絵）</text></svg>`,
@@ -440,9 +440,10 @@ function renderVote() {
 }
 function renderS9() {
   const v = view;
-  const rows = v.rows.map((r, i) => (r.last ? `<tr class="lastcap"><td colspan="3">${esc(T.s9capLast)} ↓</td></tr>` : '') + `<tr class="${r.me ? 'me' : ''}${r.last ? ' last' : ''}"${r.me ? ' data-act="s9open"' : ''}><td>${r.me ? `<span class="you">${esc(T.s9you)}</span>` : ''}${esc(r.a)}</td><td>${esc(r.p)}</td><td>${esc(r.s)}</td></tr>` + (r.me && v.openDet ? `<tr class="det"><td colspan="3"><div class="det-wrap"><span class="shopcol"><span class="shopm"><img src="img/shop.jpg" alt="" draggable="false"><i style="left:18%;top:21%;width:57%;height:18%"></i><i style="left:81%;top:32%;width:18%;height:7%"></i></span><span class="cap">${esc(T.s9capShop)}</span></span>${st.station ? `<span class="chip">${esc(st.station)}駅</span>` : ''}${st.faceTaken ? '<div class="face" data-face="1"></div>' : ''}<span class="chip">${esc(T.friends54)}<small>${esc(T.s9capFriends)}</small></span></div></td></tr>` : '')).join('');
+  /* 最後の行は、列に分けず1つの欄に（11/19 2列目だけに押し込まれて読みにくかった） */
+  const rows = v.rows.map((r, i) => r.last ? `<tr class="lastcap"><td colspan="3">${esc(st.route === 'safe' ? T.s9capLastSafe : v.stopped ? T.s9capLastStop : T.s9capLast)} ↓</td></tr><tr class="last"><td colspan="3">${esc(r.p)}</td></tr>` : `<tr class="${r.me ? 'me' : ''}"${r.me ? ' data-act="s9open"' : ''}><td>${r.me ? `<span class="you">${esc(T.s9you)}</span>` : ''}${esc(r.a)}</td><td>${esc(r.p)}</td><td>${esc(r.s)}${r.got ? `<span class="got">${esc(r.got)}</span>` : ''}</td></tr>` + (r.me && v.openDet ? `<tr class="det"><td colspan="3"><div class="det-wrap"><span class="shopcol"><span class="shopm"><img src="img/shop.jpg" alt="" draggable="false"><i style="left:18%;top:21%;width:57%;height:18%"></i><i style="left:81%;top:32%;width:18%;height:7%"></i></span><span class="cap">${esc(T.s9capShop)}</span></span>${st.station ? `<span class="chip">${esc(st.station)}駅</span>` : ''}${st.faceTaken ? '<div class="face" data-face="1"></div>' : ''}<span class="chip">${esc(T.friends54)}<small>${esc(T.s9capFriends)}</small></span></div></td></tr>` : '')).join('');
   const total = v.rows.filter(r => !r.last).length, sending = v.rows.filter(r => r.s === '送信中').length;
-  return `<div class="view s9" style="position:absolute;inset:0"><div class="s9bar"><b>${esc(T.s9title)}</b><span>${esc(T.s9stats.replace('{n}', total).replace('{m}', sending))}</span></div>${v.foot ? `<div class="s9foot">${esc(T.s9foot)}</div>` : ''}<div class="scroll"><table><colgroup><col class="c1"><col class="c2"><col class="c3"></colgroup><tr>${T.s9cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr>${rows}</table></div><button class="nx${v.next ? ' on' : ''}" data-act="s9next">›</button></div>`;
+  return `<div class="view s9" style="position:absolute;inset:0"><div class="s9bar"><b>${esc(T.s9title)}</b><span>${T.s9stats.replace('{n}', total).replace('{m}', sending).split('　').map(x => `<i>${esc(x)}</i>`).join('')}</span></div>${v.foot ? `<div class="s9foot">${esc(v.stopped ? T.s9footStop : T.s9foot)}</div>` : ''}<div class="scroll"><table><colgroup><col class="c1"><col class="c2"><col class="c3"></colgroup><tr>${T.s9cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr>${rows}</table></div><button class="nx${v.next ? ' on' : ''}" data-act="s9next">›</button></div>`;
 }
 const lockCards = [];
 
@@ -459,6 +460,7 @@ function trayPad() {
     n.style.paddingBottom = (Math.max(0, b - trayTop) + 12) + 'px';
   });
   const ch = scr.querySelector('.chat'); if (ch && on) ch.scrollTop = ch.scrollHeight;
+  if (voteView && view === voteView && voteView.verify && on) centerCodeField();
 }
 let trayFolded = null;   /* null＝その場に合わせる（返事できる会話ではたたむ） */
 function renderTray() {
@@ -469,7 +471,7 @@ function renderTray() {
   if (['s9', 'doc', 's0'].includes(view.name)) return;
   if (pendingTrayOptions) {
     el.className = 'on dark';
-    const isActs = tray && view.name !== 'call' && pendingTrayOptions.length === tray.length;
+    const isActs = tray && view.name !== 'call' && !!pendingTrayOptions.isActs;
     if (isActs) {
       const folded = trayFolded != null ? trayFolded : canReply(view.name, view.th);
       if (folded) { el.innerHTML = `<button class="trayHandle" data-act="trayToggle">${esc(T.trayMore)}（${pendingTrayOptions.filter(o => !o.off).length}） ▲</button>`; return; }
@@ -495,17 +497,45 @@ function renderTray() {
 }
 
 /* ---------- お知らせ ---------- */
+/* 11/19 通知が次の通知に押し出されて0.5秒ほどで消えていた → 出てから最低3秒は残す。
+   2枚出ていて、古いほうがまだ3秒たっていないときは、新しい通知を少し待たせる */
+const banQueue = [];
+let banQueueTm = null;
+function banMinMs() { return TIMING.banMin * 1000 / SPEED; }
+function flushBanQueue() {
+  banQueueTm = null;
+  while (banQueue.length) {
+    const shown = [...document.querySelectorAll('#banners .ban:not(.out):not(.sticky)')];
+    if (shown.length >= 2) {
+      const oldest = shown[shown.length - 1];
+      const age = Date.now() - (oldest._at || 0);
+      if (age < banMinMs()) { banQueueTm = setTimeout(flushBanQueue, banMinMs() - age + 20); return; }
+      dismiss(oldest);
+    }
+    const q = banQueue.shift();
+    /* 犯人側の画面（S9）からあとは、待たせていた通知は出さない */
+    if (['S9', 'S10', 'S11'].includes(st.scene)) continue;
+    /* 待っているあいだに、その会話を開いていたら出さない */
+    if (q.opts.open && view.name === q.opts.open.name && view.th && view.th === q.opts.open.th) continue;
+    showBanner(q.app, q.title, q.text, q.opts);
+  }
+}
 function banner(app, title, text, opts = {}) {
+  /* ロック画面と、消えない通知（ログインの通知）は、待たせずにすぐ出す */
+  if (opts.sticky || view.name === 'lock') return showBanner(app, title, text, opts);
+  banQueue.push({ app, title, text, opts });
+  if (!banQueueTm) flushBanQueue();
+  return null;
+}
+function showBanner(app, title, text, opts = {}) {
   const tm = hm(new Date());
   lockCards.push({ app, text: title ? `${title}${text ? '　' + text : ''}` : text, tm, fresh: true });
   sound.notify(app);
   bgNotify(text);
   /* ロック画面のときは、上から降ろさず、暗い画面が光ってロック画面に積む */
   if (view.name === 'lock' && !opts.sticky) { wake(); render(); return null; }
-  /* 上に出しておくのは2枚まで（古いものから引っ込める） */
-  const shown = [...document.querySelectorAll('#banners .ban:not(.out):not(.sticky)')];
-  if (shown.length >= 2) dismiss(shown[0]);
   const box = document.createElement('div');
+  box._at = Date.now();
   box.className = 'ban' + (opts.sticky ? ' sticky' : '');
   box.innerHTML = `<span class="ico">${ICON[app] || ''}</span><div class="mid"><div class="t"><span>${esc(UI.apps[app] || app)}</span><span>今</span></div>${title ? `<div class="h">${esc(title)}</div>` : ''}<div class="b">${esc(text)}</div>${opts.button ? `<button class="bt">${esc(opts.button)}</button>` : ''}</div>${opts.img && SVG[opts.img] ? `<span class="bimg">${SVG[opts.img]}</span>` : ''}`;
   /* 上にはらうと消える（11/17 本人「通知をどかせない・消せないのが嫌」） */
@@ -620,11 +650,13 @@ function ask(app, th, options, opts = {}) {
   return new Promise(resolve => {
     choice = { app, th, options, resolve, at: Date.now() };
     render();
-    let nudged = false;
+    let nudged = false, nudgedMore = 0;
     const tick = setInterval(() => {
       if (!choice || choice.options !== options) { clearInterval(tick); return; }
       const idle = (Date.now() - choice.at) / 1000 * SPEED;
       if (opts.nudge && !nudged && idle > TIMING.nudge) { nudged = true; deliver({ app, th, who: PEOPLE[th], text: T.nudge, wait: 0, noPace: true }); }
+      /* 11/19 「見てる？」のあとも放っておくと、さらに催促が来る */
+      if (opts.nudge && nudged && nudgedMore < TIMING.nudgeMore.length && idle > TIMING.nudgeMore[nudgedMore]) { const tx = T.nudgeMore[nudgedMore]; nudgedMore++; deliver({ app, th, who: PEOPLE[th], text: tx, wait: 0, noPace: true }); }
       if (!(view.name === app && view.th === th) && idle > 20 && Math.floor(idle) % 20 === 0) banner(app, PEOPLE[th], '…', { open: { name: app, th } });
     }, 1000);
     if (AUTO) { const p = PICKS.length ? PICKS.shift() : 0; setTimeout(() => choose(Math.min(p, options.length - 1)), 300); }
@@ -795,7 +827,7 @@ async function voteFlow() {
   let i = 1;
   if (!vv.closed) {
   await sleep(1.0);
-  { const vf = document.querySelector('#screen .vverify'); if (vf) vf.scrollIntoView({ block: 'center' }); }
+  centerCodeField();
   pushMsg('sms', 'picosms', { who: 'インスタグラフ', text: T.sms2 });
   banner('sms', 'インスタグラフ', T.sms2, {});
   await sleep(0.6);
@@ -822,7 +854,22 @@ function renderVoteTray() {
   const el = $('#tray');
   el.className = 'on';
   el.innerHTML = choice.options.map((o, i) => `<button class="opt" data-act="choose" data-arg="${i}">${esc(o.label)}</button>`).join('');
-  setTimeout(() => { trayPad(); const vf = document.querySelector('#screen .vverify'); if (vf) vf.scrollIntoView({ block: 'end' }); }, 0);
+  setTimeout(() => { trayPad(); centerCodeField(); }, 0);
+}
+/* 11/19 確認番号の欄が下の板に隠れていた → 欄を、板より上の見えている所の真ん中に */
+function centerCodeField() {
+  if (!voteView || view !== voteView) return;
+  const sc = document.querySelector('#screen .scroll'), flds = document.querySelectorAll('#screen .vverify .fld');
+  const fld = flds[flds.length - 1]; if (!sc || !fld) return;
+  const tr = $('#tray'), bar = document.querySelector('#screen .vbar');
+  const sr = sc.getBoundingClientRect(), fr = fld.getBoundingClientRect();
+  const top = bar ? Math.max(sr.top, bar.getBoundingClientRect().bottom) : sr.top;
+  const bottom = tr.classList.contains('on') ? Math.min(sr.bottom, tr.getBoundingClientRect().top) : sr.bottom;
+  const k = sr.height / (sc.offsetHeight || 1) || 1;   /* PCでは画面ごと縮めているので、その分を戻す */
+  const want = sc.scrollTop + ((fr.top + fr.height / 2) - (top + bottom) / 2) / k;
+  const max = sc.scrollHeight - sc.clientHeight;
+  if (want > max) sc.style.paddingBottom = ((parseFloat(sc.style.paddingBottom) || 0) + want - max + 2) + 'px';   /* 真ん中まで動かせるだけの余白 */
+  sc.scrollTop = want;
 }
 const actWaiters = {};
 function waitAct(name) {
@@ -907,7 +954,7 @@ async function race() {
     /* インスタグラフを見ているときだけ、その場で締め出される。ほかのアプリにいるときは通知で知る（11/17 本人「RINEを開いてるのにインスタのログアウトが出る」） */
     if (view.name === 'pico') { st.picoLocked = true; $('#overlay').className = 'on white'; $('#overlay').textContent = T.s4white; await sleep(3); $('#overlay').className = ''; $('#overlay').textContent = ''; }
     else banner('pico', '', T.s4white, { open: { name: 'pico' } });
-    if (!AUTO) setTimeout(() => hint(T.hintOut, 8), 1500);
+    if (!AUTO) setTimeout(() => hint(st.rineLost ? T.hintOutRine : T.hintOut, 8), 1500);
   }
   render();
 }
@@ -930,9 +977,8 @@ async function misaki3() {
 }
 
 const doubt = new Set();   /* 犯人に先回りされて迷っている友だち */
-let speedUp = false;       /* 知らせが広まったら、犯人は急ぐ */
 let drawBarsNow = null;    /* S8の上の表示を描き直す */
-function told() { if (st.notified.size >= TIMING.s8.speedUpAfter) speedUp = true; if (drawBarsNow) drawBarsNow(); }
+function told() { if (drawBarsNow) drawBarsNow(); }
 /* グループに書く（締め出された直後から、S8の板からも） */
 function groupPost() {
   if (st.groupUsed || st.rineLost) return;
@@ -950,6 +996,11 @@ function groupPost() {
       if (st.paid.has(k)) await deliver({ app: 'kotori', th: 'group', who, from, text: T.groupLate, wait: 1.2 });
       else if (k === 2 && !st.notified.has(k)) { doubt.add(k); await deliver({ app: 'kotori', th: 'group', who, from, text: T.groupDoubt, wait: 1.5 }); }
       else if (st.paid.has(k)) await deliver({ app: 'kotori', th: 'group', who, from, text: T.groupLate, wait: 1.2 });
+      else if (going.has(k)) {
+        /* コンビニへ向かっていた人は、ここで止まる */
+        st.notified.add(k); { const ft = thread('kotori', friendTh(k)); if (ft.inline && ft.inline[0] && ft.inline[0].label === T.qrHijacked) ft.inline = null; }
+        await deliver({ app: 'kotori', th: 'group', who, from, text: T.friendStopped[k % T.friendStopped.length], wait: 1.2 });
+      }
       else { st.notified.add(k); if (T.groupOk[k] && Math.random() < 0.8) await deliver({ app: 'kotori', th: 'group', who, from, text: T.groupOk[k], wait: 1.2 }); }
       told(); render();
     }
@@ -960,7 +1011,20 @@ function replyHijacked(th, k, app = 'kotori') {
   const t = thread(app, th); t.inline = null;
   pushMsg(app, th, { me: true, text: T.qrHijacked.replace(/[「」]/g, '') }); render();
   const late = st.paid.has(k); if (!late) { st.notified.add(k); doubt.delete(k); told(); }
-  deliver({ app, th, who: FRIENDS[k], text: late ? T.friendLate : T.friendOk[k % T.friendOk.length], wait: 1.5 });
+  deliver({ app, th, who: FRIENDS[k], text: late ? T.friendLate : going.has(k) ? T.friendStopped[k % T.friendStopped.length] : T.friendOk[k % T.friendOk.length], wait: 1.5 });
+}
+/* 11/19 コンビニへ向かっている友だちからの連絡（まだ買っていないので、返事をすれば止まる） */
+const going = new Set();
+function goingNotice(k) {
+  if (st.notified.has(k) || st.paid.has(k)) return;
+  const app = st.rineLost ? 'sms' : 'kotori';
+  const th = app === 'sms' ? 'f' + k : friendTh(k); thread(app, th).name = FRIENDS[k];
+  deliver({ app, th, who: FRIENDS[k], text: fill(T.goingMsgs[k % T.goingMsgs.length]), wait: 0, noPace: true }).then(() => {
+    if (['END', 'S9', 'S10', 'S11'].includes(st.scene) || st.paid.has(k) || st.notified.has(k)) return;
+    const t = thread(app, th);
+    t.inline = [{ label: T.qrHijacked, f: () => replyHijacked(th, k, app) }];
+    render();
+  });
 }
 /* 送ってしまった友だちからの連絡（相手はインスタグラフの頼みを本物だと思っている） */
 const friendTh = k => ['yuto', 'riko', 'kai'][k] || 'f' + k;   /* RINEでは、ゆうと・Riko・kai は前からの会話に続ける */
@@ -980,16 +1044,21 @@ async function recover() {
   const momLeft = { v: TIMING.lines.mom };
   const frLeft = { v: out ? TIMING.lines.friends : 0 };
   const receivers = []; for (let i = 0; i < st.sentCount; i++) receivers.push(i);
-  let speed = 1, momDone = false;
-  $('#bars').className = 'on';
+  let momDone = false;
+  let s8clock = 0;   /* S8に入ってからの秒（タブが裏にいるあいだは進めない） */
+  const goingAt = new Map();   /* 「向かってる」が届いたときの s8clock */
+  let plan = null;   /* 買う間隔：{ r: 割り直したときの残り秒, n: そのときの残り人数 } */
+  const leftNow = () => receivers.filter(i => !st.notified.has(i) && !st.paid.has(i));
+  const friendsOver = () => !out || st.reverted || (frLeft.v <= 0 && !leftNow().length);
+  /* 11/19 本人「上にゲージが出るじゃん、あれいらないかも」→ 残り時間のバー・友だちの顔の列・凡例は画面に出さない。
+     時間の数え方と、誰が買うかの決まりは今までどおり裏で動かす（drawBars は中身を作るだけで、#bars は表示しない） */
+  $('#bars').className = '';
   const drawBars = () => {
     const bar = (lab, left, total, cls) => `<div class="bar ${cls}"><div class="lab"><span>${esc(lab)}</span><b>${Math.max(0, Math.ceil(left))}秒</b></div><div class="track"><div class="fill" style="width:${Math.max(0, left / total * 100)}%"></div></div></div>`;
     const frs = out ? `<div class="frs">${receivers.map(k => `<span class="fr ${st.paid.has(k) ? 'paid' : st.notified.has(k) ? 'ok' : doubt.has(k) ? 'doubt' : ''}">${avHTML('f' + k, 'frav')}<i>${esc(FRIENDS[k])}</i></span>`).join('')}</div>` : '';
-    const legend = out ? `<div class="frleg"><span class="ok">知らせた</span><span class="doubt">迷っている</span><span class="paid">送ってしまった</span></div>` : '';
+    const legend = out ? `<div class="frleg"><span class="ok">知らせた</span><span class="doubt">迷っている</span><span class="paid">買ってしまった</span></div>` : '';
     $('#bars').innerHTML = bar(T.lineMom, momLeft.v, TIMING.lines.mom, st.momSaved ? 'saved' : '') + (out && !st.reverted ? bar(T.lineFriends, frLeft.v, TIMING.lines.friends, '') : '') + frs + legend;
-    document.documentElement.style.setProperty('--barsh', $('#bars').offsetHeight + 'px');
   };
-  document.querySelectorAll('.view').forEach(v => v.classList.add('withBars'));
   drawBarsNow = drawBars;
   if (st.path3 && !st.rineLost) { st.rineLost = true; banner('kotori', '', T.rineLostBanner, {}); if (view.name === 'kotori') { view = { name: 'home' }; render(); } }
   const chat = st.rineLost ? 'sms' : 'kotori';   /* RINEを取られていたら、連絡はSMSと電話だけ */
@@ -1067,36 +1136,66 @@ async function recover() {
     await sleep(TIMING.s8.sayHold);
     if (view.name === 'call') { view = st.rineLost ? { name: 'home' } : { name: 'kotori', th: 'mom' }; render(); }
   };
-  const t0 = Date.now(); let last = t0;
+  let last = Date.now();
+  /* 11/19 タブを裏にして戻ると、裏にいたあいだの分の通知と文が一度に届いていた → 裏にいるあいだはS8の時計を止める */
+  const onVis = () => { last = Date.now(); };
+  document.addEventListener('visibilitychange', onVis);
   const timer = setInterval(() => {
-    const now = Date.now(); const dt = FROZEN ? 0 : (now - last) * SPEED / 1000; last = now;
+    const now = Date.now();
+    /* 1回に進めるのは最大0.6秒ぶん（裏で止められていたページが戻ったときに、まとめて進めない） */
+    const dt = FROZEN || document.hidden ? 0 : Math.min(now - last, 600) * SPEED / 1000; last = now;
+    s8clock += dt;
     if (!st.momSaved && !momDone) { momLeft.v -= dt; if (momLeft.v <= 0) { st.momPaid = true; momDone = true; } }
-    if (speedUp && speed < TIMING.s8.speedUpRate) speed = TIMING.s8.speedUpRate;
     if (st.reverted && frLeft.v > 0) { receivers.forEach(k => { if (!st.paid.has(k)) st.notified.add(k); }); frLeft.v = 0; const ap = tray && tray.find(a => a.id === 'apply'); if (ap) ap.off = true; }
     if (st.momSaved && tray) { const mo = tray.find(a => a.id === 'mom'); if (mo && !mo.off) { mo.off = true; if (pendingTrayOptions && !busy) { const r = trayResolve; trayResolve = null; pendingTrayOptions = null; r && r(-2); } } }
-    if (out && frLeft.v > 0) {
-      frLeft.v -= dt * speed;
-      const left = receivers.filter(i => !st.notified.has(i) && !st.paid.has(i));
-      const shouldPaid = Math.floor((1 - Math.max(0, frLeft.v) / TIMING.lines.friends) * receivers.length);
-      while (st.paid.size < shouldPaid && left.length) { const k = left.shift(); st.paid.add(k); paidNotice(k); }
+    if (out && !st.reverted && (frLeft.v > 0 || leftNow().length)) {
+      frLeft.v = Math.max(0, frLeft.v - dt);
+      const left = leftNow();
+      /* 11/19 知らせた人を数え直す：残り時間を、まだ知らせていない人数で割り直す（知らせるほど、残りの人が買うのは遅くなる） */
+      if (!plan || plan.n !== left.length) plan = { r: frLeft.v, n: left.length };
+      /* 残りの j 番目の人が買う予定（残り秒がこの値になったとき） */
+      const at = j => plan.r * (plan.n - 1 - j) / plan.n;
+      /* 買う予定の少し前に、コンビニへ向かう様子が届く（このあいだに知らせれば止まる） */
+      left.forEach((k, j) => { if (!going.has(k) && frLeft.v <= at(j) + TIMING.s8.goLead) { going.add(k); goingAt.set(k, s8clock); goingNotice(k); } });
+      /* 予定の時刻が来ても、「向かってる」から最低 goMin 秒たつまでは買わない */
+      if (left.length && frLeft.v <= at(0)) {
+        const k = left[0];
+        if (!going.has(k)) { going.add(k); goingAt.set(k, s8clock); goingNotice(k); }
+        else if (s8clock - goingAt.get(k) >= TIMING.s8.goMin) { st.paid.add(k); paidNotice(k); }
+      }
     }
-    if (!strangerShown && (now - t0) * SPEED / 1000 > TIMING.s8.strangerAt) { strangerShown = true; stranger(); }
+    refreshActs();
+    if (!strangerShown && s8clock > TIMING.s8.strangerAt) { strangerShown = true; stranger(); }
     drawBars();
   }, 200);
+  /* 11/19 知らせる人がいないのに「1人ずつ知らせる」が押せた → いないときは押せなくする */
+  const refreshActs = () => {
+    if (!tray) return;
+    const any = out && !st.reverted && leftNow().length > 0;
+    let changed = false;
+    tray.forEach((a, i) => {
+      if (a.id !== 'friend' && a.id !== 'fcall') return;
+      if (!!a.off !== !any) { a.off = !any; changed = true; }
+      if (pendingTrayOptions && pendingTrayOptions.isActs && pendingTrayOptions[i] && !!pendingTrayOptions[i].off !== !!a.off) { pendingTrayOptions[i].off = a.off; changed = true; }
+    });
+    if (changed) renderTray();
+  };
   drawBars();
   const actLoop = (async () => {
-    while (!(momDone && (!out || frLeft.v <= 0))) {
-      const i = await askTray(tray.map(a => ({ label: a.label, off: a.off })));
+    while (!(momDone && friendsOver())) {
+      refreshActs();
+      const actOpts = tray.map(a => ({ label: a.label, off: a.off })); actOpts.isActs = true;
+      const i = await askTray(actOpts);
       if (i === -2) continue;
       if (i < 0) break;
       const a = tray[i]; tlog('act', a.id);
       if (a.id === 'mom') { if (!st.momSaved && momLeft.v > 0) await momCall(); }
       else if (a.id === 'fcall') {
         /* RINEを取られたので、電話で1人ずつ。1人15秒 */
-        const next = receivers.find(k => !st.notified.has(k) && !st.paid.has(k));
+        const next = receivers.find(k => going.has(k) && !st.notified.has(k) && !st.paid.has(k)) ?? receivers.find(k => !st.notified.has(k) && !st.paid.has(k));
         if (next == null) { toast('もう知らせる人がいない'); continue; }
         st.notified.add(next); drawBars();
-        await doBusy(FRIENDS[next] + 'に電話中…', 15);
+        await doBusy(FRIENDS[next] + 'に電話中', 15);   /* 「…」は板の側で足す */
         toast(FRIENDS[next] + T.fcallDone);
         told();
       }
@@ -1105,14 +1204,15 @@ async function recover() {
         gotoView({ name: 'kotori', th: 'group' }); groupPost();
       }
       else if (a.id === 'friend') {
-        const next = receivers.find(k => doubt.has(k) && !st.paid.has(k)) ?? receivers.find(k => !st.notified.has(k) && !st.paid.has(k));
+        const next = receivers.find(k => doubt.has(k) && !st.paid.has(k)) ?? receivers.find(k => going.has(k) && !st.notified.has(k) && !st.paid.has(k)) ?? receivers.find(k => !st.notified.has(k) && !st.paid.has(k));
         if (next == null) { toast('もう知らせる人がいない'); continue; }
-        st.notified.add(next);   /* 知らせ始めた時点で、この人は送金しない */
+        st.notified.add(next);   /* 知らせ始めた時点で、この人は買わない */
         thread('kotori', friendTh(next)).name = FRIENDS[next]; gotoView({ name: 'kotori', th: friendTh(next) });
         pushMsg('kotori', friendTh(next), { me: true, text: T.friendMsg }); render();
         await doBusy(T.act.friend, TIMING.s8.notifyEach);
         const wasDoubt = doubt.has(next); doubt.delete(next);
-        deliver({ app: 'kotori', th: friendTh(next), who: FRIENDS[next], text: st.paid.has(next) ? T.friendLate : wasDoubt ? T.friendDoubtOk : T.friendOk[next % T.friendOk.length], wait: 1.5 });
+        { const ft = thread('kotori', friendTh(next)); if (ft.inline && ft.inline[0] && ft.inline[0].label === T.qrHijacked) ft.inline = null; }
+        deliver({ app: 'kotori', th: friendTh(next), who: FRIENDS[next], text: st.paid.has(next) ? T.friendLate : wasDoubt ? T.friendDoubtOk : going.has(next) ? T.friendStopped[next % T.friendStopped.length] : T.friendOk[next % T.friendOk.length], wait: 1.5 });
         drawBars();
         told();
       } else if (a.id === 'mail') { await doBusy(T.act.mail, TIMING.s8.mailPw); st.mailPw = true; a.off = true; }
@@ -1126,8 +1226,8 @@ async function recover() {
       }
     }
   })();
-  await new Promise(resolve => { const iv = setInterval(() => { if (momDone && (!out || frLeft.v <= 0)) { clearInterval(iv); resolve(); } }, 300); });
-  clearInterval(timer); drawBarsNow = null;
+  await new Promise(resolve => { const iv = setInterval(() => { if (momDone && friendsOver()) { clearInterval(iv); resolve(); } }, 300); });
+  clearInterval(timer); drawBarsNow = null; document.removeEventListener('visibilitychange', onVis);
   if (trayResolve) pickTray(-1);   /* 出したままの選択肢も片づける */
   tray = null; busy = null;
   for (const app of ['kotori', 'sms']) for (const k in threads[app]) threads[app][k].inline = null;   /* 時間切れのあとは答えられない */
@@ -1204,14 +1304,19 @@ async function attacker() {
   if (st.route === 'safe') me = { a: myName(), p: '—', s: T.failed3, me: true };
   else {
     const p = []; if (!st.leakFixed) p.push(T.path1); if (st.path2) p.push(T.path2); if (st.path3) p.push(T.path3);
-    me = { a: myName(), p: p.join(' / ') + '　' + T.twoStep, s: (st.route === 'in' || st.reverted) ? 'ログアウトされた' : 'ログイン中', me: true };
+    /* 11/19 結末の「カードを買ってしまった友だち n人」とそろえる（母が買ったときは「・母」を足す） */
+    const fp = st.friendsPaid || 0, mp = !st.momSaved;
+    const got = fp || mp ? T.s9got + (fp ? T.s9gotFriends.replace('{n}', fp) : '') + (fp && mp ? '・' : '') + (mp ? T.s9gotMom : '') : '';
+    me = { a: myName(), p: p.join(' / ') + '　' + T.twoStep, s: (st.route === 'in' || st.reverted) ? 'ログアウトされた' : 'ログイン中', got, me: true };
   }
   rows.splice(1, 0, me);
   view = { name: 's9', rows, openDet: false, next: false }; render();
   await new Promise(r => { actWaiters.s9open = r; setTimeout(r, TIMING.s9AutoOpen * 1000 / SPEED); });
   view.openDet = true; render();
   await sleep(TIMING.s9LastLine);
-  view.rows.push({ a: '', p: fill(st.route === 'safe' ? T.lastSafe : T.lastIn), s: '', last: true }); view.next = true; view.foot = st.route !== 'safe'; render();
+  /* 11/19 追い出せた・メールから取り戻したときは、乗っ取りが止まった側の文にする */
+  const stopped = st.route === 'in' || !!st.reverted;
+  view.rows.push({ a: '', p: fill(st.route === 'safe' ? T.lastSafe : stopped ? T.lastStop : T.lastIn), s: '', last: true }); view.next = true; view.foot = st.route !== 'safe'; view.stopped = stopped; render();
   const sc = $('#screen .scroll'); if (sc) sc.scrollTop = sc.scrollHeight;
   await new Promise(r => { actWaiters.s9next = r; if (AUTO) setTimeout(r, 400); });
 }
@@ -1347,7 +1452,8 @@ async function begin(mode) {
   if (startScene !== 'S1') {
     restoreProgress(saved);
     view = { name: 'home' }; render();
-    banner('pico', T.welcomeApp, T.welcome, {});
+    /* 11/19 投票ページを見ていないルートでは「投票サイト」の名前を出さない */
+    banner('pico', st.opened ? T.welcomeApp : '', T.welcome, {});
     await sleep(2);
   }
   runScene(startScene).catch(err => tlog('ERROR', err && err.stack || err));
