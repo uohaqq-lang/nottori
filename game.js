@@ -180,7 +180,7 @@ function msgHTML(app, t, m) {
   const me = m.me;
   const av = me ? '' : avHTML(t.th, 'av');
   let bb;
-  if (m.typing) bb = `<div class="bb typing">${esc(UI.typing)}</div>`;
+  if (m.typing) bb = `<div class="bb typing" aria-label="${esc(UI.typing)}"><i></i><i></i><i></i></div>`;
   else if (m.link) bb = `<div class="bb link" data-act="openVote"><div class="lkimg"></div><div class="lk"><b>${esc(UI.voteTitle)}</b><span>${esc(UI.voteHost)}</span></div></div>`;
   else if (m.img) bb = `<div class="bb img">${(SVG[m.img] || '').replace('>ソウタ<', '>' + esc(myName()) + '<')}</div>`;
   else if (m.face) bb = `<div class="bb img"><div class="camslot" style="width:120px;height:120px;margin:0;border-width:2px" data-face="1"></div></div>`;
@@ -653,7 +653,10 @@ async function deliver(step) {
   /* 読ませる速さ：台本の間を1.6倍にし、字数に応じた最低の間をとる（11/17 本人「すごい速さで出てきて怖さがない」） */
   const len = String(step.text || '').length;
   const wait = step.noPace ? (step.wait || 0) : humanWait(th, step, len);
-  if (wait > 0) {
+  /* 11/24 本人「入力中ってLINEもインスタも出ないよね」→ LINEとSMSには相手が打っている印は出ない。
+     インスタのDMは、本物も相手が打っている間に3つの点が出るので、インスタだけ点で出す */
+  if (wait > 0 && app !== 'pico') { await sleep(wait); if (step.when && !step.when(st)) return; }
+  else if (wait > 0) {
     const ty = { typing: true };
     t.msgs.push(ty); if (view.name === app && view.th === th) render();
     await sleep(wait);
