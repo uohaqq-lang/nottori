@@ -1048,7 +1048,20 @@ async function recover() {
   let s8clock = 0;   /* S8に入ってからの秒（タブが裏にいるあいだは進めない） */
   const goingAt = new Map();   /* 「向かってる」が届いたときの s8clock */
   let plan = null;   /* 買う間隔：{ r: 割り直したときの残り秒, n: そのときの残り人数 } */
-  const leftNow = () => receivers.filter(i => !st.notified.has(i) && !st.paid.has(i));
+  /* 11/24 本人「ゆうとの時系列がわけわからなくならない？」→ S5で「本人？」と疑って聞いてきたゆうとは、返事がなくても買いに行かない。
+     「知らせた」には数えない（自分で気づいた人）。少したってから、買わないでおく、と個人のトークに来る */
+  const selfSafe = new Set();
+  if (out && st.sentCount > 0 && !st.notified.has(0) && !st.paid.has(0)) {
+    selfSafe.add(0);
+    setTimeout(() => {
+      if (['END', 'S9', 'S10', 'S11'].includes(st.scene) || st.notified.has(0)) return;
+      /* S5の「本人？」と同じ会話に続ける（RINEを取られていればSMSの同じ会話） */
+      const app = st.rineLost ? 'sms' : 'kotori', th = friendTh(0);
+      thread(app, th).name = FRIENDS[0];
+      deliver({ app, th, who: FRIENDS[0], text: T.yutoWary, wait: 0, noPace: true });
+    }, TIMING.s8.yutoWaryAt * 1000 / SPEED);
+  }
+  const leftNow = () => receivers.filter(i => !st.notified.has(i) && !st.paid.has(i) && !selfSafe.has(i));
   const friendsOver = () => !out || st.reverted || (frLeft.v <= 0 && !leftNow().length);
   /* 11/19 本人「上にゲージが出るじゃん、あれいらないかも」→ 残り時間のバー・友だちの顔の列・凡例は画面に出さない。
      時間の数え方と、誰が買うかの決まりは今までどおり裏で動かす（drawBars は中身を作るだけで、#bars は表示しない） */
