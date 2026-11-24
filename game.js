@@ -309,7 +309,13 @@ function renderS0() {
   if (view.step === 'real') return `<div class="view s0"><div class="inner"><div class="notes">${T.s0.realNotes.map(p => `<p>${esc(p)}</p>`).join('')}</div>${nameField()}<button class="btn go" data-act="start" data-arg="real">${esc(T.s0.start)}</button><button class="backs" data-act="s0back">${esc(UI.back)}</button></div></div>`;
   if (view.step === 'normal') return `<div class="view s0"><div class="inner"><div class="notes"><p>${esc(T.s0.normalNote)}</p></div>${nameField()}<button class="btn go" data-act="start" data-arg="normal">${esc(T.s0.start)}</button><button class="backs" data-act="s0back">${esc(UI.back)}</button></div></div>`;
   const ios = deviceKind() === 'iPhone' && !navigator.standalone;
-  return `<div class="view s0"><div class="inner">${saved ? `<div class="resume"><span>${esc(UI.resume)}</span><button data-act="resume">${esc(UI.goOn)}</button></div>` : ''}<button class="mode" data-act="mode" data-arg="normal"><b>${esc(T.s0.normal.label)}</b><span>${esc(T.s0.normal.desc)}</span></button><button class="mode real" data-act="mode" data-arg="real"><b>${esc(T.s0.real.label)}</b><span>${esc(T.s0.real.desc)}</span></button>${ios ? `<p style="font-size:13px;line-height:1.7;color:#9aa0ab;margin-top:6px">${esc(UI.iosFull)}</p>` : ''}</div></div>`;
+  /* SafariのほかにChrome・LINE・Instagramなどのアプリ内ブラウザでも開かれる。Safari以外は「ホーム画面に追加」ができないので、まずSafariで開いてもらう */
+  const notSafari = ios && /CriOS|FxiOS|EdgiOS|OPiOS|GSA\/|Line\/|Instagram|FBAN|FBAV|YJApp|Twitter/i.test(navigator.userAgent);
+  const tipCss = 'font-size:13px;line-height:1.7;color:#9aa0ab;margin-top:6px';
+  const tip = !ios ? '' : notSafari
+    ? `<p style="${tipCss}">${esc(UI.iosOther)}</p><button data-act="copyUrl" style="margin-top:8px;padding:8px 16px;font-size:14px;color:#e6e8ec;background:transparent;border:1px solid #5a6170;border-radius:18px">${esc(UI.copyUrl)}</button>`
+    : `<p style="${tipCss}">${esc(UI.iosFull)}</p>`;
+  return `<div class="view s0"><div class="inner">${saved ? `<div class="resume"><span>${esc(UI.resume)}</span><button data-act="resume">${esc(UI.goOn)}</button></div>` : ''}<button class="mode" data-act="mode" data-arg="normal"><b>${esc(T.s0.normal.label)}</b><span>${esc(T.s0.normal.desc)}</span></button><button class="mode real" data-act="mode" data-arg="real"><b>${esc(T.s0.real.label)}</b><span>${esc(T.s0.real.desc)}</span></button>${tip}</div></div>`;
 }
 /* ---------- インスタグラフとRINEは、本物のアプリの画面の作りに寄せる（11/17 本人「めっちゃ似せて」）。ロゴは写さない ---------- */
 const IC = {
@@ -1548,6 +1554,13 @@ document.addEventListener('click', e => {
   switch (act) {
     case 'mode': view = { name: 's0', step: arg }; render(); break;
     case 's0back': view = { name: 's0' }; render(); break;
+    case 'copyUrl': {
+      const url = location.origin + location.pathname;
+      const done = () => toast(UI.copied);
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, () => toast(url));
+      else toast(url);
+      break;
+    }
     case 'fresh': eraseProgress(); render(); break;
     case 'resume': wantResume = true; { const sv = loadProgress(); begin(sv && sv.mode === 'real' ? 'real' : 'normal'); } break;
     case 'start': { const el = document.getElementById('nameIn'); st.name = el ? el.value.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 8) : ''; begin(arg); break; }
