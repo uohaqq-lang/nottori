@@ -378,7 +378,7 @@ const T = {
 const UI = {
   title: '乗っ取り',
   inGame: 'ゲーム内',
-  pcLead: 'スマホで遊んでください',
+  pcLead: 'スマホで遊ぶと、本物に近い体験ができます',
   nameLabel: 'あなたの呼ばれ方（あだ名でも）',
   namePh: 'ソウタ',
   nameNote: '入れた名前は、このスマホの外に出ません。',
