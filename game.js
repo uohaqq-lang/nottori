@@ -1190,7 +1190,9 @@ async function recover() {
   const leftNow = () => receivers.filter(i => !st.notified.has(i) && !st.paid.has(i) && !selfSafe.has(i));
   /* 11/24 1人ずつ知らせるとき、自分で気づいて買わないゆうと（selfSafe）は最後に回す（先に選ぶと、その間にRikoが出かけてしまう） */
   const nextToTell = () => receivers.find(k => !st.notified.has(k) && !st.paid.has(k) && !selfSafe.has(k)) ?? receivers.find(k => !st.notified.has(k) && !st.paid.has(k));
-  const friendsOver = () => !out || st.reverted || (frLeft.v <= 0 && !leftNow().length);
+  /* 11/24 本人のスクショ：母も友だちも片づいて、ボタンが全部押せない灰色のまま残り時間（最大150秒）を待たされていた。
+     知らせる人が残っていなければ、時間を待たずに次へ進む */
+  const friendsOver = () => !out || st.reverted || !leftNow().length;
   /* 11/19 本人「上にゲージが出るじゃん、あれいらないかも」→ 残り時間のバー・友だちの顔の列・凡例は画面に出さない。
      時間の数え方と、誰が買うかの決まりは今までどおり裏で動かす（drawBars は中身を作るだけで、#bars は表示しない） */
   $('#bars').className = '';
