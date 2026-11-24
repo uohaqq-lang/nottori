@@ -80,6 +80,10 @@ const T = {
   sms2: '【インスタグラフ】パスワード再設定の確認番号 739104　他の人に教えないでください',
   code1: '482913',
   code2: '739104',
+  /* 11/24 本人「その形で進めて」：番号を自分の指で打って送る形にした。番号らしいが違う数字を送ったときの、みさきの聞き返し */
+  s2retry: 'あれ、違うかも。もう一回見てくれる？',
+  /* 11/24 「ちょっと待って」「了解」など、断りでも質問でもない返事のとき（2回目は短く、3回目からは返さない） */
+  s2wait: ['うん！届いてたら番号だけ送ってくれたら大丈夫🙏', 'うん、待ってる！'],
 
   vote: {
     loc: '近くの会場を表示します',
@@ -191,6 +195,10 @@ const T = {
   /* 結末 */
   endA: 'コンビニの人にも、詐欺かもって言われた',
   endB: '番号送ったよ。あとで電話してね',
+  /* 11/24 RINEで「買わないで」と送ったのに、母がまだ読まないうちに買ってしまったとき（こちらの連絡を読んだと分かる文） */
+  endBRine: 'ごめん、今RINE見た。もう番号送っちゃった…',
+  /* 11/24 母がRINEで確かめてきたのに、答えないうちに買ってしまったとき */
+  endBRineNoReply: '返事なかったから、番号送っちゃった…',
   edge: '{名前}だと思って、カードを買ってしまった友だち {n}人',
   later: '4日後',
   restored: 'アカウントを元に戻しました。',
@@ -227,7 +235,8 @@ const T = {
   hintOutRine: '乗っ取られた。RINEも取られている。友だちや母に、電話で早く知らせよう',
   groupOld: [['Riko', 'f1', '鍋の写真あげたよー'], ['ゆうと', 'f0', 'また来週やろ'], ['はるか', 'f3', '次はたこ焼きがいい']],
   groupPost: 'インスタグラフ乗っ取られた！俺のアカウントからカードやお金の話が来ても全部無視して。絶対買わないで',
-  groupOk: { 0: 'やっぱりか。さっき個別に聞いたやつね',1: '了解！ほかの人にも回しとく', 3: 'え、こわ。無視する', 5: '気づいてよかった…', 6: '了解' },
+  /* 11/24 ゆうとが個別に聞いていない流れもあるので、個別の話には触れない */
+  groupOk: { 0: 'やっぱりか。俺にも来てた',1: '了解！ほかの人にも回しとく', 3: 'え、こわ。無視する', 5: '気づいてよかった…', 6: '了解' },
   groupLate: 'ごめん、もう買っちゃった…',
   yutoWary: '返事ないし、やっぱ怪しいから買わないでおく',
   groupDoubt: 'でもインスタのDMで「RINEの方が乗っ取られたから、そっちは無視して」って来てるんだけど。どっちが本物？',
@@ -247,6 +256,10 @@ const T = {
   /* 締め出されたあと、自分のアカウントが勝手に使われているのが友だちから伝わる */
   storyAsk: 'ちょっと、{名前}のストーリーこれ何？',
   storyAsk2: 'プロフの写真も消えてるし、名前も変わってるよ',
+  yutoAsk: 'インスタグラフでお前から「コンビニでカード買ってきて」って来たけど本人？',
+  /* 11/24 S5で「プロフ変」と怪しんだRikoが、返事がないまま買いに行くときは、その疑いを受けた文にする */
+  rikoGoingWary: 'プロフ変だったけど、本人だよね？今コンビニ向かってる',
+  rikoPaidWary: '返事ないけど、急ぎっぽいから買って番号送っといた',
   /* 11/17 本人「気づいたら友達金送ってくれてた？」→ 送ってしまった友だちから、RINEで連絡が来る */
   /* 11/19 本人「色んな人がコンビニに買いに行っちゃって収拾がつかなくなる感じ」→ 買いに行く途中（まだ止められる）と、買ったあと（もう戻らない）を、RINEで次々に届かせる */
   goingMsgs: ['コンビニ着いた。どのカード？', 'ATM寄ってから行くね', 'レジで店員さんに「詐欺じゃないですか」って言われたんだけど、大丈夫だよね？', '今から買いに行く。どこのコンビニでもいい？', 'コンビニ着いた。カードってレジの横のやつ？', '店員さんに「誰に頼まれたの？」って聞かれた。友だちって言っといた', '急ぎだよね？今出た', '今コンビニ向かってる'],
@@ -305,6 +318,21 @@ const T = {
     voteYes: ['✕', '投票ページで電話番号とSMSの番号を入れた', 'RINEはここで取られた。そのせいで、母にも友だちにもRINEで連絡できなくなった'],
     voteOpen: ['△', '投票ページを開いた（番号は入れなかった）', '開いただけで、スマホの種類と時刻は相手に伝わった'],
     voteNo: ['○', '投票のリンクを開かなかった', '知り合いからのリンクでも、急かされたら開かない'],
+    /* 11/24 投票ページの許可（位置情報・カメラ・通知）。押さなかった／閉じたら○、押したら✕。
+       {asked} は出た許可、{allowed} は押した許可、{gave} はそれで相手に渡るもの、{note} は体験版／本番で変える */
+    permNo: ['○', '知らないページの許可は押さなかった', '押すと、そのページが{asked}を使えるようになる。{face}'],
+    permNoFace: '顔写真は、乗っ取った人が「本人です」と友だちを信じさせるのに使う',
+    permYes: ['✕', '投票ページで、{allowed}の許可を押した', '{note}本物のページなら、{gave}。{preNote}知らないページの許可は押さない'],
+    permNoteNormal: '体験版の絵の画面なので、何も読み取っていない。',
+    permNoteReal: 'このゲームは保存も送信もしていない。',
+    permGave: '{what}が相手に渡る',
+    permGaveNotif: '偽の通知を送ってこられるようになる',
+    /* 11/24 本番で、前に遊んだときなどにブラウザが許可を覚えていて、確認の画面が出なかったとき */
+    permPre: ['△', '{pre}は、前に許可していたので確認の画面が出なかった', '{denied}このゲームは保存も送信もしていない。前の許可は設定から外せる。知らないページの許可は押さない'],
+    permPreDenied: '出た許可（{asked}）は押さなかった。',
+    permPreNote: '{pre}は前に許可していたので、確認の画面は出なかった（設定から外せる）。',
+    permWord: { loc: '位置情報', cam: 'カメラ', notif: '通知' },
+    permWhat: { loc: '位置', cam: '顔写真' },
     raceIn: ['○', '「新しいログイン」に気づいて、パスワードを変えた', '1分以内に動けたので、追い出せた'],
     raceOut: ['✕', '「新しいログイン」から1分以内に止められなかった', '通知を押すか、設定のパスワード変更ですぐ止められた'],
     momYes: ['○', '母に、本人しか知らないこと（みかん）で確かめてもらった', '母はカードを買わずに済んだ'],
@@ -379,6 +407,10 @@ const UI = {
   permKind: { loc: '位置情報の使用', cam: 'カメラの使用', notif: '通知の表示' },
   phoneLabel: '電話番号',
   codeLabel: '確認番号',
+  dmPh: 'メッセージ…',
+  send: '送信',
+  codeOk: '確認',
+  codeWrong: '番号が違います',
   picoTabs: ['ホーム', 'DM', '設定'],
   stranger: '復旧サポート窓口',
   apps: { pico: 'インスタグラフ', kotori: 'RINE', sms: 'SMS', mail: 'メール', phone: '電話' }
@@ -386,6 +418,7 @@ const UI = {
 
 /* ---------- 場面の進み方（進行役 game.js がこの表を上から順に動かす） ---------- */
 const anyOpen = st => !st.leakFixed || st.path2 || st.path3;
+const noGroupYet = st => !st.groupUsed;
 
 const SCENES = {
   S1: [
@@ -412,7 +445,10 @@ const SCENES = {
     { do: 'msg', app: 'pico', th: 'misaki', who: 'みさき', text: 'ごめん番号ミスってそっちにコード行っちゃった', wait: 3 },
     { do: 'msg', app: 'pico', th: 'misaki', who: 'みさき', text: '届いてたら教えてくれない？🙏', wait: 2 },
     { do: 'msg', app: 'sms', th: 'picosms', who: 'インスタグラフ', text: T.sms1, wait: 1 },
-    { do: 'choice', id: 's2', app: 'pico', th: 'misaki', nudge: true, options: [
+    /* 11/24 ボタンで選ぶのではなく、DMの入力欄に自分で打って送る（input）。
+       打った文に確認番号が入っていれば options[0]、番号らしい数字が違えば聞き返して待ち直し、それ以外は options[1]。
+       me は自動テスト（?pick=）で打った扱いにする文 */
+    { do: 'choice', id: 's2', app: 'pico', th: 'misaki', nudge: true, input: { code: T.code1, retry: T.s2retry }, options: [
       { label: '番号を送る', me: T.code1, set: { path2: true }, steps: [
         { do: 'msg', app: 'pico', th: 'misaki', who: 'みさき', text: 'ありがと！助かった', wait: TIMING.s2Gap }
       ], next: 'S4' },
@@ -473,14 +509,15 @@ const SCENES = {
     { do: 'set', v: { picoLocked: true } },
     { do: 'qr', th: 'group' },
     { do: 'mail', wait: 2, mail: T.s5mail },
-    { do: 'msg', app: 'kotori', th: 'yuto', who: 'ゆうと', text: 'インスタグラフでお前から「コンビニでカード買ってきて」って来たけど本人？', wait: 6 },
-    { do: 'msg', app: 'kotori', th: 'yuto', who: 'ゆうと', img: 'yutoShot', text: '', wait: 2 },
-    { do: 'qr', th: 'yuto', k: 0 },
-    { do: 'msg', when: st => st.faceTaken, app: 'kotori', th: 'riko', who: 'Riko', text: '{名前}の顔写真つきで「本人です」って来たんだけど', wait: 5 },
-    { do: 'msg', app: 'kotori', th: 'riko', who: 'Riko', text: T.storyAsk, wait: 4 },
-    { do: 'msg', app: 'kotori', th: 'riko', who: 'Riko', img: 'storyShot', text: '', wait: 1 },
-    { do: 'msg', app: 'kotori', th: 'riko', who: 'Riko', text: T.storyAsk2, wait: 2 },
-    { do: 'qr', th: 'riko', k: 1 },
+    /* 11/24 グループに先に書いたあとは、ゆうと・Rikoの個人の問い合わせは来ない（グループで了解したのに個人で「本人？」と聞くのは矛盾するため） */
+    { do: 'msg', when: noGroupYet, app: 'kotori', th: 'yuto', who: 'ゆうと', text: T.yutoAsk, wait: 6 },
+    { do: 'msg', when: noGroupYet, app: 'kotori', th: 'yuto', who: 'ゆうと', img: 'yutoShot', text: '', wait: 2 },
+    { do: 'qr', when: noGroupYet, th: 'yuto', k: 0 },
+    { do: 'msg', when: st => st.faceTaken && noGroupYet(st), app: 'kotori', th: 'riko', who: 'Riko', text: '{名前}の顔写真つきで「本人です」って来たんだけど', wait: 5 },
+    { do: 'msg', when: noGroupYet, app: 'kotori', th: 'riko', who: 'Riko', text: T.storyAsk, wait: 4 },
+    { do: 'msg', when: noGroupYet, app: 'kotori', th: 'riko', who: 'Riko', img: 'storyShot', text: '', wait: 1 },
+    { do: 'msg', when: noGroupYet, app: 'kotori', th: 'riko', who: 'Riko', text: T.storyAsk2, wait: 2 },
+    { do: 'qr', when: noGroupYet, th: 'riko', k: 1 },
     { do: 'goto', to: 'S6' }
   ],
 

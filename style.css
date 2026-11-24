@@ -657,3 +657,24 @@ html, body { overscroll-behavior: none; }
 @media (max-width: 380px) { .s9bar { padding: 4px 10px; } .s9bar b { font-size: 12px; } .s9bar span { font-size: 9.5px; } }
 /* 11/19 最後の行は1つの欄に */
 .s9 tr.last td { padding: 8px 8px; line-height: 1.6; font-size: 11px; }
+/* 11/24 番号を自分で打って送る欄。DMは本物のDMの入力欄と同じ形（灰色の丸い欄、打つと青い「送信」）。
+   iPhoneのSafariは16px未満の欄を勝手に拡大するので、文字は16px以上にした */
+#dmIn, #codeIn { -webkit-user-select: text; user-select: text; font-family: inherit; }
+.igCompose { cursor: text; }
+#dmIn { flex: 1; min-width: 0; border: 0; background: transparent; outline: none; font-size: 16px; color: #111; padding: 6px 0; margin: 0; }
+#dmIn::placeholder { color: #8e8e8e; }
+.igSend { display: none; border: 0; background: none; color: #0095f6; font-weight: 600; font-size: 16px; padding: 4px 6px; cursor: pointer; flex: none; font-family: inherit; }
+.igCompose.has .igSend { display: block; }
+.igCompose.has .igIdle { display: none; }
+.vcode { display: flex; gap: 8px; align-items: stretch; }
+.vverify input.fld { flex: 1; min-width: 0; width: 100%; font-size: 17px; color: var(--ink); outline: none; -webkit-appearance: none; appearance: none; margin: 0; }
+.vverify input.fld:focus { border-color: var(--vote1); box-shadow: 0 0 0 3px rgba(255,92,147,.15); }
+.vverify input.fld.ng { border-color: #e0245e; }
+.vverify input.fld:disabled { opacity: .6; }
+.vok { flex: none; border: 0; border-radius: 10px; background: var(--vote1); color: #fff; font-weight: 700; font-size: 16px; padding: 0 18px; cursor: pointer; font-family: inherit; }
+.vok:disabled { opacity: .45; cursor: default; }
+.verr { color: #e0245e; font-size: 13px; min-height: 18px; margin-top: 6px; }
+/* キーボードが出ている間は、ホームバーの線を消して余白を細くする（「ゲーム内」の印が「送信」に重ならない高さは残す） */
+body.kb .homebar { height: 20px; }
+body.kb .homebar i { display: none; }
+body.kb #watermark { bottom: 3px; }

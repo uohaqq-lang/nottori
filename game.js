@@ -21,7 +21,7 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&a
 /* ---------- 状態 ---------- */
 const st = {
   mode: 'normal', name: '', answeredS1: false, leakFixed: false, path2: false, path3: false, opened: false,
-  locAllowed: false, lat: null, lon: null, station: null, faceTaken: false, notifAllowed: false,
+  locAllowed: false, lat: null, lon: null, station: null, faceTaken: false, notifAllowed: false, permAsked: [], permAllowed: [], permPre: [],
   route: null, sentCount: 0, picoLocked: false, momSaved: false, momPaid: false,
   notified: new Set(), paid: new Set(), mailPw: false, applied: false, scene: 'S0'
 };
@@ -209,6 +209,9 @@ function canReply(app, th) {
   const t = threads[app] && threads[app][th];
   return !!(t && t.inline && t.inline.length) || !!(choice && choice.app === app && choice.th === th);
 }
+/* 11/24 自分で打って返す場面（choice.input）か。打ちかけの文は、画面を移って戻っても残す */
+let dmDraft = '', codeDraft = '', typedReply = null;
+function composeHere(app, th) { return !!(choice && choice.input && choice.app === app && choice.th === th); }
 function inlineHTML(app, th) {
   const t = threads[app] && threads[app][th];
   if (!t || !t.inline) return '';
@@ -258,6 +261,9 @@ function render() {
   }
   else if (v.name === 's9') html = renderS9();
   else if (v.name === 'doc') html = v.html;
+  /* 11/24 打っている途中に画面を作り直すと、入力欄が消えてキーボードが閉じる。
+     同じ画面のままなら、DMは会話の部分だけ、投票ページは何も作り直さない */
+  if (!nav && keep && patchKeepInput(s, v, html)) { renderTray(); return; }
   s.innerHTML = html;
   { const sb = s.querySelector('[data-act="submitId"]'); if (sb) setTimeout(() => sb.scrollIntoView({ block: 'center' }), 0); }
   if (nav) {
@@ -277,6 +283,26 @@ function render() {
   if ($('#bars').classList.contains('on')) s.querySelectorAll('.view').forEach(x => x.classList.add('withBars'));
   renderTray();
 }
+function patchKeepInput(s, v, html) {
+  if (v.name === 'pico' && v.th) {
+    const oc = s.querySelector('.chat');
+    if (!s.querySelector('#dmIn') || !oc || html.indexOf('id="dmIn"') < 0) return false;
+    const tmp = document.createElement('div'); tmp.innerHTML = html;
+    const nc = tmp.querySelector('.chat'); if (!nc) return false;
+    const atBottom = oc.scrollHeight - oc.scrollTop - oc.clientHeight < 40;
+    oc.innerHTML = nc.innerHTML;
+    oc.querySelectorAll('[data-face]').forEach(el => { if (faceCanvas) { const c = document.createElement('canvas'); c.width = faceCanvas.width; c.height = faceCanvas.height; c.getContext('2d').drawImage(faceCanvas, 0, 0); el.appendChild(c); } else el.innerHTML = SVG.faceDummy; });
+    if (atBottom) oc.scrollTop = oc.scrollHeight;
+    return true;
+  }
+  if (v.name === 'vote') {
+    const vf = s.querySelector('.vverify[data-sig]');
+    return !!(vf && s.querySelector('#codeIn') && vf.dataset.sig === voteSig(v));
+  }
+  return false;
+}
+/* 投票ページの見た目が変わる要素。これが同じ間は作り直さない */
+function voteSig(v) { return [v.card, v.perm, v.verify, v.code, !!v.stream, !!(choice && choice.app === 'vote')].join('|'); }
 function nameField() { return `<label class="nameLab">${esc(UI.nameLabel)}<input id="nameIn" maxlength="8" autocomplete="off" placeholder="${esc(UI.namePh)}" value="${esc(st.name)}"></label><p class="nameNote">${esc(UI.nameNote)}</p>`; }
 function renderS0() {
   const saved = loadProgress();
@@ -360,7 +386,11 @@ function renderPico() {
   if (v.sett) return renderSettings(v);
   if (v.th) {
     const t = thread('pico', v.th);
-    return `<div class="view pico ig"><div class="pad44"></div><div class="igChatHead"><button class="igIcon" data-act="back">${IC.back}</button>${igAv(v.th, 32)}<div class="igChatName"><b>${esc(t.name)}</b><span>Instagraph</span></div><span class="igIcon">${IC.phone}</span><span class="igIcon">${IC.video}</span></div><div class="chat">${t.msgs.map(m => msgHTML('pico', t, m)).join('')}${inlineHTML('pico', v.th)}</div><div class="igInput${canReply('pico', v.th) ? ' can' : ' off'}" data-act="typeHint"><span class="igCam">${IC.camera}</span><span class="igPh">${esc(canReply('pico', v.th) ? T.canReply : T.cannotReply)}</span><span class="igIcon sm">${IC.mic}</span><span class="igIcon sm">${IC.image}</span></div>${homebar()}</div>`;
+    /* 11/24 自分で打って送る場面では、見た目だけの欄の代わりに本物の入力欄を出す（本物のDMと同じく、打つと「送信」が出る） */
+    const bar = composeHere('pico', v.th)
+      ? `<div class="igInput igCompose${dmDraft ? ' has' : ''}"><span class="igCam">${IC.camera}</span><input id="dmIn" type="text" enterkeyhint="send" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="200" placeholder="${esc(UI.dmPh)}" value="${esc(dmDraft)}"><span class="igIcon sm igIdle">${IC.mic}</span><span class="igIcon sm igIdle">${IC.image}</span><button class="igSend" data-act="dmSend" data-keepfocus="1">${esc(UI.send)}</button></div>`
+      : `<div class="igInput${canReply('pico', v.th) ? ' can' : ' off'}" data-act="typeHint"><span class="igCam">${IC.camera}</span><span class="igPh">${esc(canReply('pico', v.th) ? T.canReply : T.cannotReply)}</span><span class="igIcon sm">${IC.mic}</span><span class="igIcon sm">${IC.image}</span></div>`;
+    return `<div class="view pico ig"><div class="pad44"></div><div class="igChatHead"><button class="igIcon" data-act="back">${IC.back}</button>${igAv(v.th, 32)}<div class="igChatName"><b>${esc(t.name)}</b><span>Instagraph</span></div><span class="igIcon">${IC.phone}</span><span class="igIcon">${IC.video}</span></div><div class="chat">${t.msgs.map(m => msgHTML('pico', t, m)).join('')}${inlineHTML('pico', v.th)}</div>${bar}${homebar()}</div>`;
   }
   const tab = v.tab || 'feed';
   if (tab === 'dm') {
@@ -435,7 +465,11 @@ function renderVote() {
   if (v.card) modal = `<div class="vmodal"><div class="vcard">${v.card === 'cam' ? `<div class="camslot">${v.stream ? '<video playsinline muted></video>' : (v.shot ? '' : SVG.faceDummy)}</div>` : ''}<p>${esc(T.vote[v.card])}</p>${v.stream ? '' : `<button class="btn" data-act="voteCard">${esc(UI.ok)}</button>`}</div></div>`;
   let perm = '';
   if (v.perm) perm = `<div class="vmodal" style="background:rgba(0,0,0,.2)"><div class="perm"><div class="ph">${esc(UI.voteHost)} ${esc(UI.permAsk)}</div><div class="pk">${esc(UI.permKind[v.perm])}</div><div class="pb"><button data-act="fakePerm" data-arg="0">${esc(UI.deny)}</button><button class="y" data-act="fakePerm" data-arg="1">${esc(UI.allow)}</button></div></div></div>`;
-  const verify = v.verify ? `<div class="vverify"><div class="h">${esc(T.vote.verify)}</div><label>${esc(UI.phoneLabel)}</label><div class="fld">●●●-●●●●-●●●●</div><label>${esc(UI.codeLabel)}</label><div class="fld">${v.code ? esc(T.code2) : ''}</div></div>` : '';
+  /* 11/24 確認番号は自分で打つ（数字のキーボード）。SMSが届くまでは打てない */
+  const can = !!(choice && choice.app === 'vote');
+  const codeBox = v.code ? `<div class="fld">${esc(T.code2)}</div>`
+    : `<div class="vcode"><input id="codeIn" class="fld${v.codeErr ? ' ng' : ''}" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" maxlength="10" value="${esc(codeDraft)}"${can ? '' : ' disabled'}><button class="vok" data-act="codeOk" data-keepfocus="1"${can ? '' : ' disabled'}>${esc(UI.codeOk)}</button></div><div class="verr">${v.codeErr ? esc(UI.codeWrong) : ''}</div>`;
+  const verify = v.verify ? `<div class="vverify" data-sig="${esc(voteSig(v))}"><div class="h">${esc(T.vote.verify)}</div><label>${esc(UI.phoneLabel)}</label><div class="fld">●●●-●●●●-●●●●</div><label for="codeIn">${esc(UI.codeLabel)}</label>${codeBox}</div>` : '';
   return `<div class="view vote" style="position:absolute;inset:0"><div class="vbar"><span class="url">${esc(UI.voteHost)}</span><button class="x" data-act="voteX">✕</button></div><div class="scroll"><div class="vhead"><b>${esc(UI.voteTitle)}</b></div><div class="vgrid">${cands}</div>${verify}</div>${modal}${perm}${homebar()}</div>`;
 }
 function renderS9() {
@@ -490,7 +524,8 @@ function renderTray() {
     el.innerHTML = `<div class="busy">${esc(busy.label)}…<div class="track"><div class="fill" style="width:${Math.min(100, (Date.now() - busy.start) / (busy.dur * 1000 / SPEED) * 100)}%"></div></div></div>`;
     return;
   }
-  if (choice && view.name === choice.app && view.th === choice.th) {
+  /* 自分で打つ場面（DMの入力欄・投票ページの番号の欄）は、下の板にボタンを出さない */
+  if (choice && !choice.input && choice.app !== 'vote' && view.name === choice.app && view.th === choice.th) {
     el.className = 'on';
     el.innerHTML = choice.options.map((o, i) => `<button class="opt" data-act="choose" data-arg="${i}">${esc(o.label)}</button>`).join('');
   }
@@ -617,6 +652,8 @@ async function deliver(step) {
     t.msgs.push(ty); if (view.name === app && view.th === th) render();
     await sleep(wait);
     t.msgs.splice(t.msgs.indexOf(ty), 1);
+    /* 11/24 打っているあいだに条件が変わったら（例：その間にグループに書いた）、送らない */
+    if (step.when && !step.when(st)) { if (view.name === app && view.th === th) render(); return; }
   }
   const m = { who: step.who, text: step.text, img: step.img, link: step.link, from: step.from };
   const viewing = pushMsg(app, th, m);
@@ -648,9 +685,11 @@ function goBack() {
 /* ---------- 選択を待つ ---------- */
 function ask(app, th, options, opts = {}) {
   return new Promise(resolve => {
-    choice = { app, th, options, resolve, at: Date.now() };
+    choice = { app, th, options, resolve, at: Date.now(), input: opts.input || null };
     render();
     let nudged = false, nudgedMore = 0;
+    /* 11/24 自分で打って送ったら、催促は最初から数え直す（送った直後に「見てる？」が来ていた） */
+    { const me = choice; me.nudgeReset = () => { me.at = Date.now(); nudged = false; nudgedMore = 0; }; }
     const tick = setInterval(() => {
       if (!choice || choice.options !== options) { clearInterval(tick); return; }
       const idle = (Date.now() - choice.at) / 1000 * SPEED;
@@ -668,12 +707,51 @@ function choose(i) {
   render();
   c.resolve(i);
 }
+/* 11/24 打った文の数字を読み取れる形に（全角数字を半角に、空白とハイフンを取る） */
+function normDigits(s) { return String(s || '').replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/[\s　\-‐‑–—−ー－]/g, ''); }
+/* 11/24 質問や断りの文（これは「なんのコード？」と同じ流れにする） */
+const ASK_OR_NO = /[?？]|なに|なんの|なんで|何|どういう|どゆこと|誰|だれ|コードって|いや|イヤ|嫌|無理|むり|ムリ|教えない|おしえない|やだ|やめ|怪し|あやし|届いてない|とどいてない|来てない|きてない|わから|分から|知らない|しらない|詐欺|さぎ|乗っ取/;
+/* DMで打った文を送る。
+   確認番号が入っていれば「番号を送る」、番号らしいが違えば聞き返されて待ち直し、
+   質問や断りなら「なんのコード？」と同じ流れ、それ以外（「ちょっと待って」など）はみさきが短く返して待ち直す */
+function sendDm() {
+  const inp = document.getElementById('dmIn');
+  const c = choice;
+  if (!inp || !c || !c.input) return;
+  const text = inp.value.replace(/[\u0000-\u001f]/g, '').trim();
+  if (!text) return;
+  inp.value = ''; dmDraft = '';
+  const box = inp.closest('.igCompose'); if (box) box.classList.remove('has');
+  const n = normDigits(text);
+  if (n.indexOf(c.input.code) >= 0) { typedReply = text; choose(0); return; }
+  const wrong = (n.match(/\d+/g) || []).some(r => r.length >= 4 && r.length <= 7);
+  if (!wrong && ASK_OR_NO.test(text)) { typedReply = text; choose(1); return; }
+  /* ここからは待ち直し：自分の吹き出しを出し、催促を数え直す */
+  pushMsg(c.app, c.th, { me: true, text }); render();
+  if (c.nudgeReset) c.nudgeReset();
+  c.holds = (c.holds || 0) + (wrong ? 0 : 1);
+  const reply = wrong ? c.input.retry : (T.s2wait[c.holds - 1] || null);
+  /* 届ける直前に、まだこの入力を待っているか、そのあと自分がもう送っていないかを確かめる
+     （すぐ後に正しい番号を送ったら聞き返しは出さない。続けて送ったら、最後の文への返しだけ出す） */
+  const seq = c.sendSeq = (c.sendSeq || 0) + 1;
+  if (reply) deliver({ app: c.app, th: c.th, who: PEOPLE[c.th], text: reply, wait: TIMING.s2Gap, when: () => choice === c && c.sendSeq === seq });
+}
+/* 投票ページの確認番号を決める。違えば欄の下に出して打ち直し */
+function submitCode() {
+  const inp = document.getElementById('codeIn');
+  if (!inp || !(choice && choice.app === 'vote') || !voteView || view !== voteView) return;
+  const d = normDigits(inp.value).replace(/\D/g, '');
+  if (!d) return;
+  if (d === T.code2) { codeDraft = ''; choose(0); return; }
+  voteView.codeErr = true; inp.classList.add('ng');
+  const er = document.querySelector('#screen .verr'); if (er) er.textContent = UI.codeWrong;
+}
 
 /* ---------- 進み具合（端末の中だけ） ---------- */
 const KEY = 'nottori.progress';
 function saveProgress() {
   try {
-    const keepSt = {}; ['name', 'answeredS1', 'leakFixed', 'path2', 'path3', 'opened', 'route', 'sentCount', 'picoLocked', 'momSaved', 'momPaid', 'mailPw', 'applied', 'reverted', 'asked', 'mailLost', 'rineLost', 'groupUsed', 'strangerListened', 'strangerPaid'].forEach(k => { keepSt[k] = st[k]; });
+    const keepSt = {}; ['name', 'answeredS1', 'leakFixed', 'path2', 'path3', 'opened', 'route', 'sentCount', 'picoLocked', 'momSaved', 'momPaid', 'mailPw', 'applied', 'reverted', 'asked', 'mailLost', 'rineLost', 'groupUsed', 'strangerListened', 'strangerPaid', 'momRineSent', 'momRineRead', 'momRineAnswered', 'permAsked', 'permAllowed', 'permPre'].forEach(k => { keepSt[k] = st[k]; });
     keepSt.notified = [...st.notified]; keepSt.paid = [...st.paid];
     const th = {}; for (const app in threads) { th[app] = {}; for (const k in threads[app]) { const t = threads[app][k]; th[app][k] = { th: t.th, name: t.name, unread: t.unread, t: t.t, msgs: t.msgs.filter(m => !m.typing && !m.priv && !m.face) }; } }
     localStorage.setItem(KEY, JSON.stringify({ scene: st.scene, mode: st.mode, st: keepSt, threads: th, mails: mails.map(m => Object.assign({}, m)) }));
@@ -720,7 +798,7 @@ async function exec(step) {
     case 'mail': await sleep(step.wait || 0); if (!st.leakFixed) { st.mailLost = true; banner('mail', '', T.mailLostBanner, {}); return; } mails.push({ id: 'm' + mails.length, from: step.mail.from, addr: step.mail.addr, subject: step.mail.subject, body: fill(step.mail.body), unread: true, t: hm(new Date()), revert: true, at: Date.now() }); banner('mail', step.mail.from, step.mail.subject, { open: { name: 'mail', id: 'm' + (mails.length - 1) } }); return;
     case 'set': Object.assign(st, step.v); return;
     case 'qr': {
-      if (st.route !== 'out') return;
+      if (st.route !== 'out' || (step.when && !step.when(st))) return;
       const app = st.rineLost ? 'sms' : 'kotori', t = thread(app, step.th);
       if (step.th === 'group') { if (!st.groupUsed && !st.rineLost) t.inline = [{ label: T.qrGroup, f: () => groupPost() }]; }
       else if (!st.notified.has(step.k)) t.inline = [{ label: T.qrHijacked, f: () => replyHijacked(step.th, step.k, app) }];
@@ -732,9 +810,13 @@ async function exec(step) {
     case 'incoming': return incoming(step);
     case 'explore': return explore();
     case 'choice': {
-      const i = await ask(step.app, step.th, step.options, { nudge: step.nudge });
+      typedReply = null;
+      const i = await ask(step.app, step.th, step.options, { nudge: step.nudge, input: step.input });
       const o = step.options[i];
-      if (o.me) { pushMsg(step.app, step.th, { me: true, text: o.me }); render(); }
+      /* 自分で打った場面は、打った文をそのまま自分の吹き出しに（自動テストは o.me） */
+      const meText = step.input && typedReply != null ? typedReply : o.me;
+      typedReply = null;
+      if (meText) { pushMsg(step.app, step.th, { me: true, text: meText }); render(); }
       if (o.set) Object.assign(st, o.set);
       const r = await runSteps(o.steps);
       if (r && r.goto) return r;
@@ -820,8 +902,14 @@ async function voteFlow() {
     await waitAct('voteCard');
     if (vv.closed) break;
     vv.card = null; render();
-    if (st.mode === 'real') await realPerm(kind);
-    else { vv.perm = kind; render(); const ok = await waitAct('fakePerm'); vv.perm = null; if (kind === 'loc') st.locAllowed = false; render(); if (kind === 'cam' && ok) st.faceTaken = false; }
+    /* 11/24 振り返り（S11）で「許可を押したか」を出すため、出た許可と押した許可を数えておく */
+    /* 11/24 確認の画面が出なかった許可（前から許可済み・前に拒否・対応していない）は、押したかどうかに数えない */
+    let res;
+    if (st.mode === 'real') res = await realPerm(kind);
+    else { vv.perm = kind; render(); const ok = await waitAct('fakePerm'); vv.perm = null; if (kind === 'loc') st.locAllowed = false; render(); if (kind === 'cam' && ok) st.faceTaken = false; res = ok ? 'granted' : 'denied'; }
+    if (res === 'granted' || res === 'denied') st.permAsked.push(kind);
+    if (res === 'granted') st.permAllowed.push(kind);
+    if (res === 'pre') st.permPre.push(kind);
   }
   if (!vv.closed) { vv.verify = true; render(); }
   let i = 1;
@@ -833,8 +921,11 @@ async function voteFlow() {
   await sleep(0.6);
   tray = null;
   i = await new Promise(resolve => {
+    /* 11/24 番号は欄に自分で打って「確認」（submitCode が choose(0)）。✕で閉じたまま20秒たつと「入れない」（choose(1) と同じ） */
     choice = { app: 'vote', th: undefined, options: [{ label: '「SMSの番号を入れる」' }, { label: '閉じる' }], resolve, at: Date.now() };
-    renderVoteTray();
+    codeDraft = ''; vv.codeErr = false;
+    render();
+    setTimeout(centerCodeField, 0);
     if (AUTO) { const p = PICKS.length ? PICKS.shift() : 0; setTimeout(() => choose(p), 300); }
   });
   }
@@ -849,18 +940,13 @@ async function voteFlow() {
   voteView = null;
   if (view === vv) { view = { name: 'pico', th: 'misaki' }; render(); }
 }
-function renderVoteTray() {
-  if (view !== voteView) return;
-  const el = $('#tray');
-  el.className = 'on';
-  el.innerHTML = choice.options.map((o, i) => `<button class="opt" data-act="choose" data-arg="${i}">${esc(o.label)}</button>`).join('');
-  setTimeout(() => { trayPad(); centerCodeField(); }, 0);
-}
-/* 11/19 確認番号の欄が下の板に隠れていた → 欄を、板より上の見えている所の真ん中に */
+/* 11/19 確認番号の欄が下の板に隠れていた → 欄を、板より上の見えている所の真ん中に。
+   11/24 キーボードが出ているときは、欄の説明（「投票には本人確認が必要です」）から見えるように、枠の上端を上に寄せる */
 function centerCodeField() {
   if (!voteView || view !== voteView) return;
   const sc = document.querySelector('#screen .scroll'), flds = document.querySelectorAll('#screen .vverify .fld');
-  const fld = flds[flds.length - 1]; if (!sc || !fld) return;
+  let fld = flds[flds.length - 1]; if (!sc || !fld) return;
+  if (document.body.classList.contains('kb')) fld = fld.closest('.vverify') || fld;
   const tr = $('#tray'), bar = document.querySelector('#screen .vbar');
   const sr = sc.getBoundingClientRect(), fr = fld.getBoundingClientRect();
   const top = bar ? Math.max(sr.top, bar.getBoundingClientRect().bottom) : sr.top;
@@ -878,7 +964,26 @@ function waitAct(name) {
     if (AUTO) setTimeout(() => { if (actWaiters[name]) { const r = actWaiters[name]; delete actWaiters[name]; r(name === 'fakePerm' ? 1 : true); } }, 250);
   });
 }
+/* 11/24 求める前に、ブラウザが覚えている許可の状態を見る（2回目に遊ぶと画面が出ないのに「押した」になっていた）。
+   返す値：'granted' 画面が出て許可した／'denied' 画面が出て断った／'pre' 前から許可済みで画面は出なかった／'none' 画面が出なかった（前に拒否・対応していない） */
+async function permState(kind) {
+  try {
+    if (kind === 'notif' && 'Notification' in window && Notification.permission !== 'default') return Notification.permission;
+    if (!navigator.permissions || !navigator.permissions.query) return 'unknown';
+    const r = await navigator.permissions.query({ name: { loc: 'geolocation', cam: 'camera', notif: 'notifications' }[kind] });
+    return r.state;
+  } catch (e) { return 'unknown'; }
+}
 async function realPerm(kind) {
+  const supported = kind === 'loc' ? !!navigator.geolocation : kind === 'cam' ? !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) : 'Notification' in window;
+  if (!supported) return 'none';   /* iPhoneのSafariは、ホーム画面に追加しないと通知の許可の画面が出ない */
+  const before = await permState(kind);
+  if (before === 'denied') return 'none';
+  const ok = await realPermAsk(kind);
+  if (before === 'granted') return ok ? 'pre' : 'none';
+  return ok ? 'granted' : 'denied';
+}
+async function realPermAsk(kind) {
   try {
     if (kind === 'loc' && navigator.geolocation) {
       const pos = await new Promise(res => {
@@ -887,6 +992,7 @@ async function realPerm(kind) {
         setTimeout(() => { if (!done) { done = true; res(null); } }, 60000);
       });
       if (pos) { st.locAllowed = true; st.lat = pos.coords.latitude; st.lon = pos.coords.longitude; st.station = nearestStation(st.lat, st.lon); }
+      return !!pos;
     } else if (kind === 'cam' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false }).catch(() => null);
       if (stream) {
@@ -902,11 +1008,15 @@ async function realPerm(kind) {
         stream.getTracks().forEach(t => t.stop());       /* 1枚撮ったらすぐ止める */
         vv.stream = null; vv.card = null; render();
       }
+      return !!stream;
     } else if (kind === 'notif' && 'Notification' in window) {
       const p = await Notification.requestPermission().catch(() => 'denied');
       st.notifAllowed = p === 'granted';
+      return st.notifAllowed;
     }
   } catch (e) { tlog('perm', kind, e && e.message); }
+  /* 11/24 許可したかを返す（振り返りの行に使う） */
+  return false;
 }
 
 /* S4：40秒 */
@@ -1018,8 +1128,10 @@ const going = new Set();
 function goingNotice(k) {
   if (st.notified.has(k) || st.paid.has(k)) return;
   const app = st.rineLost ? 'sms' : 'kotori';
-  const th = app === 'sms' ? 'f' + k : friendTh(k); thread(app, th).name = FRIENDS[k];
-  deliver({ app, th, who: FRIENDS[k], text: fill(T.goingMsgs[k % T.goingMsgs.length]), wait: 0, noPace: true }).then(() => {
+  /* 11/24 SMSでも、S5の問い合わせと同じ会話に続ける（RINEを取られると会話が2つに分かれていた） */
+  const th = friendTh(k); thread(app, th).name = FRIENDS[k];
+  const text = k === 1 && rikoWary() ? T.rikoGoingWary : T.goingMsgs[k % T.goingMsgs.length];
+  deliver({ app, th, who: FRIENDS[k], text: fill(text), wait: 0, noPace: true }).then(() => {
     if (['END', 'S9', 'S10', 'S11'].includes(st.scene) || st.paid.has(k) || st.notified.has(k)) return;
     const t = thread(app, th);
     t.inline = [{ label: T.qrHijacked, f: () => replyHijacked(th, k, app) }];
@@ -1027,11 +1139,15 @@ function goingNotice(k) {
   });
 }
 /* 送ってしまった友だちからの連絡（相手はインスタグラフの頼みを本物だと思っている） */
-const friendTh = k => ['yuto', 'riko', 'kai'][k] || 'f' + k;   /* RINEでは、ゆうと・Riko・kai は前からの会話に続ける */
+const friendTh = k => ['yuto', 'riko', 'kai'][k] || 'f' + k;   /* RINEでもSMSでも、ゆうと・Riko・kai は前からの会話に続ける */
+/* 11/24 その友だちから、S5で個人の問い合わせが届いていたか（RINEでもSMSでも） */
+function askedInS5(th, text) { return ['kotori', 'sms'].some(a => threads[a][th] && threads[a][th].msgs.some(m => !m.me && m.text === text)); }
+const rikoWary = () => askedInS5('riko', T.storyAsk2);
 function paidNotice(k) {
   const app = st.rineLost ? 'sms' : 'kotori';
-  const th = app === 'sms' ? 'f' + k : friendTh(k); thread(app, th).name = FRIENDS[k];
-  deliver({ app, th, who: FRIENDS[k], text: fill(T.paidMsgs[k % T.paidMsgs.length]), wait: 0, noPace: true }).then(() => {
+  const th = friendTh(k); thread(app, th).name = FRIENDS[k];
+  const text = k === 1 && rikoWary() ? T.rikoPaidWary : T.paidMsgs[k % T.paidMsgs.length];
+  deliver({ app, th, who: FRIENDS[k], text: fill(text), wait: 0, noPace: true }).then(() => {
     if (['END', 'S9', 'S10', 'S11'].includes(st.scene)) return;
     const t = thread(app, th);
     t.inline = [{ label: T.qrFake, f: () => { t.inline = null; pushMsg(app, th, { me: true, text: T.qrFake.replace(/[「」]/g, '') }); render(); deliver({ app, th, who: FRIENDS[k], text: T.fakeReply, wait: 1.5 }); } }];
@@ -1051,7 +1167,8 @@ async function recover() {
   /* 11/24 本人「ゆうとの時系列がわけわからなくならない？」→ S5で「本人？」と疑って聞いてきたゆうとは、返事がなくても買いに行かない。
      「知らせた」には数えない（自分で気づいた人）。少したってから、買わないでおく、と個人のトークに来る */
   const selfSafe = new Set();
-  if (out && st.sentCount > 0 && !st.notified.has(0) && !st.paid.has(0)) {
+  /* 11/24 グループに先に書いて「本人？」が届かなかった流れでは、ゆうとは自分で疑ったわけではないので入れない */
+  if (out && st.sentCount > 0 && !st.notified.has(0) && !st.paid.has(0) && askedInS5('yuto', T.yutoAsk)) {
     selfSafe.add(0);
     setTimeout(() => {
       if (['END', 'S9', 'S10', 'S11'].includes(st.scene) || st.notified.has(0)) return;
@@ -1062,6 +1179,8 @@ async function recover() {
     }, TIMING.s8.yutoWaryAt * 1000 / SPEED);
   }
   const leftNow = () => receivers.filter(i => !st.notified.has(i) && !st.paid.has(i) && !selfSafe.has(i));
+  /* 11/24 1人ずつ知らせるとき、自分で気づいて買わないゆうと（selfSafe）は最後に回す（先に選ぶと、その間にRikoが出かけてしまう） */
+  const nextToTell = () => receivers.find(k => !st.notified.has(k) && !st.paid.has(k) && !selfSafe.has(k)) ?? receivers.find(k => !st.notified.has(k) && !st.paid.has(k));
   const friendsOver = () => !out || st.reverted || (frLeft.v <= 0 && !leftNow().length);
   /* 11/19 本人「上にゲージが出るじゃん、あれいらないかも」→ 残り時間のバー・友だちの顔の列・凡例は画面に出さない。
      時間の数え方と、誰が買うかの決まりは今までどおり裏で動かす（drawBars は中身を作るだけで、#bars は表示しない） */
@@ -1097,7 +1216,7 @@ async function recover() {
       view = prev; render();
       momStage = 1;
       const i = st.rineLost ? 0 : await askTray([{ label: T.again }, { label: T.writeKotori }]);
-      if (i === 1) { view = { name: 'kotori', th: 'mom' }; pushMsg('kotori', 'mom', { me: true, text: T.kotoriToMom }); render(); rineQuiz(); return; }
+      if (i === 1) { view = { name: 'kotori', th: 'mom' }; pushMsg('kotori', 'mom', { me: true, text: T.kotoriToMom }); st.momRineSent = true; render(); rineQuiz(); return; }
       return momConversation();
     }
     return momConversation(true);
@@ -1110,12 +1229,12 @@ async function recover() {
     /* 電話がつながったら、母はRINEで確かめるのをやめる。呼び出し中は待つ（11/17 本人「電話してるのに母からめっちゃラインきてんの変」） */
     const hold = async () => { while (view.name === 'call' && !momTalked && !momDone) await sleep(0.5); return st.momSaved || momDone || momTalked; };
     if (await hold()) return;
-    for (const l of T.momRineAsk) { if (await hold()) return; await deliver({ app: 'kotori', th: 'mom', who: '母', text: l, wait: 1.5 }); }
+    for (const l of T.momRineAsk) { if (await hold()) return; await deliver({ app: 'kotori', th: 'mom', who: '母', text: l, wait: 1.5 }); st.momRineRead = true; }
     if (await hold()) return;
     const t = thread('kotori', 'mom');
     const answer = async k => {
       if (momDone) { t.inline = null; render(); return; }
-      t.inline = null; pushMsg('kotori', 'mom', { me: true, text: T.momQuiz[k].replace(/[「」]/g, '') }); render();
+      t.inline = null; st.momRineAnswered = true; pushMsg('kotori', 'mom', { me: true, text: T.momQuiz[k].replace(/[「」]/g, '') }); render();
       if (k === 0) {
         for (const l of T.momRineRight) await deliver({ app: 'kotori', th: 'mom', who: '母', text: l, wait: 2 });
         st.momSaved = true; momDone = true; drawBars();
@@ -1205,7 +1324,7 @@ async function recover() {
       if (a.id === 'mom') { if (!st.momSaved && momLeft.v > 0) await momCall(); }
       else if (a.id === 'fcall') {
         /* RINEを取られたので、電話で1人ずつ。1人15秒 */
-        const next = receivers.find(k => going.has(k) && !st.notified.has(k) && !st.paid.has(k)) ?? receivers.find(k => !st.notified.has(k) && !st.paid.has(k));
+        const next = receivers.find(k => going.has(k) && !st.notified.has(k) && !st.paid.has(k)) ?? nextToTell();
         if (next == null) { toast('もう知らせる人がいない'); continue; }
         st.notified.add(next); drawBars();
         await doBusy(FRIENDS[next] + 'に電話中', 15);   /* 「…」は板の側で足す */
@@ -1217,7 +1336,7 @@ async function recover() {
         gotoView({ name: 'kotori', th: 'group' }); groupPost();
       }
       else if (a.id === 'friend') {
-        const next = receivers.find(k => doubt.has(k) && !st.paid.has(k)) ?? receivers.find(k => going.has(k) && !st.notified.has(k) && !st.paid.has(k)) ?? receivers.find(k => !st.notified.has(k) && !st.paid.has(k));
+        const next = receivers.find(k => doubt.has(k) && !st.paid.has(k)) ?? receivers.find(k => going.has(k) && !st.notified.has(k) && !st.paid.has(k)) ?? nextToTell();
         if (next == null) { toast('もう知らせる人がいない'); continue; }
         st.notified.add(next);   /* 知らせ始めた時点で、この人は買わない */
         thread('kotori', friendTh(next)).name = FRIENDS[next]; gotoView({ name: 'kotori', th: friendTh(next) });
@@ -1288,7 +1407,10 @@ async function ending() {
   const capp = st.rineLost ? 'sms' : 'kotori';
   thread(capp, 'mom').name = '母';
   view = { name: capp, th: 'mom' };
-  await deliver({ app: capp, th: 'mom', who: '母', text: st.momSaved ? T.endA : T.endB, wait: TIMING.endingWait });
+  /* 11/24 RINEで「買わないで」と送ったのに母がまだ読んでいなかったときは、読んだと分かる文で（送った連絡を無視したように見えないように） */
+  /* 母がRINEで確かめてきて、こちらが答えないうちに買ったときは、返事がなかったことに触れる */
+  const endMom = st.momSaved ? T.endA : st.momRineSent && !st.momRineRead ? T.endBRine : st.momRineSent && !st.momRineAnswered ? T.endBRineNoReply : T.endB;
+  await deliver({ app: capp, th: 'mom', who: '母', text: endMom, wait: TIMING.endingWait });
   const edge = $('#edge');
   edge.className = 'on';
   edge.innerHTML = `<span>${esc(fill(T.edge).replace('{n}', n))}</span><button id="edgeNext">›</button>`;
@@ -1357,6 +1479,32 @@ async function advice() {
   rows.push(st.leakFixed ? C.leakYes : (st.route === 'out' && st.mailLost) ? C.leakNo : C.leakNoIn);
   rows.push(st.path2 ? C.codeYes : C.codeNo);
   if (!st.path2) rows.push(st.path3 ? C.voteYes : st.opened ? C.voteOpen : C.voteNo);   /* 番号を送った人には投票の誘いは来ていない */
+  /* 11/24 審査で「本物の許可を押させる作りが心配」と言われた → 投票ページを開いた人には、許可を押したかの行を足す。
+     押さなかった（拒否・閉じた）なら○、押したら✕。本番であとから位置が取れた・写真が撮れた分も、押したに数える */
+  if (!st.path2 && st.opened) {
+    const W = C.permWord, order = ['loc', 'cam', 'notif'];
+    const names = ks => ks.map(k => W[k]).join('・');
+    const pre = order.filter(k => (st.permPre || []).includes(k));
+    const askedSet = new Set(st.permAsked || []);
+    const allowed = new Set(st.permAllowed || []);
+    /* 本番で、画面が出たあと遅れて位置が取れた・写真が撮れた分も押したに数える（前から許可済みのものは除く） */
+    if (st.mode === 'real') { if (st.locAllowed && askedSet.has('loc')) allowed.add('loc'); if (st.faceTaken && askedSet.has('cam')) allowed.add('cam'); if (st.notifAllowed && askedSet.has('notif')) allowed.add('notif'); }
+    const asked = order.filter(k => askedSet.has(k));
+    const preNote = pre.length ? C.permPreNote.replace('{pre}', names(pre)) : '';
+    if (allowed.size) {
+      const al = order.filter(k => allowed.has(k));
+      const what = al.filter(k => C.permWhat[k]).map(k => C.permWhat[k]);
+      const gave = what.length ? C.permGave.replace('{what}', what.join('や')) : C.permGaveNotif;
+      rows.push(C.permYes.map(x => x.replace('{allowed}', names(al)).replace('{note}', st.mode === 'real' ? C.permNoteReal : C.permNoteNormal).replace('{gave}', gave).replace('{preNote}', preNote)));
+    } else if (pre.length) {
+      const denied = asked.length ? C.permPreDenied.replace('{asked}', names(asked)) : '';
+      rows.push(C.permPre.map(x => x.replace('{pre}', names(pre)).replace('{denied}', denied)));
+    } else {
+      /* 許可の画面が出る前に閉じた・画面が出なかったときは、位置情報とカメラで書く（通知は出ない端末があるので入れない） */
+      const ak = asked.length ? asked : ['loc', 'cam'];
+      rows.push(C.permNo.map(x => x.replace('{asked}', names(ak)).replace('{face}', ak.includes('cam') ? C.permNoFace : '')));
+    }
+  }
   if (st.route === 'in') rows.push(C.raceIn); else if (st.route === 'out') rows.push(C.raceOut);
   if (st.route === 'out' && st.reverted) rows.push(C.revert);
   if (st.route === 'out' && st.mailLost) rows.push(C.mailLost);
@@ -1439,6 +1587,8 @@ document.addEventListener('click', e => {
       else toast('今は返事を送れる場面ではありません');
       break;
     }
+    case 'dmSend': sendDm(); break;
+    case 'codeOk': submitCode(); break;
     case 'erase': eraseProgress(); toast(UI.erased); break;
     case 'again': eraseProgress(); location.href = location.pathname; break;
   }
@@ -1451,6 +1601,43 @@ $('#tray').addEventListener('click', e => {
   if (el.dataset.act === 'trayPick') pickTray(Number(el.dataset.arg));
   if (el.dataset.act === 'trayToggle') { const cur = trayFolded != null ? trayFolded : canReply(view.name, view.th); trayFolded = !cur; renderTray(); }
 }, true);
+
+/* ---------- 自分で打つ欄（11/24） ---------- */
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 'dmIn') { dmDraft = t.value; const box = t.closest('.igCompose'); if (box) box.classList.toggle('has', t.value.trim() !== ''); }
+  else if (t.id === 'codeIn') codeDraft = t.value;
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.isComposing || e.keyCode === 229) return;   /* 日本語の変換を決めるEnterでは送らない */
+  if (e.target.id === 'dmIn') { e.preventDefault(); sendDm(); }
+  else if (e.target.id === 'codeIn') { e.preventDefault(); submitCode(); }
+});
+/* 「送信」「確認」を押してもキーボードを閉じない（本物のチャットと同じ。閉じると画面が動いて押し損じる） */
+document.addEventListener('mousedown', e => { if (e.target.closest && e.target.closest('[data-keepfocus]')) e.preventDefault(); });
+/* キーボードが出たら、見えている高さ（visualViewport）に画面を合わせる。
+   こうすると会話の下端がキーボードの上に来て、直前のみさきのメッセージや番号の欄の説明が隠れない */
+let kbRaf = 0;
+function kbFit() {
+  kbRaf = 0;
+  const vv = window.visualViewport, stg = $('#stage');
+  const ae = document.activeElement;
+  const typing = !!(ae && ae.tagName === 'INPUT' && ae.type !== 'checkbox');
+  const kb = vv ? window.innerHeight - vv.height : 0;
+  const on = !!vv && window.innerWidth <= 600 && typing && kb > 80;
+  const was = document.body.classList.contains('kb');
+  if (on) { stg.style.top = vv.offsetTop + 'px'; stg.style.height = vv.height + 'px'; stg.style.bottom = 'auto'; document.body.classList.add('kb'); }
+  else if (was) { stg.style.top = ''; stg.style.height = ''; stg.style.bottom = ''; document.body.classList.remove('kb'); try { window.scrollTo(0, 0); } catch (e) {} }
+  if (on || was) {
+    trayPad();
+    const ch = document.querySelector('#screen .chat'); if (ch) ch.scrollTop = ch.scrollHeight;
+    centerCodeField();
+  }
+}
+function kbLater() { if (!kbRaf) kbRaf = requestAnimationFrame(kbFit); }
+if (window.visualViewport) { visualViewport.addEventListener('resize', kbLater); visualViewport.addEventListener('scroll', kbLater); }
+document.addEventListener('focusin', kbLater);
+document.addEventListener('focusout', () => setTimeout(kbLater, 60));
 
 /* ---------- 始める ---------- */
 let wantResume = false;
