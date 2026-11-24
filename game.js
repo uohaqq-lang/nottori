@@ -156,10 +156,12 @@ const ICON = {
 };
 /* ---------- 描画 ---------- */
 function statusbar() {
-  const dark = ['lock', 'home', 'call', 's0'].includes(view.name);
+  const dark = ['lock', 'home', 'call', 's0', 's9'].includes(view.name);
   const sb = $('#statusbar');
   sb.className = dark ? 'light' : '';
-  sb.innerHTML = `<span>${hm(new Date())}</span><span class="icons"><svg width="18" height="12"><rect x="0" y="8" width="3" height="4" fill="currentColor"/><rect x="5" y="5" width="3" height="7" fill="currentColor"/><rect x="10" y="2" width="3" height="10" fill="currentColor"/><rect x="15" y="0" width="3" height="12" fill="currentColor"/></svg><svg width="26" height="12"><rect x="0.5" y="0.5" width="22" height="11" rx="3" fill="none" stroke="currentColor"/><rect x="2" y="2" width="15" height="8" rx="1.5" fill="currentColor"/></svg></span>`;
+  /* 11/24 S9は犯人のスマホ：時刻は深夜、電池は残りわずか（赤） */
+  const s9 = view.name === 's9';
+  sb.innerHTML = `<span>${s9 ? esc(view.clock || '3:12') : hm(new Date())}</span><span class="icons"><svg width="18" height="12"><rect x="0" y="8" width="3" height="4" fill="currentColor"/><rect x="5" y="5" width="3" height="7" fill="currentColor"/><rect x="10" y="2" width="3" height="10" fill="currentColor"/><rect x="15" y="0" width="3" height="12" fill="currentColor"/></svg><svg width="26" height="12"><rect x="0.5" y="0.5" width="22" height="11" rx="3" fill="none" stroke="currentColor"/><rect x="2" y="2" width="${s9 ? 3 : 15}" height="8" rx="1.5" fill="${s9 ? '#ff453a' : 'currentColor'}"/></svg></span>`;
 }
 function head(title, back, cls = '') { return `<div class="pad44"></div><div class="appHead ${cls}">${back ? `<button class="back" data-act="back">‹</button>` : ''}<span class="ttl">${esc(title)}</span></div>`; }
 const homebar = (light) => `<div class="homebar${light ? ' light' : ''}" data-act="home"><i></i></div>`;
@@ -477,13 +479,6 @@ function renderVote() {
     : `<div class="vcode"><input id="codeIn" class="fld${v.codeErr ? ' ng' : ''}" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" maxlength="10" value="${esc(codeDraft)}"${can ? '' : ' disabled'}><button class="vok" data-act="codeOk" data-keepfocus="1"${can ? '' : ' disabled'}>${esc(UI.codeOk)}</button></div><div class="verr">${v.codeErr ? esc(UI.codeWrong) : ''}</div>`;
   const verify = v.verify ? `<div class="vverify" data-sig="${esc(voteSig(v))}"><div class="h">${esc(T.vote.verify)}</div><label>${esc(UI.phoneLabel)}</label><div class="fld">●●●-●●●●-●●●●</div><label for="codeIn">${esc(UI.codeLabel)}</label>${codeBox}</div>` : '';
   return `<div class="view vote" style="position:absolute;inset:0"><div class="vbar"><span class="url">${esc(UI.voteHost)}</span><button class="x" data-act="voteX">✕</button></div><div class="scroll"><div class="vhead"><b>${esc(UI.voteTitle)}</b></div><div class="vgrid">${cands}</div>${verify}</div>${modal}${perm}${homebar()}</div>`;
-}
-function renderS9() {
-  const v = view;
-  /* 最後の行は、列に分けず1つの欄に（11/19 2列目だけに押し込まれて読みにくかった） */
-  const rows = v.rows.map((r, i) => r.last ? `<tr class="lastcap"><td colspan="3">${esc(st.route === 'safe' ? T.s9capLastSafe : v.stopped ? T.s9capLastStop : T.s9capLast)} ↓</td></tr><tr class="last"><td colspan="3">${esc(r.p)}</td></tr>` : `<tr class="${r.me ? 'me' : ''}"${r.me ? ' data-act="s9open"' : ''}><td>${r.me ? `<span class="you">${esc(T.s9you)}</span>` : ''}${esc(r.a)}</td><td>${esc(r.p)}</td><td>${esc(r.s)}${r.got ? `<span class="got">${esc(r.got)}</span>` : ''}</td></tr>` + (r.me && v.openDet ? `<tr class="det"><td colspan="3"><div class="det-wrap"><span class="shopcol"><span class="shopm"><img src="img/shop.jpg" alt="" draggable="false"><i style="left:18%;top:21%;width:57%;height:18%"></i><i style="left:81%;top:32%;width:18%;height:7%"></i></span><span class="cap">${esc(T.s9capShop)}</span></span>${st.station ? `<span class="chip">${esc(st.station)}駅</span>` : ''}${st.faceTaken ? '<div class="face" data-face="1"></div>' : ''}<span class="chip">${esc(T.friends54)}<small>${esc(T.s9capFriends)}</small></span></div></td></tr>` : '')).join('');
-  const total = v.rows.filter(r => !r.last).length, sending = v.rows.filter(r => r.s === '送信中').length;
-  return `<div class="view s9" style="position:absolute;inset:0"><div class="s9bar"><b>${esc(T.s9title)}</b><span>${T.s9stats.replace('{n}', total).replace('{m}', sending).split('　').map(x => `<i>${esc(x)}</i>`).join('')}</span></div>${v.foot ? `<div class="s9foot">${esc(v.stopped ? T.s9footStop : T.s9foot)}</div>` : ''}<div class="scroll"><table><colgroup><col class="c1"><col class="c2"><col class="c3"></colgroup><tr>${T.s9cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr>${rows}</table></div><button class="nx${v.next ? ' on' : ''}" data-act="s9next">›</button></div>`;
 }
 const lockCards = [];
 
@@ -1439,32 +1434,83 @@ async function ending() {
 
 /* S9：向こうの画面 */
 async function attacker() {
+  /* 11/24 本人「よく意味が分からない情報だな。本当にこういう画面なの？」→ 作り物の表をやめ、犯人のスマホでインスタグラフの「アカウント切り替え」を開いた形にした。
+     深夜の時刻・電池の残りわずか・知らない壁紙・大量の未読で「他人のスマホ」と分かるようにし、場面ごとに短い字幕を1つずつ出す（本人「文で書かないとわからない」） */
   tray = null; choice = null; renderTray();
-  $('#overlay').className = 'on black s9in'; $('#overlay').textContent = T.s9intro;
-  await sleep(TIMING.s9Dark + 2.5);
-  $('#overlay').className = ''; $('#overlay').textContent = '';
-  const names = ['みさき', 'たくみ_07', 'yuu.k', 'さき', 'ren0412', 'まなみ', 'hiro_t', 'りん', 'kazuya', 'あや', 'sora.m', 'しおり', 'tatsu', 'なな', 'ryota_22', 'ゆい', 'kenta.s', 'みお', 'daiki', 'はるか', 'shun', 'あおい', 'mei_k', 'こうた', 'rina', 'つばさ', 'yuto.h', 'かな', 'sho', 'えみ', 'takeru', 'のぞみ'];
-  const paths = [T.path2, T.path3, T.path1];
-  const rows = names.map((a, i) => ({ a, p: paths[i % 3], s: i % 5 === 0 ? 'ログイン中' : '送信中' }));
-  let me;
-  if (st.route === 'safe') me = { a: myName(), p: '—', s: T.failed3, me: true };
-  else {
-    const p = []; if (!st.leakFixed) p.push(T.path1); if (st.path2) p.push(T.path2); if (st.path3) p.push(T.path3);
-    /* 11/19 結末の「カードを買ってしまった友だち n人」とそろえる（母が買ったときは「・母」を足す） */
-    const fp = st.friendsPaid || 0, mp = !st.momSaved;
-    const got = fp || mp ? T.s9got + (fp ? T.s9gotFriends.replace('{n}', fp) : '') + (fp && mp ? '・' : '') + (mp ? T.s9gotMom : '') : '';
-    me = { a: myName(), p: p.join(' / ') + '　' + T.twoStep, s: (st.route === 'in' || st.reverted) ? 'ログアウトされた' : 'ログイン中', got, me: true };
+  $('#overlay').className = 'on black'; $('#overlay').textContent = '';
+  await sleep(TIMING.s9Dark);
+  $('#overlay').className = '';
+  const safe = st.route === 'safe', stopped = st.route === 'in' || !!st.reverted;
+  const C = T.s9cap;
+  /* 並ぶアカウント（知らない人。顔の写真は使わず、色の丸で写真の代わりにする） */
+  const names = ['kenta.s', 'たくみ_07', 'yuu.k', 'さき', 'みさき', 'まなみ', 'hiro_t', 'りん', 'kazuya', 'あや', 'sora.m', 'しおり', 'tatsu', 'なな', 'ryota_22', 'ゆい', 'mei_k', 'daiki', 'はるか', 'shun', 'あおい', 'こうた', 'rina', 'つばさ', 'yuto.h', 'かな', 'sho', 'えみ', 'takeru', 'のぞみ'];
+  const accounts = names.map((n, i) => ({ name: n, av: n === 'みさき' ? 'misaki' : null, hue: (i * 47) % 360, badge: i % 3 === 1 ? 0 : (i * 7) % 38 + 2, cur: i === 0 }));
+  if (!safe) accounts.splice(13, 0, { name: myName(), av: 'me', badge: stopped ? 0 : 12, mine: true, out: stopped });
+  const pickIdx = () => accounts.findIndex(a => safe ? a.av === 'misaki' : a.mine);
+  view = { name: 's9', phase: 'home', clock: '3:12', accounts, openDet: true, next: false };
+  render();
+  const cap = async (text, last) => {
+    view.cap = text; view.next = true; render();
+    await new Promise(r => { actWaiters.s9next = r; if (!last) setTimeout(r, TIMING.s9CapAuto * 1000 / SPEED); if (AUTO) setTimeout(r, 400); });
+    delete actWaiters.s9next; view.cap = null; view.next = false; render();
+  };
+  await sleep(1.2);
+  await cap(C.phone);
+  /* インスタグラフを開くと、アカウント切り替えの一覧が下から出る */
+  view.tapApp = true; render(); await sleep(0.5);
+  view.phase = 'list'; view.tapApp = false; render();
+  await sleep(1.0);
+  /* 一覧をゆっくり下へ。自分のアカウント（防げたときは、みさき）で止める */
+  const sc = document.querySelector('#screen .s9sheet .scroll'), row = document.querySelectorAll('#screen .s9row')[pickIdx()];
+  if (sc && row) {
+    const want = Math.max(0, row.offsetTop - sc.clientHeight / 2 + row.offsetHeight / 2), from = sc.scrollTop, n = 30;
+    for (let k = 1; k <= n; k++) { const t = k / n; const s2 = document.querySelector('#screen .s9sheet .scroll'); if (s2) s2.scrollTop = from + (want - from) * (1 - Math.pow(1 - t, 3)); await sleep(2.2 / n); }
   }
-  rows.splice(1, 0, me);
-  view = { name: 's9', rows, openDet: false, next: false }; render();
-  await new Promise(r => { actWaiters.s9open = r; setTimeout(r, TIMING.s9AutoOpen * 1000 / SPEED); });
-  view.openDet = true; render();
-  await sleep(TIMING.s9LastLine);
-  /* 11/19 追い出せた・メールから取り戻したときは、乗っ取りが止まった側の文にする */
-  const stopped = st.route === 'in' || !!st.reverted;
-  view.rows.push({ a: '', p: fill(st.route === 'safe' ? T.lastSafe : stopped ? T.lastStop : T.lastIn), s: '', last: true }); view.next = true; view.foot = st.route !== 'safe'; view.stopped = stopped; render();
-  const sc = $('#screen .scroll'); if (sc) sc.scrollTop = sc.scrollHeight;
-  await new Promise(r => { actWaiters.s9next = r; if (AUTO) setTimeout(r, 400); });
+  view.pick = pickIdx(); render();
+  await sleep(1.4);
+  await cap(safe ? C.safe : stopped ? C.mineStop : C.mine);
+  /* 取り戻せたときは、自分の行は入れないので、みさきに移る */
+  if (stopped) { view.pick = accounts.findIndex(a => a.av === 'misaki'); render(); await sleep(1.2); }
+  const acct = accounts[view.pick];
+  view.tapRow = true; render(); await sleep(0.4);
+  view.phase = 'switch'; view.as = acct; render(); await sleep(2.2);
+  /* 切り替えたアカウントのDM一覧（見出しがそのアカウントの名前）に、知らない人あての送信が1人ずつ増える。
+     11/24 初見役が個別の会話では「誰が送っているか分からない」と言ったので、一覧だけで見せる。各行は「久しぶり〜元気？」のあと「ごめん番号ミスって…」に変わる */
+  const peers = (safe ? [{ name: 'Riko', av: 'riko' }] : []).concat(['haruto_k', 'mika.0815', 'りょう', 'yuna_s', 'こうへい', 'aki_n'].map((n, i) => ({ name: n, hue: (i * 83 + 20) % 360 })));
+  view.phase = 'inbox'; view.inbox = []; render();
+  for (let k = 0; k < 5; k++) {
+    await sleep(0.9);
+    const r = { p: peers[k], text: T.s9msgs[0] }; view.inbox.unshift(r); sound.tap(); render();
+    await sleep(0.9); r.text = T.s9msgs[1]; render();
+  }
+  await sleep(0.8);
+  await cap(safe ? C.usedSafe : stopped ? C.usedStop : C.used, true);
+}
+const S9CHEV = '<svg class="s9chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+/* S9 の画面（犯人のスマホ。インスタグラフは暗い表示にして、自分のスマホと見た目を変える） */
+function s9Av(a, size) {
+  if (a && a.av) return avHTML(a.av, 'igav', size);
+  const h = a ? a.hue : 0;
+  return `<span class="igav pic" style="width:${size}px;height:${size}px"><svg viewBox="0 0 40 40"><defs><linearGradient id="g${h}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${h},55%,62%)"/><stop offset="1" stop-color="hsl(${(h + 50) % 360},50%,38%)"/></linearGradient></defs><rect width="40" height="40" fill="url(#g${h})"/><circle cx="${12 + h % 17}" cy="${14 + h % 11}" r="7" fill="rgba(255,255,255,.35)"/></svg></span>`;
+}
+function renderS9() {
+  const v = view;
+  const capBox = v.cap ? `<div class="s9cap"><span>${esc(v.cap)}</span><button class="nx on" data-act="s9next">›</button></div>` : '';
+  let body = '';
+  if (v.phase === 'home') {
+    const ic = (k, label, n) => `<button class="app${k === 'pico' && v.tapApp ? ' s9tap' : ''}"><span class="ic">${ICON[k]}</span><span class="nm">${esc(label)}</span>${n ? `<span class="badge">${esc(n)}</span>` : ''}</button>`;
+    body = `<div class="view home s9home"><div class="grid">${ic('pico', UI.apps.pico, '99+')}${ic('kotori', UI.apps.kotori, '99+')}${ic('mail', UI.apps.mail, '999+')}${ic('sms', UI.apps.sms, '214')}${ic('cam', 'カメラ')}${ic('photo', '写真')}${ic('clock', '時計')}${ic('set', '設定', '3')}</div><div class="dock">${ic('phone', UI.apps.phone, '27')}<span></span><span></span><span></span></div>${homebar(true)}</div>`;
+  } else if (v.phase === 'list') {
+    const cur = v.accounts.find(a => a.cur);
+    const rows = v.accounts.map((a, i) => `<div class="s9row${a.out ? ' out' : ''}${v.pick === i ? ' pick' : ''}${v.pick === i && v.tapRow ? ' s9tap' : ''}">${s9Av(a, 44)}<div class="mid"><b>${esc(a.name)}${a.mine && v.pick === i ? `<span class="s9you">${esc(T.s9you)}</span>` : ''}</b>${a.out ? `<span>${esc(T.s9cannot)}</span>` : ''}</div>${a.badge ? `<span class="s9badge">${a.badge}</span>` : ''}${a.cur ? '<span class="s9check"></span>' : '<span class="s9radio"></span>'}</div>`).join('');
+    body = `<div class="view s9ig"><div class="pad44"></div><div class="s9top"><b>${esc(cur.name)}${S9CHEV}</b><span class="igIcon">${IC.plus}</span><span class="igIcon s9dm">${IC.plane}<i>99+</i></span></div><div class="s9prof">${s9Av(cur, 76)}<div class="igNums"><div><b>0</b><span>投稿</span></div><div><b>3</b><span>フォロワー</span></div><div><b>1,204</b><span>フォロー中</span></div></div></div><div class="s9dim"></div><div class="s9sheet"><i class="grab"></i><div class="scroll">${rows}<div class="s9row add"><span class="plus">＋</span><div class="mid"><b>${esc(T.s9add)}</b></div></div></div></div></div>`;
+  } else if (v.phase === 'switch') {
+    body = `<div class="view s9ig s9switch"><div class="pad44"></div><div class="s9sw">${s9Av(v.as, 84)}<b>${esc(v.as.name)}</b><i class="spin"></i></div></div>`;
+  } else {
+    const rows = v.inbox.map((r, i) => `<div class="igRow${i === 0 ? ' s9new' : ''}">${s9Av(r.p, 54)}<div class="mid"><div class="nm">${esc(r.p.name)}</div><div class="pv"><span class="txt">${esc(r.text)}</span><span class="ago"> · 今</span></div></div></div>`).join('');
+    body = `<div class="view s9ig"><div class="pad44"></div><div class="igChatHead"><span class="igIcon">${IC.back}</span><div class="igChatName"><b>${esc(v.as.name)}${S9CHEV}</b></div><span class="igIcon">${IC.edit}</span></div><div class="scroll"><div class="igSearch">${IC.search}<span>検索</span></div><div class="igSub"><b>メッセージ</b><span>リクエスト</span></div>${rows}</div>${homebar(true)}</div>`;
+  }
+  return body.replace(/<\/div>$/, capBox + '</div>');
 }
 
 /* S10：このゲームが読み取ったもの */
