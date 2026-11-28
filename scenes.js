@@ -529,14 +529,16 @@ const SCENES = {
     { do: 'qr', th: 'group' },
     { do: 'mail', wait: 2, mail: T.s5mail },
     /* 11/24 グループに先に書いたあとは、ゆうと・Rikoの個人の問い合わせは来ない（グループで了解したのに個人で「本人？」と聞くのは矛盾するため） */
+    /* 11/28 本人「ここで返事できないのも変」→ 聞かれたその瞬間から返事できるようにする。返事したあとは、続きの確認（スクショなど）は来ない */
     { do: 'msg', when: noGroupYet, app: 'kotori', th: 'yuto', who: 'ゆうと', text: T.yutoAsk, wait: 6 },
-    { do: 'msg', when: noGroupYet, app: 'kotori', th: 'yuto', who: 'ゆうと', img: 'yutoShot', text: '', wait: 2 },
     { do: 'qr', when: noGroupYet, th: 'yuto', k: 0 },
+    { do: 'msg', when: st => noGroupYet(st) && !st.notified.has(0), app: 'kotori', th: 'yuto', who: 'ゆうと', img: 'yutoShot', text: '', wait: 2 },
     { do: 'msg', when: st => st.faceTaken && noGroupYet(st), app: 'kotori', th: 'riko', who: 'Riko', text: '{名前}の顔写真つきで「本人です」って来たんだけど', wait: 5 },
-    { do: 'msg', when: noGroupYet, app: 'kotori', th: 'riko', who: 'Riko', text: T.storyAsk, wait: 4 },
-    { do: 'msg', when: noGroupYet, app: 'kotori', th: 'riko', who: 'Riko', img: 'storyShot', text: '', wait: 1 },
-    { do: 'msg', when: noGroupYet, app: 'kotori', th: 'riko', who: 'Riko', text: T.storyAsk2, wait: 2 },
+    { do: 'qr', when: st => st.faceTaken && noGroupYet(st), th: 'riko', k: 1 },
+    { do: 'msg', when: st => noGroupYet(st) && !st.notified.has(1), app: 'kotori', th: 'riko', who: 'Riko', text: T.storyAsk, wait: 4 },
     { do: 'qr', when: noGroupYet, th: 'riko', k: 1 },
+    { do: 'msg', when: st => noGroupYet(st) && !st.notified.has(1), app: 'kotori', th: 'riko', who: 'Riko', img: 'storyShot', text: '', wait: 1 },
+    { do: 'msg', when: st => noGroupYet(st) && !st.notified.has(1), app: 'kotori', th: 'riko', who: 'Riko', text: T.storyAsk2, wait: 2 },
     { do: 'goto', to: 'S6' }
   ],
 
