@@ -209,7 +209,10 @@ function statusbar() {
   const s9 = view.name === 's9';
   sb.innerHTML = `<span>${s9 ? esc(view.clock || '3:12') : hm(new Date())}</span><span class="icons"><svg width="18" height="12"><rect x="0" y="8" width="3" height="4" fill="currentColor"/><rect x="5" y="5" width="3" height="7" fill="currentColor"/><rect x="10" y="2" width="3" height="10" fill="currentColor"/><rect x="15" y="0" width="3" height="12" fill="currentColor"/></svg><svg width="26" height="12"><rect x="0.5" y="0.5" width="22" height="11" rx="3" fill="none" stroke="currentColor"/><rect x="2" y="2" width="${s9 ? 3 : 15}" height="8" rx="1.5" fill="${s9 ? '#ff453a' : 'currentColor'}"/></svg></span>`;
 }
-function head(title, back, cls = '') { return `<div class="pad44"></div><div class="appHead ${cls}">${back ? `<button class="back" data-act="back">‹</button>` : ''}<span class="ttl">${esc(title)}</span></div>`; }
+function head(title, back, cls = '', right = '') { return `<div class="pad44"></div><div class="appHead ${cls}">${back ? `<button class="back" data-act="back">‹</button>` : ''}<span class="ttl">${esc(title)}</span>${right}</div>`; }
+/* 11/28 本人「下に選択肢が出るのは不自然。自然にそっちに行くギミックを」→ S8の手は、トークの電話ボタン・電話アプリ・各トークの返事・アプリの中から打つ。
+   s8fire は S8 のあいだだけ入る（電話・メール・申し込みの順番待ち） */
+let s8fire = null, mailPwBusy = false;
 const homebar = (light) => `<div class="homebar${light ? ' light' : ''}" data-act="home"><i></i></div>`;
 function badge(app) {
   if ((app === 'kotori' && st.rineLost) || (app === 'mail' && st.mailLost)) return 0;
@@ -298,7 +301,7 @@ function render() {
   } else if (v.name === 'pico') html = renderPico();
   else if (v.name === 'kotori' || v.name === 'sms') html = renderChatApp(v.name);
   else if (v.name === 'mail') html = renderMail();
-  else if (v.name === 'phone') html = `<div class="view">${head(UI.apps.phone, true)}<div class="scroll">${calls.slice().reverse().map(c => `<div class="row">${avHTML('mom', 'av')}<div class="mid"><div class="nm"${c.missed ? ' style="color:var(--danger)"' : ''}>${esc(c.who)}</div><div class="pv">${c.missed ? '不在着信' : '通話'}</div></div><span class="tm">${esc(c.tm)}</span></div>`).join('')}</div>${homebar()}</div>`;
+  else if (v.name === 'phone') html = `<div class="view">${head(UI.apps.phone, true)}<div class="scroll">${calls.slice().reverse().map(c => `<div class="row" data-act="callRow" data-arg="${esc(c.who)}">${avHTML(c.av || 'mom', 'av')}<div class="mid"><div class="nm"${c.missed ? ' style="color:var(--danger)"' : ''}>${esc(c.who)}</div><div class="pv">${c.missed ? '不在着信' : '通話'}</div></div><span class="tm">${esc(c.tm)}</span></div>`).join('')}</div>${homebar()}</div>`;
   else if (v.name === 'call') html = renderCall();
   else if (v.name === 'vote') html = renderVote();
   else if (v.name === 'protect') {
@@ -433,7 +436,7 @@ function renderPico() {
   const v = view;
   if (st.picoLocked) {
     const sup = (support || []).map(x => x === 'id' ? `<div class="bb">${SVG.selfie}</div>` : x === 'submit' ? `<button class="btn pico" data-act="submitId">${esc(T.submit)}</button>` : `<div class="bb">${esc(x)}</div>`).join('');
-    return `<div class="view pico ig"><div class="pad44"></div><div class="igTop"><span class="igLogo">Instagraph</span></div><div class="locked"><div class="big">${esc(T.s5locked)}</div><div class="fake"></div><div class="fake"></div><div class="support">${sup}</div></div>${homebar()}</div>`;
+    return `<div class="view pico ig"><div class="pad44"></div><div class="igTop"><span class="igLogo">Instagraph</span></div><div class="locked"><div class="big">${esc(T.s5locked)}</div><div class="fake"></div><div class="fake"></div>${s8fire && st.route === 'out' && !(support && support.length) ? `<button class="iglink" data-act="applyOpen">${esc(UI.cantLogin)}</button>` : ''}<div class="support">${sup}</div></div>${homebar()}</div>`;
   }
   if (v.lc) return renderLoginCheck(v);
   if (v.where) return renderLoginWhere();
@@ -480,7 +483,7 @@ function renderChatApp(app) {
   if (app === 'kotori') {
     if (v.th) {
       const t = thread(app, v.th);
-      return `<div class="view kotori rine"><div class="pad44"></div><div class="rineHead"><button class="igIcon" data-act="back">${IC.back}</button><b>${esc(t.name)}</b><span class="igIcon">${IC.search}</span><span class="igIcon">${IC.phone}</span><span class="igIcon">${IC.menu}</span></div><div class="chat">${t.msgs.map(m => msgHTML(app, t, m)).join('')}${inlineHTML(app, v.th)}</div><div class="rineInput${canReply(app, v.th) ? ' can' : ' off'}" data-act="typeHint"><span class="igIcon sm">${IC.plus2}</span><span class="igIcon sm">${IC.camera}</span><span class="igIcon sm">${IC.image}</span><span class="rinePh">${esc(canReply(app, v.th) ? T.canReply : T.cannotReply)}</span><span class="igIcon sm">${IC.mic}</span></div>${homebar()}</div>`;
+      return `<div class="view kotori rine"><div class="pad44"></div><div class="rineHead"><button class="igIcon" data-act="back">${IC.back}</button><b>${esc(t.name)}</b><span class="igIcon">${IC.search}</span><button class="igIcon" data-act="callTh">${IC.phone}</button><span class="igIcon">${IC.menu}</span></div><div class="chat">${t.msgs.map(m => msgHTML(app, t, m)).join('')}${inlineHTML(app, v.th)}</div><div class="rineInput${canReply(app, v.th) ? ' can' : ' off'}" data-act="typeHint"><span class="igIcon sm">${IC.plus2}</span><span class="igIcon sm">${IC.camera}</span><span class="igIcon sm">${IC.image}</span><span class="rinePh">${esc(canReply(app, v.th) ? T.canReply : T.cannotReply)}</span><span class="igIcon sm">${IC.mic}</span></div>${homebar()}</div>`;
     }
     const list = Object.values(threads[app]).filter(t => t.msgs.length).sort((a, b) => b.t - a.t);
     const rows = list.map(t => { const last = lastReal(t); return `<div class="rineRow" data-act="th" data-arg="${t.th}">${igAv(t.th, 50)}<div class="mid"><div class="nm">${esc(t.name)}</div><div class="pv">${esc(last.img ? '写真を送信しました' : fill(last.text || ''))}</div></div><div class="rineSide"><span>${esc(last.tm || '')}</span>${t.unread ? `<span class="rineCount">${t.unread}</span>` : ''}</div></div>`; }).join('');
@@ -488,7 +491,7 @@ function renderChatApp(app) {
   }
   if (v.th) {
     const t = thread(app, v.th);
-    return `<div class="view ${app}">${head(t.name, true)}<div class="chat">${t.msgs.map(m => msgHTML(app, t, m)).join('')}${inlineHTML(app, v.th)}</div>${homebar()}</div>`;
+    return `<div class="view ${app}">${head(t.name, true, '', v.th !== 'stranger' && v.th !== 'picosms' ? `<button class="appCall" data-act="callTh">${IC.phone}</button>` : '')}<div class="chat">${t.msgs.map(m => msgHTML(app, t, m)).join('')}${inlineHTML(app, v.th)}</div>${homebar()}</div>`;
   }
   const list = Object.values(threads[app]).filter(t => t.msgs.length).sort((a, b) => b.t - a.t);
   return `<div class="view ${app}">${head(UI.apps[app], false)}<div class="scroll">${list.map(t => { const last = t.msgs[t.msgs.length - 1]; return `<div class="row${t.unread ? ' unread' : ''}" data-act="th" data-arg="${t.th}">${avHTML(t.th, 'av')}<div class="mid"><div class="nm">${esc(t.name)}</div><div class="pv">${esc(last.img ? '画像' : (last.me ? 'あなた：' : '') + fill(last.text || ''))}</div></div><span class="tm">${esc(last.tm || '')}</span></div>`; }).join('')}</div>${homebar()}</div>`;
@@ -503,14 +506,16 @@ function renderMail() {
     const extra = m.revert ? `<div class="acts"><button class="btn igBlue" data-act="revertOpen"${st.reverted ? ' disabled' : ''}>${esc(T.s5mail.btn)}</button></div>` : '';
     return `<div class="view">${head(UI.apps.mail, true)}<div class="mailbody"><div class="s">${esc(m.subject)}</div><div class="f">${esc(m.from)}${m.addr ? ` &lt;${esc(m.addr)}&gt;` : ''}</div><div class="b">${esc(m.body)}</div>${extra}${acts}</div>${homebar()}</div>`;
   }
-  return `<div class="view">${head(UI.apps.mail, false)}<div class="scroll">${mails.slice().reverse().map(m => `<div class="mailrow${m.unread ? ' unread' : ''}" data-act="mailOpen" data-arg="${m.id}"><div class="f">${esc(m.from)}<span>${esc(m.t)}</span></div><div class="s">${esc(m.subject)}</div></div>`).join('')}</div>${homebar()}</div>`;
+  /* S8：メールのアカウントの欄から、パスワードを変えられる */
+  const acct = s8fire ? `<div class="mailacct"${st.mailPw || mailPwBusy ? '' : ' data-act="mailPw"'}><span>${esc(UI.mailAcct)}</span><b>${esc(st.mailPw ? UI.mailPwDone : mailPwBusy ? UI.mailPwBusy : UI.mailPwBtn)}</b></div>` : '';
+  return `<div class="view">${head(UI.apps.mail, false)}<div class="scroll">${acct}${mails.slice().reverse().map(m => `<div class="mailrow${m.unread ? ' unread' : ''}" data-act="mailOpen" data-arg="${m.id}"><div class="f">${esc(m.from)}<span>${esc(m.t)}</span></div><div class="s">${esc(m.subject)}</div></div>`).join('')}</div>${homebar()}</div>`;
 }
 function renderCall() {
   const v = view;
   const subs = (v.subs || []).map(x => `<div class="sub${x.me ? ' me' : x.sys ? ' sys' : ''}">${x.who ? `<b>${esc(x.who)}</b>` : ''}${esc(fill(x.text))}</div>`).join('');
   let btns = '';
   if (v.ringing) btns = `<button class="rb ng" data-act="callNo"><i>✕</i>${esc(UI.decline)}</button><button class="rb ok" data-act="callYes"><i>✆</i>${esc(UI.answer)}</button>`;
-  return `<div class="view call${pendingTrayOptions ? ' asking' : ''}"><div class="${v.ringing ? 'ringing' : ''}"><div class="who" style="margin-top:96px">${avHTML('mom', 'avatar')}${esc(v.who || '母')}</div><div class="st">${esc(v.status || '')}</div></div><div class="subs">${subs}</div><div class="btns">${btns}</div></div>`;
+  return `<div class="view call${pendingTrayOptions ? ' asking' : ''}"><div class="${v.ringing ? 'ringing' : ''}"><div class="who" style="margin-top:96px">${avHTML(v.av || 'mom', 'avatar')}${esc(v.who || '母')}</div><div class="st">${esc(v.status || '')}</div></div><div class="subs">${subs}</div><div class="btns">${btns}</div></div>`;
 }
 function renderVote() {
   const v = view;
@@ -1252,10 +1257,53 @@ async function recover() {
   if (out && st.rineLost) acts.push({ id: 'fcall', label: T.fcall });
   if (!st.mailLost) acts.push({ id: 'mail', label: T.act.mail });
   if (out) acts.push({ id: 'apply', label: T.act.apply });
-  tray = acts;
-  let momCalls = 0, momStage = 0, strangerShown = false;
+  tray = acts;   /* 中身の管理だけに使う。画面の下には出さない */
+  let momCalls = 0, momStage = 0, strangerShown = false, acted = false;
+  /* 11/28 それぞれのトークを開けば、そこで返事できる */
+  const writeMom = () => {
+    const t = thread('kotori', 'mom'); t.inline = null; acted = true;
+    pushMsg('kotori', 'mom', { me: true, text: T.kotoriToMom }); st.momRineSent = true; render(); rineQuiz();
+  };
+  if (!st.rineLost) thread('kotori', 'mom').inline = [{ label: '「' + T.kotoriToMom + '」', f: writeMom }];
+  if (out && !st.rineLost && !st.groupUsed) thread('kotori', 'group').inline = [{ label: T.qrGroup, f: () => { acted = true; groupPost(); } }];
+  if (out) receivers.forEach(k => {
+    if (st.notified.has(k) || st.paid.has(k)) return;
+    const th = friendTh(k), t = thread(chat, th); t.name = FRIENDS[k];
+    /* まだ話したことのない友だちも、前からのトークが一覧にある（昨日の短いやりとり） */
+    if (!t.msgs.length) { t.msgs.push({ who: FRIENDS[k], text: T.oldChat[k % T.oldChat.length], tm: '昨日' }); t.t = Date.now() - 86400000 - k * 1000; }
+    if (!t.inline) t.inline = [{ label: T.qrHijacked, f: () => { acted = true; replyHijacked(th, k, chat); } }];
+  });
+  setTimeout(() => { if (!acted && s8fire) toast(UI.s8hint); }, 15000 / SPEED);
+  /* 電話は1本ずつ（電話中に別の電話はかけない）。メールと申し込みは、ほかと並べて進む */
+  const actQ = []; let actWake = null, calling = false;
+  s8fire = (id, k) => {
+    acted = true;
+    if (id === 'mail') { mailChange(); return; }
+    if (id === 'apply') { applyStart(); return; }
+    if (calling || view.name === 'call' || actQ.length) return;
+    actQ.push({ id, k }); if (actWake) { const w = actWake; actWake = null; w(actQ.shift()); }
+  };
+  const nextAct = () => new Promise(res => { if (actQ.length) res(actQ.shift()); else actWake = res; });
+  const mailChange = async () => {
+    if (st.mailPw || mailPwBusy || st.mailLost) return;
+    mailPwBusy = true; render();
+    await sleep(TIMING.s8.mailPw);
+    mailPwBusy = false; st.mailPw = true; { const a = tray && tray.find(x => x.id === 'mail'); if (a) a.off = true; }
+    if (view.name === 'mail') render(); else toast(UI.mailPwDone);
+  };
+  const applyStart = async () => {
+    if (support && support.length) return;
+    { const a = tray && tray.find(x => x.id === 'apply'); if (a) a.off = true; }
+    support = [UI.applySending]; render();
+    await sleep(TIMING.s8.apply);
+    support = [T.support[0], T.support[1], 'id', 'submit'];
+    if (view.name !== 'pico') banner('pico', '', T.support[1], { open: { name: 'pico' } });
+    if (AUTO) setTimeout(() => { support = [T.support[0], T.support[1], 'id', T.support[2]]; st.applied = true; }, 300);
+    render();
+  };
   const doBusy = async (label, dur) => { busy = { label, start: Date.now(), dur }; render(); const iv = setInterval(renderTray, 200); await sleep(dur); clearInterval(iv); busy = null; render(); };
   const momCall = async () => {
+    if (momStage >= 1) return momConversation();   /* 2回目は、少し鳴ってからつながる */
     const prev = view;
     view = { name: 'call', who: '母', status: UI.calling, subs: [] }; render();
     sound.dialOnce();
@@ -1266,10 +1314,10 @@ async function recover() {
       view.subs.push({ sys: true, text: T.noAnswer }); render();
       await sleep(TIMING.s8.sayHold);
       view = prev; render();
-      momStage = 1;
-      const i = st.rineLost ? 0 : await askTray([{ label: T.again }, { label: T.writeKotori }]);
-      if (i === 1) { view = { name: 'kotori', th: 'mom' }; pushMsg('kotori', 'mom', { me: true, text: T.kotoriToMom }); st.momRineSent = true; render(); rineQuiz(); return; }
-      return momConversation();
+      /* 11/28 出なかったら、母のトークに戻る。もう一度かけるなら右上の電話、RINEで書くならトークの返事から（板の選択肢は出さない） */
+      momStage = 1; st.momNoAnswer = true;
+      if (!st.rineLost) { view = { name: 'kotori', th: 'mom' }; render(); }
+      return;
     }
     return momConversation(true);
   };
@@ -1331,7 +1379,7 @@ async function recover() {
     s8clock += dt;
     if (!st.momSaved && !momDone) { momLeft.v -= dt; if (momLeft.v <= 0) { st.momPaid = true; momDone = true; } }
     if (st.reverted && frLeft.v > 0) { receivers.forEach(k => { if (!st.paid.has(k)) st.notified.add(k); }); frLeft.v = 0; const ap = tray && tray.find(a => a.id === 'apply'); if (ap) ap.off = true; }
-    if (st.momSaved && tray) { const mo = tray.find(a => a.id === 'mom'); if (mo && !mo.off) { mo.off = true; if (pendingTrayOptions && !busy) { const r = trayResolve; trayResolve = null; pendingTrayOptions = null; r && r(-2); } } }
+    if (st.momSaved && tray) { const mo = tray.find(a => a.id === 'mom'); if (mo && !mo.off) { mo.off = true; if (pendingTrayOptions && pendingTrayOptions.isActs && !busy) { const r = trayResolve; trayResolve = null; pendingTrayOptions = null; r && r(-2); } } }
     if (out && !st.reverted && (frLeft.v > 0 || leftNow().length)) {
       frLeft.v = Math.max(0, frLeft.v - dt);
       const left = leftNow();
@@ -1368,50 +1416,34 @@ async function recover() {
   const actLoop = (async () => {
     while (!(momDone && friendsOver())) {
       refreshActs();
-      const actOpts = tray.map(a => ({ label: a.label, off: a.off })); actOpts.isActs = true;
-      const i = await askTray(actOpts);
-      if (i === -2) continue;
-      if (i < 0) break;
-      const a = tray[i]; tlog('act', a.id);
-      if (a.id === 'mom') { if (!st.momSaved && momLeft.v > 0) await momCall(); }
+      const a = await nextAct();
+      if (!a) break;
+      tlog('act', a.id);
+      calling = true;
+      if (a.id === 'mom') { if (!st.momSaved && !momDone && momLeft.v > 0) await momCall(); else toast(UI.callBusy); }
       else if (a.id === 'fcall') {
-        /* RINEを取られたので、電話で1人ずつ。1人15秒 */
-        const next = receivers.find(k => going.has(k) && !st.notified.has(k) && !st.paid.has(k)) ?? nextToTell();
-        if (next == null) { toast('もう知らせる人がいない'); continue; }
-        st.notified.add(next); drawBars();
-        await doBusy(FRIENDS[next] + 'に電話中', 15);   /* 「…」は板の側で足す */
-        toast(FRIENDS[next] + T.fcallDone);
+        /* 友だちに電話して知らせる（RINEを取られていても、電話はできる） */
+        const k = a.k;
+        if (k == null || k >= st.sentCount || st.notified.has(k) || st.paid.has(k) || friendsOver()) { toast(UI.callBusy); calling = false; continue; }
+        st.notified.add(k); doubt.delete(k); drawBars();
+        const prev = view;
+        view = { name: 'call', who: FRIENDS[k], av: AVATAR['f' + k] ? 'f' + k : null, status: UI.calling, subs: [] }; render();
+        sound.dialOnce(); await sleep(3);
+        if (view.name === 'call') { view.status = '通話中'; view.subs.push({ me: true, text: T.friendMsg }); render(); }
+        await sleep(5);
+        if (view.name === 'call') { view.subs.push({ who: FRIENDS[k], text: going.has(k) ? T.friendStopped[k % T.friendStopped.length] : T.friendOk[k % T.friendOk.length] }); render(); }
+        await sleep(2);
+        { const ft = thread(chat, friendTh(k)); if (ft.inline && ft.inline[0] && ft.inline[0].label === T.qrHijacked) ft.inline = null; }
+        if (view.name === 'call') { view = prev.name === 'call' ? { name: 'home' } : prev; render(); }
+        calls.push({ who: FRIENDS[k], av: AVATAR['f' + k] ? 'f' + k : null, tm: hm(new Date()), missed: false });
         told();
       }
-      else if (a.id === 'group') {
-        a.off = true;
-        gotoView({ name: 'kotori', th: 'group' }); groupPost();
-      }
-      else if (a.id === 'friend') {
-        const next = receivers.find(k => doubt.has(k) && !st.paid.has(k)) ?? receivers.find(k => going.has(k) && !st.notified.has(k) && !st.paid.has(k)) ?? nextToTell();
-        if (next == null) { toast('もう知らせる人がいない'); continue; }
-        st.notified.add(next);   /* 知らせ始めた時点で、この人は買わない */
-        thread('kotori', friendTh(next)).name = FRIENDS[next]; gotoView({ name: 'kotori', th: friendTh(next) });
-        pushMsg('kotori', friendTh(next), { me: true, text: T.friendMsg }); render();
-        await doBusy(T.act.friend, TIMING.s8.notifyEach);
-        const wasDoubt = doubt.has(next); doubt.delete(next);
-        { const ft = thread('kotori', friendTh(next)); if (ft.inline && ft.inline[0] && ft.inline[0].label === T.qrHijacked) ft.inline = null; }
-        deliver({ app: 'kotori', th: friendTh(next), who: FRIENDS[next], text: st.paid.has(next) ? T.friendLate : wasDoubt ? T.friendDoubtOk : going.has(next) ? T.friendStopped[next % T.friendStopped.length] : T.friendOk[next % T.friendOk.length], wait: 1.5 });
-        drawBars();
-        told();
-      } else if (a.id === 'mail') { await doBusy(T.act.mail, TIMING.s8.mailPw); st.mailPw = true; a.off = true; }
-      else if (a.id === 'apply') {
-        a.off = true; support = []; gotoView({ name: 'pico' });
-        await doBusy(T.act.apply, TIMING.s8.apply);
-        support = [T.support[0], T.support[1], 'id', 'submit'];
-        if (view.name !== 'pico') banner('pico', '', T.support[1], { open: { name: 'pico' } });
-        if (AUTO) setTimeout(() => { support = [T.support[0], T.support[1], 'id', T.support[2]]; st.applied = true; }, 300);
-        render();
-      }
+      calling = false;
     }
   })();
   await new Promise(resolve => { const iv = setInterval(() => { if (momDone && friendsOver()) { clearInterval(iv); resolve(); } }, 300); });
   clearInterval(timer); drawBarsNow = null; document.removeEventListener('visibilitychange', onVis);
+  s8fire = null; mailPwBusy = false; if (actWake) { const w = actWake; actWake = null; w(null); }
   if (trayResolve) pickTray(-1);   /* 出したままの選択肢も片づける */
   tray = null; busy = null;
   for (const app of ['kotori', 'sms']) for (const k in threads[app]) threads[app][k].inline = null;   /* 時間切れのあとは答えられない */
@@ -1684,6 +1716,18 @@ document.addEventListener('click', e => {
     case 'choose': choose(Number(arg)); break;
     case 'trayPick': pickTray(Number(arg)); break;
     case 'inline': { const t = threads[view.name] && threads[view.name][view.th]; if (t && t.inline && t.inline[arg]) t.inline[arg].f(); break; }
+    /* 11/28 トークの右上の電話・電話アプリの履歴から電話する（S8のあいだだけつながる） */
+    case 'callTh': {
+      if (!s8fire) { toast(UI.callBusy); break; }
+      const th = view.th;
+      if (th === 'mom') { s8fire('mom'); break; }
+      const k = ['yuto', 'riko', 'kai'].indexOf(th) >= 0 ? ['yuto', 'riko', 'kai'].indexOf(th) : /^f\d+$/.test(th) ? Number(th.slice(1)) : -1;
+      if (k >= 0) s8fire('fcall', k); else toast(UI.callBusy);
+      break;
+    }
+    case 'callRow': if (!s8fire) { toast(UI.callBusy); break; } if (arg === '母') s8fire('mom'); else { const k = FRIENDS.indexOf(arg); if (k >= 0) s8fire('fcall', k); } break;
+    case 'mailPw': if (s8fire && !st.mailPw && !mailPwBusy) s8fire('mail'); break;
+    case 'applyOpen': if (s8fire) s8fire('apply'); break;
     case 'callYes': if (view.onPick) view.onPick(0); break;
     case 'callNo': if (view.onPick) view.onPick(1); break;
     case 'loginAlert': if (raceAction) raceAction.press(); break;
