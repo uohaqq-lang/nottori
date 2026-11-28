@@ -73,11 +73,44 @@ function tone(freq, t0, dur, vol = 0.12, type = 'sine') {
   g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + t0 + dur);
   o.connect(g); g.connect(audio.destination); o.start(audio.currentTime + t0); o.stop(audio.currentTime + t0 + dur + 0.02);
 }
+/* 水の粒がはじけるような音（周波数を一気に上げて、すぐ消す） */
+function drop(f0, f1, t0, dur, vol = 0.16) {
+  if (!audio) return;
+  const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime + t0;
+  o.type = 'sine';
+  o.frequency.setValueAtTime(f0, t);
+  o.frequency.exponentialRampToValueAtTime(f1, t + dur * 0.35);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+/* 木琴のような音（基音に、すぐ消える高い倍音を重ねる） */
+function mallet(freq, t0, vol = 0.12) {
+  tone(freq, t0, 0.45, vol);
+  tone(freq * 4, t0, 0.06, vol * 0.35);
+}
+/* 日本の電話の呼び出し音（400Hzを16回/秒で揺らす「プルルル」） */
+function ringback(t0, dur) {
+  if (!audio) return;
+  const t = audio.currentTime + t0;
+  const o = audio.createOscillator(), g = audio.createGain(), lfo = audio.createOscillator(), lg = audio.createGain(), out = audio.createGain();
+  o.frequency.value = 400; lfo.frequency.value = 16;
+  g.gain.value = 0.5; lg.gain.value = 0.5;
+  lfo.connect(lg); lg.connect(g.gain);
+  out.gain.setValueAtTime(0.0001, t);
+  out.gain.exponentialRampToValueAtTime(0.09, t + 0.02);
+  out.gain.setValueAtTime(0.09, t + dur - 0.03);
+  out.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(out); out.connect(audio.destination);
+  o.start(t); lfo.start(t); o.stop(t + dur + 0.02); lfo.stop(t + dur + 0.02);
+}
 function haptic() { try { const l = document.getElementById('hapt'); if (l) l.click(); } catch (e) {} }
 const sound = {
   /* アプリごとに違う、短い通知音（本物のアプリの音は使わない） */
   notify(app) {
-    if (app === 'kotori') { tone(880, 0, 0.07, 0.13); tone(1175, 0.08, 0.12, 0.13); }
+    /* RINE：トークアプリらしい「ポコン」（低い粒→高い粒） */
+    if (app === 'kotori') { drop(520, 900, 0, 0.09, 0.15); drop(780, 1500, 0.075, 0.17, 0.17); }
     else if (app === 'pico') { tone(1568, 0, 0.25, 0.08); tone(2093, 0.06, 0.35, 0.05); }
     else if (app === 'sms') { tone(1319, 0, 0.09); tone(1568, 0.11, 0.09); tone(2093, 0.22, 0.14); }
     else if (app === 'mail') { tone(660, 0, 0.18, 0.07); tone(990, 0.12, 0.2, 0.06); }
@@ -85,8 +118,21 @@ const sound = {
     if (isAndroid && navigator.vibrate) navigator.vibrate(app === 'kotori' ? [40, 60, 40] : 70);
     else haptic();   /* iPhone（iOS 18以降のSafari）は、スイッチの小さな振動を借りる */
   },
-  ringOnce() { for (let i = 0; i < 8; i++) { tone(1046, i * 0.1, 0.08, 0.1, 'triangle'); tone(1318, i * 0.1 + 0.05, 0.05, 0.08, 'triangle'); } if (isAndroid && navigator.vibrate) navigator.vibrate([400, 200, 400]); },
-  dialOnce() { tone(400, 0, 1.0, 0.07); },
+  /* 着信：スマホの着信音らしい木琴の短いフレーズ（オリジナルの音の並び）。1.6秒ごとにくり返す */
+  ringOnce() {
+    [[1047, 0], [784, 0.15], [1047, 0.3], [1319, 0.45], [1175, 0.75], [1568, 0.9]].forEach(([f, t]) => mallet(f, t));
+    if (isAndroid && navigator.vibrate) navigator.vibrate([700, 300, 500]); else haptic();
+  },
+  /* 発信：日本の電話の呼び出し音。1秒鳴って2秒止まる、をつながるか切れるまでくり返す */
+  dialOnce() {
+    let n = 0;
+    const pulse = () => {
+      if (n++ >= 4 || view.name !== 'call' || view.status !== UI.calling) return;
+      ringback(0, 1.0);
+      setTimeout(pulse, 3000 / SPEED);
+    };
+    pulse();
+  },
   tap() { tone(1500, 0, 0.03, 0.03); }
 };
 
